@@ -43,6 +43,7 @@ class Operator(FermionOperator):
 
 
 class DiscoData:
+    """Class to parse results of DISCO-VQE algorithm"""
     def __init__(self, geometry: str, result_id: str):
         try:
             with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
@@ -54,12 +55,15 @@ class DiscoData:
         self.geometry = geometry
         self.result_id = result_id
         self.operator_pool = self._get_operator_pool()
-        self.step = int(re.search(r'found at step\s+(\d+)', data).group(1))
         self.energy = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', data).group(1))
 
         self.phases = [float(c.strip()) for c in data.splitlines()[2:]]
         self.operator_order = self._get_operator_order()
         self.operators = [self.operator_pool[i - 1] for i in self.operator_order]
+
+        # NB: ordered list of data to be passed to the Ansatz class
+        self.ansatz_data = [self.qubit_number, self.operators, self.phases,
+                            self.energy, self.geometry, self.operator_order]
 
     def _get_operator_order(self):
         with open(f'DISCO_data/{self.geometry}/oporder.{self.result_id}') as file:
@@ -80,31 +84,40 @@ class DiscoData:
 
 
 class Ansatz:
-    def __init__(self, data: DiscoData):
-        self.data = data
-        self.energy = data.energy
-        self.qubit_number = data.qubit_number
+    """Class to represent UPS ansätze. Required arguments: number of qubits, list of operators and list of phases."""
+    def __init__(self,
+                 qubit_number: int,
+                 operators: list[Operator],
+                 phases: list[float],
+                 energy: float | str | None = 'undefined',
+                 geometry: str | None = 'undefined',
+                 operator_order: list[int] | None = None,
+                 ):
 
-        self.phases = data.phases
-        self.phases_radians = [c / np.pi for c in self.phases]
-        self.operators = data.operators
-        self.operator_order = data.operator_order
+        self.energy = energy
+        self.geometry = geometry
+        self.qubit_number = qubit_number
+        self.operator_order = operator_order if operator_order else [None] * len(operators)
+
+        self.operators = operators
         self.qubit_operators = [jordan_wigner(o) for o in self.operators]
 
+        self.phases = phases
+        self.phases_radians = [c / np.pi for c in self.phases]
+
         self.circuits: list[zx.Circuit] = self.generate_circuits()
-        self.full_circuit: zx.Circuit = self.generate_full_circuit()
-        self.full_graph = self.generate_graph()
+        self.complete_circuit: zx.Circuit = self.generate_complete_circuit()
+        self.complete_graph = self.generate_graph()
 
     def __str__(self):
-        metadata = (f'Geometry: {self.data.geometry}        '
-                    f'Number of Qubits: {self.qubit_number}        '
-                    f'Lowest Energy: {self.energy} Ha        '
-                    f'Result ID: {self.data.result_id} \n\n')
+        metadata_str = (f'Geometry: {self.geometry}        '
+                        f'Number of Qubits: {self.qubit_number}        '
+                        f'Lowest Energy: {self.energy} Ha \n\n')
 
-        data = [f'({idx})      {c} π      {o}'
-                for idx, o, c in zip(self.operator_order, self.operators, self.phases_radians)]
+        data_str = [f'({idx})      {c} π      {o}'
+                    for idx, o, c in zip(self.operator_order, self.operators, self.phases_radians)]
 
-        return metadata + '\n'.join(data)
+        return metadata_str + '\n'.join(data_str)
 
     def generate_circuits(self) -> list[zx.Circuit]:
         def _generate_circuit(qubit_operator: QubitOperator, phase: float) -> zx.Circuit:
@@ -133,7 +146,7 @@ class Ansatz:
 
         return [_generate_circuit(o, p) for o, p in zip(self.qubit_operators, self.phases_radians)]
 
-    def generate_full_circuit(self) -> zx.Circuit:
+    def generate_complete_circuit(self) -> zx.Circuit:
         complete_circuit = self.circuits[0]
         for circuit in self.circuits[1:]:
             complete_circuit.add_circuit(circuit)
