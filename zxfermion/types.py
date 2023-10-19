@@ -17,6 +17,7 @@ VertexRef = int
 
 
 class Operator(FermionOperator):
+    """Wrapper class for FermionOperator class with updated __str__ dunder"""
     @classmethod
     def from_fermion_operator(cls, fermion_operator: FermionOperator) -> 'Operator':
         return Operator(str(fermion_operator))
@@ -43,7 +44,7 @@ class Operator(FermionOperator):
 
 
 class DiscoData:
-    """Class to parse results of DISCO-VQE algorithm"""
+    """Class to parse and store results of DISCO-VQE algorithm"""
     def __init__(self, geometry: str, result_id: str):
         try:
             with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
@@ -89,8 +90,8 @@ class Ansatz:
                  qubit_number: int,
                  operators: list[Operator],
                  phases: list[float],
-                 energy: float | str | None = 'undefined',
-                 geometry: str | None = 'undefined',
+                 geometry: str = 'undefined',
+                 energy: float | str = 'undefined',
                  operator_order: list[int] | None = None,
                  ):
 
