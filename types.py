@@ -42,8 +42,31 @@ class Operator(FermionOperator):
             string_rep.append(tmp_string.strip())
         return ' + '.join(string_rep).replace('+ -', '-')
 
-    def __repr__(self):
-        return str(super().__str__())
+
+class DiscoData:
+    def __init__(self, geometry: str, result_id: str):
+        with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
+            data = file.read()
+
+        self.qubit_number = 8
+        self.geometry = geometry
+        self.result_id = result_id
+        self.step = int(re.search(r'found at step\s+(\d+)', data).group(1))
+        self.energy = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', data).group(1))
+        self.operator_pool = self.get_operator_pool()
+
+    def get_operator_pool(self) -> list[Operator]:
+        with open(f'DISCO_data/{self.geometry}/operator_pool.txt') as file:
+            raw_operators = file.read()
+
+        # extract slice of text containing operators
+        pattern = r"Generating operator matrices\.\.\.(.*?)Operator matrices saved to 'opmat'"
+        match = re.search(pattern, raw_operators, re.DOTALL)
+        extracted_text = '\n'.join(match.group(1).strip().splitlines()[:-1])
+
+        # extract operator strings
+        extracted_operators = [o.strip() for o in re.split(r'Operator\s+\d+:', extracted_text)[1:]]
+        return [Operator(op) for op in extracted_operators]
 
 
 class Ansatz:
@@ -163,9 +186,7 @@ class Ansatz:
                 refs, row = _pauli_gadget(g, refs, row, phase, ps, row_size=row_size, end_pad=end_pad)
             return refs, row
 
-        def ansatz_to_graph(*,
-                            ops: Sequence[int] | None = None,
-                            row_size: Real = 1, end_pad: Real = 1) -> zx.Graph:
+        def ansatz_to_graph(*, ops: Sequence[int] | None = None, row_size: Real = 1, end_pad: Real = 1) -> zx.Graph:
             if ops is None:
                 ops = range(self.qubit_number)
             g = zx.Graph()
