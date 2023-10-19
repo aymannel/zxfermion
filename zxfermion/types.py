@@ -10,8 +10,7 @@ from openfermion import jordan_wigner, QubitOperator
 from openfermion.circuits import pauli_exp_to_qasm
 from openfermion.ops import FermionOperator
 
-from helpers import get_operator_pool
-
+from zxfermion.exceptions import MissingDiscoData
 
 VertexType = int
 VertexRef = int
@@ -45,17 +44,28 @@ class Operator(FermionOperator):
 
 class DiscoData:
     def __init__(self, geometry: str, result_id: str):
-        with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
-            data = file.read()
+        try:
+            with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
+                data = file.read()
+        except FileNotFoundError as exception:
+            raise MissingDiscoData(exception)
 
         self.qubit_number = 8
         self.geometry = geometry
         self.result_id = result_id
+        self.operator_pool = self._get_operator_pool()
         self.step = int(re.search(r'found at step\s+(\d+)', data).group(1))
         self.energy = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', data).group(1))
-        self.operator_pool = self.get_operator_pool()
 
-    def get_operator_pool(self) -> list[Operator]:
+        self.phases = [float(c.strip()) for c in data.splitlines()[2:]]
+        self.operator_order = self._get_operator_order()
+        self.operators = [self.operator_pool[i - 1] for i in self.operator_order]
+
+    def _get_operator_order(self):
+        with open(f'DISCO_data/{self.geometry}/oporder.{self.result_id}') as file:
+            return [int(op.strip()) for op in file.read().splitlines()]
+
+    def _get_operator_pool(self) -> list[Operator]:
         with open(f'DISCO_data/{self.geometry}/operator_pool.txt') as file:
             raw_operators = file.read()
 
@@ -70,35 +80,31 @@ class DiscoData:
 
 
 class Ansatz:
-    def __init__(self, system: str, result_id: str):
-        with open(f'DISCO_data/{system}/lowest.{result_id}') as file:
-            data = file.read()
+    def __init__(self, data: DiscoData):
+        self.data = data
+        self.energy = data.energy
+        self.qubit_number = data.qubit_number
 
-        self.qubit_number = 8
-
-        self.system: str = system
-        self.result_id: str = result_id
-        self.step: int = int(re.search(r'found at step\s+(\d+)', data).group(1))
-        self.energy: float = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', data).group(1))
-
-        self.phases: list[float] = [float(c.strip()) for c in data.splitlines()[2:]]
-        self.phases_radians: list[float] = [c / np.pi for c in self.phases]
-        self.operators: list[Operator] = self.get_operators()
-        self.qubit_operators: list[QubitOperator] = [jordan_wigner(o) for o in self.operators]
+        self.phases = data.phases
+        self.phases_radians = [c / np.pi for c in self.phases]
+        self.operators = data.operators
+        self.operator_order = data.operator_order
+        self.qubit_operators = [jordan_wigner(o) for o in self.operators]
 
         self.circuits: list[zx.Circuit] = self.generate_circuits()
         self.full_circuit: zx.Circuit = self.generate_full_circuit()
         self.full_graph = self.generate_graph()
 
     def __str__(self):
-        data = enumerate(zip(self.operators, self.phases_radians))
-        return f'Result: {self.result_id} \n' + '\n'.join([f'({idx})      {c} π      {o}' for idx, (o, c) in data])
+        metadata = (f'Geometry: {self.data.geometry}        '
+                    f'Number of Qubits: {self.qubit_number}        '
+                    f'Lowest Energy: {self.energy} Ha        '
+                    f'Result ID: {self.data.result_id} \n\n')
 
-    def get_operators(self) -> list[Operator]:
-        operator_pool = [Operator.from_fermion_operator(o) for o in get_operator_pool(system=self.system)]
-        with open(f'DISCO_data/{self.system}/oporder.{self.result_id}') as file:
-            operator_order = [int(op.strip()) for op in file.read().splitlines()]
-            return [operator_pool[i - 1] for i in operator_order]
+        data = [f'({idx})      {c} π      {o}'
+                for idx, o, c in zip(self.operator_order, self.operators, self.phases_radians)]
+
+        return metadata + '\n'.join(data)
 
     def generate_circuits(self) -> list[zx.Circuit]:
         def _generate_circuit(qubit_operator: QubitOperator, phase: float) -> zx.Circuit:

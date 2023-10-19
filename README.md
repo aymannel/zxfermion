@@ -5,3 +5,5 @@
 
 ## Example Phase Gadget
 ![phase_gadget](img/phase_gadget_example.png)
+
+$$\ket\psi = U_{(\vec\theta)} \ket{\psi_0}$$
