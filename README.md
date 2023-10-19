@@ -27,3 +27,5 @@ $$U_{(\theta)} = e^{\theta\hat A} \quad\text{ where $\hat A$ is anti-Hermitian}$
 
 ## Example Phase Gadget
 ![phase_gadget](img/phase_gadget_example.png)
+
+$$\ket\psi = U_{(\vec\theta)} \ket{\psi_0}$$
