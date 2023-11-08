@@ -92,8 +92,7 @@ class Ansatz:
                  phases: list[float],
                  geometry: str = 'undefined',
                  energy: float | str = 'undefined',
-                 operator_order: list[int] | None = None,
-                 ):
+                 operator_order: list[int] | None = None):
 
         self.energy = energy
         self.geometry = geometry
@@ -106,17 +105,15 @@ class Ansatz:
         self.phases = phases
         self.phases_radians = [c / np.pi for c in self.phases]
 
-        self.circuits: list[zx.Circuit] = self.generate_circuits()
-        self.complete_circuit: zx.Circuit = self.generate_complete_circuit()
-        self.complete_graph = self.generate_graph()
-
     def __str__(self):
         metadata_str = (f'Geometry: {self.geometry}        '
                         f'Number of Qubits: {self.qubit_number}        '
                         f'Lowest Energy: {self.energy} Ha \n\n')
 
         data_str = [f'({idx})      {c} π      {o}'
-                    for idx, o, c in zip(self.operator_order, self.operators, self.phases_radians)]
+                    for idx, o, c in zip(self.operator_order,
+                                         self.operators,
+                                         self.phases_radians)]
 
         return metadata_str + '\n'.join(data_str)
 
@@ -137,7 +134,10 @@ class Ansatz:
                 }.get(operator)
 
             # transform qubit operator into operator strings e.g. ['H', '2']
-            operator_strings = list(pauli_exp_to_qasm(qubit_operator, evolution_time=phase, qubit_list=None, ancilla=None))
+            operator_strings = list(pauli_exp_to_qasm(qubit_operator,
+                                                      evolution_time=phase,
+                                                      qubit_list=None,
+                                                      ancilla=None))
 
             # construct zx.Circuit for a given qubit operator
             circuit = zx.Circuit(self.qubit_number)
@@ -148,76 +148,122 @@ class Ansatz:
         return [_generate_circuit(o, p) for o, p in zip(self.qubit_operators, self.phases_radians)]
 
     def generate_complete_circuit(self) -> zx.Circuit:
-        complete_circuit = self.circuits[0]
-        for circuit in self.circuits[1:]:
+        circuits = self.generate_circuits()
+        complete_circuit = circuits[0]
+        for circuit in circuits[1:]:
             complete_circuit.add_circuit(circuit)
         return complete_circuit
 
     def generate_graph(self) -> zx.Graph:
-        def _add_vertex(g: zx.Graph, ref: VertexRef,
-                        ty: VertexType, qubit: int, row: int, phase: Real | None = None) -> VertexRef:
-            new_ref = g.add_vertex(ty, qubit=qubit, row=row, phase=phase)
-            g.add_edge((ref, new_ref))
+        def _add_vertex(graph: zx.Graph,
+                        vtx_ref: VertexRef,
+                        vtx_type: VertexType,
+                        qubit: int,
+                        row: int,
+                        phase: Real | None = None) -> VertexRef:
+
+            new_ref = graph.add_vertex(vtx_type, qubit=qubit, row=row, phase=phase)
+            graph.add_edge((vtx_ref, new_ref))
             return new_ref
 
-        def _pauli_gadget(g: zx.Graph,
-                          refs: Sequence[VertexRef],
+        def _pauli_gadget(graph: zx.Graph,
+                          vtx_refs: Sequence[VertexRef],
                           row: int,
                           phase: float,
-                          ps: Sequence[tuple[int, Literal["X", "Y", "Z"]]], *,
-                          row_size: Real = 1, end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
-            refs = list(refs)
-            assert (n:=len(refs)) >= np.max([q for q, _ in ps])+1
+                          paulis: Sequence[tuple[int, Literal["X", "Y", "Z"]]],
+                          # *,  # TODO
+                          row_size: Real = 1,
+                          end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
+
+            vtx_refs = list(vtx_refs)
+            assert (n := len(vtx_refs)) >= np.max([q for q, _ in paulis]) + 1
 
             # 1. Change of basis to Z
-            for q, p in ps:
-                match p:
+            for qubit, pauli in paulis:
+                match pauli:
                     case "X":
-                        refs[q] = _add_vertex(g, refs[q], ty=zx.VertexType.H_BOX, qubit=q, row=row)
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.H_BOX,
+                                                      qubit=qubit,
+                                                      row=row)
                     case "Y":
-                        refs[q] = _add_vertex(g, refs[q], ty=zx.VertexType.X, qubit=q, row=row, phase=1/2)
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.X,
+                                                      qubit=qubit,
+                                                      row=row,
+                                                      phase=1/2)
 
-            # 2. Phase gadget
-            for q, _ in ps:
-                refs[q] = _add_vertex(g, refs[q], ty=zx.VertexType.Z, qubit=q, row=row+1*row_size)
-            hub_ref = g.add_vertex(zx.VertexType.X, qubit=n, row=row+2*row_size)
-            for q, _ in ps:
-                g.add_edge((refs[q], hub_ref))
-            tip_ref = g.add_vertex(zx.VertexType.Z, qubit=n+1, row=row+2*row_size, phase=phase)
-            g.add_edge((hub_ref, tip_ref))
+            # Phase gadget X spider hub
+            hub_ref = graph.add_vertex(zx.VertexType.X, qubit=n, row=row + 2 * row_size)
+
+            # Phase gadget Z spiders
+            for qubit, _ in paulis:
+                vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                              vtx_type=zx.VertexType.Z,
+                                              qubit=qubit,
+                                              row=row + 1 * row_size)
+
+                graph.add_edge((vtx_refs[qubit], hub_ref))
+
+            # Phase Z spider
+            phase_hub_ref = graph.add_vertex(zx.VertexType.Z, qubit=n + 1, row=row + 2 * row_size, phase=phase)
+            graph.add_edge((hub_ref, phase_hub_ref))
 
             # 3. Change of basis from Z
-            for q, p in ps:
-                match p:
+            for qubit, pauli in paulis:
+                match pauli:
                     case "X":
-                        refs[q] = _add_vertex(g, refs[q], ty=zx.VertexType.H_BOX, qubit=q, row=row+2*row_size)
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.H_BOX,
+                                                      qubit=qubit,
+                                                      row=row + 2 * row_size)
                     case "Y":
-                        refs[q] = _add_vertex(g, refs[q], ty=zx.VertexType.X, qubit=q, row=row+2*row_size, phase=-1/2)
-            return refs, row+3*row_size+end_pad
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.X,
+                                                      qubit=qubit,
+                                                      row=row + 2 * row_size,
+                                                      phase=-1/2)
 
-        def _jw_op(g: zx.Graph,
+            return vtx_refs, row + 3 * row_size + end_pad
+
+        def _jw_op(graph: zx.Graph,
                    op: QubitOperator,
-                   refs: Sequence[VertexRef],
+                   vtx_refs: Sequence[VertexRef],
                    row: int,
-                   angle: Real, *,
-                   row_size: Real = 1, end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
-            for ps, c in op.terms.items():
-                phase = c.imag*angle
-                refs, row = _pauli_gadget(g, refs, row, phase, ps, row_size=row_size, end_pad=end_pad)
-            return refs, row
+                   phase: Real, *,  # TODO
+                   row_size: Real = 1,
+                   end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
 
-        def ansatz_to_graph(*, ops: Sequence[int] | None = None, row_size: Real = 1, end_pad: Real = 1) -> zx.Graph:
-            if ops is None:
-                ops = range(self.qubit_number)
-            g = zx.Graph()
-            refs = [g.add_vertex(qubit=q, row=0) for q in range(self.qubit_number)]
-            row = 1
+            for paulis, c in op.terms.items():
+                phase = c.imag + phase  # TODO plus or times?
+                vtx_refs, row = _pauli_gadget(graph, vtx_refs, row, phase, paulis, row_size=row_size, end_pad=end_pad)
+
+            return vtx_refs, row
+
+        def ansatz_to_graph(*,
+                            row: int = 1,
+                            ops: Sequence[int] | None = None,
+                            row_size: Real = 1,
+                            end_pad: Real = 1) -> zx.Graph:
+
+            graph = zx.Graph()
+            ops = range(self.qubit_number) if ops is None else ops
+
+            # instantiate boundary vertices
+            vtx_refs = [graph.add_vertex(qubit=q, row=0) for q in range(self.qubit_number)]
+
+            # select operators
             all_ops_list = list(zip(self.qubit_operators, self.phases_radians))
-            select_ops_list = [all_ops_list[idx] for idx in ops]
-            for op, angle in select_ops_list:
-                refs, row = _jw_op(g, op, refs, row, float(angle), row_size=row_size, end_pad=end_pad)
-            out_refs = [g.add_vertex(qubit=q, row=row) for q in range(self.qubit_number)]
-            g.add_edges(list(zip(refs, out_refs)))
-            return g
+            # select_ops_list = [all_ops_list[idx] for idx in ops]
+            select_ops_list = all_ops_list
+
+            for op, phase in select_ops_list:
+                vtx_refs, row = _jw_op(graph, op, vtx_refs,
+                                       row=row, phase=float(phase),
+                                       row_size=row_size, end_pad=end_pad)
+
+            out_refs = [graph.add_vertex(qubit=q, row=row + 1) for q in range(self.qubit_number)]
+            graph.add_edges(list(zip(vtx_refs, out_refs)))
+            return graph
 
         return ansatz_to_graph()
