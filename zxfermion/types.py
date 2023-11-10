@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import pyzx as zx
 import numpy as np
@@ -10,6 +12,7 @@ from openfermion import jordan_wigner, QubitOperator
 from openfermion.circuits import pauli_exp_to_qasm
 from openfermion.ops import FermionOperator
 
+from DISCO_data.operator_graphs import operator_graphs
 from zxfermion.exceptions import MissingDiscoData
 
 VertexType = int
@@ -17,11 +20,16 @@ VertexRef = int
 
 
 class Operator(FermionOperator):
-    """Wrapper class for FermionOperator class with updated __str__ dunder"""
+    """Wrapper class for FermionOperator class with updated __str__ dunder and make type hashable"""
     @classmethod
-    def from_fermion_operator(cls, fermion_operator: FermionOperator) -> 'Operator':
+    def from_fermion_operator(cls, fermion_operator: FermionOperator) -> Operator:
         return Operator(str(fermion_operator))
 
+    # define Operator hash for use in set() and dict()
+    def __hash__(self):
+        return hash(tuple((self.terms.items())))
+
+    # redefine __str__ dunder so us mere humans can understand the data
     def __str__(self):
         if not self.terms:
             return '0'
@@ -42,35 +50,38 @@ class Operator(FermionOperator):
             string_rep.append(tmp_string.strip())
         return ' + '.join(string_rep).replace('+ -', '-')
 
+    @property
+    def repr_latex(self):
+        if not self.terms:
+            return '0'
+        string_rep = list()
+        for term, coeff in sorted(self.terms.items()):
+            if np.isclose(coeff, 0.0):
+                continue
+            elif coeff == 1:
+                tmp_string = ''
+            elif coeff == -1:
+                tmp_string = '- '
+            else:
+                tmp_string = f'{coeff} × '
+            for factor in term:
+                index, action = factor
+                action_string = ('^\\dagger', '')[self.actions.index(action)]
+                tmp_string += f'a{action_string}_{{({index})}}'
+            string_rep.append(tmp_string.strip())
+        return ' + '.join(string_rep).replace('+ -', '-')
 
-class DiscoData:
-    """Class to parse and store results of DISCO-VQE algorithm"""
-    def __init__(self, geometry: str, result_id: str):
-        try:
-            with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
-                data = file.read()
-        except FileNotFoundError as exception:
-            raise MissingDiscoData(exception)
+    def _repr_latex_(self):
+        return f'${self.repr_latex}$'
 
-        self.qubit_number = 8
+
+class OperatorPool:
+    def __init__(self, geometry: str):
         self.geometry = geometry
-        self.result_id = result_id
-        self.operator_pool = self._get_operator_pool()
-        self.energy = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', data).group(1))
+        self.operators = self._get_operators()
+        self.graph = operator_graphs.get(self.geometry)
 
-        self.phases = [float(c.strip()) for c in data.splitlines()[2:]]
-        self.operator_order = self._get_operator_order()
-        self.operators = [self.operator_pool[i - 1] for i in self.operator_order]
-
-        # NB: ordered list of data to be passed to the Ansatz class
-        self.ansatz_data = [self.qubit_number, self.operators, self.phases,
-                            self.energy, self.geometry, self.operator_order]
-
-    def _get_operator_order(self):
-        with open(f'DISCO_data/{self.geometry}/oporder.{self.result_id}') as file:
-            return [int(op.strip()) for op in file.read().splitlines()]
-
-    def _get_operator_pool(self) -> list[Operator]:
+    def _get_operators(self) -> list[Operator]:
         with open(f'DISCO_data/{self.geometry}/operator_pool.txt') as file:
             raw_operators = file.read()
 
@@ -84,6 +95,40 @@ class DiscoData:
         return [Operator(op) for op in extracted_operators]
 
 
+class DiscoData:
+    """Class to parse and store results of DISCO-VQE algorithm"""
+    def __init__(self, geometry: str, result_id: str):
+        try:
+            with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
+                data = file.read()
+        except FileNotFoundError as exception:
+            raise MissingDiscoData(exception)
+
+        self.qubit_number = 8
+        self.geometry = geometry
+        self.result_id = result_id
+        self.operator_pool = OperatorPool(self.geometry).operators
+        self.energy = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', data).group(1))
+
+        self.phases = [float(c.strip()) for c in data.splitlines()[2:]]
+        self.operator_order = self._get_operator_order()
+        self.operators = [self.operator_pool[i - 1] for i in self.operator_order]
+
+        self.ansatz_data = {
+            'qubit_number': self.qubit_number,
+            'operators': self.operators,
+            'phases': self.phases,
+            'geometry': self.geometry,
+            'energy': self.energy,
+            'operator_order': self.operator_order,
+            'result_id': self.result_id
+        }
+
+    def _get_operator_order(self):
+        with open(f'DISCO_data/{self.geometry}/oporder.{self.result_id}') as file:
+            return [int(op.strip()) for op in file.read().splitlines()][::-1]
+
+
 class Ansatz:
     """Class to represent UPS ansätze. Required arguments: number of qubits, list of operators and list of phases."""
     def __init__(self,
@@ -92,12 +137,14 @@ class Ansatz:
                  phases: list[float],
                  geometry: str = 'undefined',
                  energy: float | str = 'undefined',
-                 operator_order: list[int] | None = None):
+                 operator_order: list[int] | None = None,
+                 result_id: str = 'undefined'):
 
         self.energy = energy
         self.geometry = geometry
+        self.result_id = result_id
         self.qubit_number = qubit_number
-        self.operator_order = operator_order if operator_order else [None] * len(operators)
+        self.operator_order = operator_order
 
         self.operators = operators
         self.qubit_operators = [jordan_wigner(o) for o in self.operators]
@@ -110,12 +157,22 @@ class Ansatz:
                         f'Number of Qubits: {self.qubit_number}        '
                         f'Lowest Energy: {self.energy} Ha \n\n')
 
-        data_str = [f'({idx})      {c} π      {o}'
-                    for idx, o, c in zip(self.operator_order,
-                                         self.operators,
-                                         self.phases_radians)]
+        data_str = [f'({idx})      {c} π      {o}' for idx, o, c in zip(
+            self.operator_order,
+            self.operators,
+            self.phases_radians)] if self.operator_order else [f'{c} π      {o}' for o, c in zip(
+            self.operators,
+            self.phases_radians)]
 
         return metadata_str + '\n'.join(data_str)
+
+    def _repr_latex_(self):
+        metadata_str = (f'$$\\text{{Result }} {self.result_id}$$'
+                        f'$$\\text{{Number of qubits: }} {self.qubit_number}$$'
+                        f'$$\\text{{Lowest energy: }} {self.energy} \\,\\,\\text{{Ha}}$$'
+                        f'$$' + '\\rightarrow'.join([str(o) for o in self.operator_order]) + '$$ $$$$')
+        return metadata_str + ''.join([f'$$ \\text{{operator }} {idx} \\,\\,=\\,\\, ' + op.repr_latex + '$$'
+                                       for idx, op in zip(self.operator_order, self.operators)])
 
     def generate_circuits(self) -> list[zx.Circuit]:
         def _generate_circuit(qubit_operator: QubitOperator, phase: float) -> zx.Circuit:
