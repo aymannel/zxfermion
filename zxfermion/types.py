@@ -8,6 +8,7 @@ from numbers import Real
 from typing import Literal
 from collections.abc import Sequence
 
+from IPython.display import display, Markdown
 from openfermion import jordan_wigner, QubitOperator
 from openfermion.circuits import pauli_exp_to_qasm
 from openfermion.ops import FermionOperator
@@ -74,9 +75,116 @@ class Operator(FermionOperator):
     def _repr_latex_(self):
         return f'${self.repr_latex}$'
 
+    def generate_graph(self) -> zx.Graph:
+        def _add_vertex(graph: zx.Graph,
+                        vtx_ref: VertexRef,
+                        vtx_type: VertexType,
+                        qubit: int,
+                        row: int,
+                        phase: Real | None = None) -> VertexRef:
+
+            new_ref = graph.add_vertex(vtx_type, qubit=qubit, row=row, phase=phase)
+            graph.add_edge((vtx_ref, new_ref))
+            return new_ref
+
+        def _pauli_gadget(graph: zx.Graph,
+                          vtx_refs: Sequence[VertexRef],
+                          row: int,
+                          phase: float,
+                          paulis: Sequence[tuple[int, Literal["X", "Y", "Z"]]],
+                          # *,  # TODO
+                          row_size: Real = 1,
+                          end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
+
+            vtx_refs = list(vtx_refs)
+            assert (n := len(vtx_refs)) >= np.max([q for q, _ in paulis]) + 1
+
+            # 1. Change of basis to Z
+            for qubit, pauli in paulis:
+                match pauli:
+                    case "X":
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.H_BOX,
+                                                      qubit=qubit,
+                                                      row=row)
+                    case "Y":
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.X,
+                                                      qubit=qubit,
+                                                      row=row,
+                                                      phase=1/2)
+
+            # Phase gadget X spider hub
+            hub_ref = graph.add_vertex(zx.VertexType.X, qubit=n, row=row + 2 * row_size)
+
+            # Phase gadget Z spiders
+            for qubit, _ in paulis:
+                vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                              vtx_type=zx.VertexType.Z,
+                                              qubit=qubit,
+                                              row=row + 1 * row_size)
+
+                graph.add_edge((vtx_refs[qubit], hub_ref))
+
+            # Phase Z spider
+            phase_hub_ref = graph.add_vertex(zx.VertexType.Z, qubit=n + 1, row=row + 2 * row_size, phase=phase)
+            graph.add_edge((hub_ref, phase_hub_ref))
+
+            # 3. Change of basis from Z
+            for qubit, pauli in paulis:
+                match pauli:
+                    case "X":
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.H_BOX,
+                                                      qubit=qubit,
+                                                      row=row + 2 * row_size)
+                    case "Y":
+                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
+                                                      vtx_type=zx.VertexType.X,
+                                                      qubit=qubit,
+                                                      row=row + 2 * row_size,
+                                                      phase=-1/2)
+
+            return vtx_refs, row + 3 * row_size + end_pad
+
+        def _jw_op(graph: zx.Graph,
+                   op: QubitOperator,
+                   vtx_refs: Sequence[VertexRef],
+                   row: int,
+                   phase: Real, *,  # TODO
+                   row_size: Real = 1,
+                   end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
+
+            for paulis, c in op.terms.items():
+                phase = c.imag  # TODO plus or times?
+                vtx_refs, row = _pauli_gadget(graph, vtx_refs, row, phase, paulis, row_size=row_size, end_pad=end_pad)
+
+            return vtx_refs, row
+
+        def ansatz_to_graph(*,
+                            row: int = 1,
+                            row_size: Real = 1,
+                            end_pad: Real = 1,
+                            qubit_number: int = 8) -> zx.Graph:
+
+            graph = zx.Graph()
+
+            # instantiate boundary vertices
+            vtx_refs = [graph.add_vertex(qubit=q, row=0) for q in range(qubit_number)]
+
+            vtx_refs, row = _jw_op(graph, jordan_wigner(self), vtx_refs,
+                                   row=row, phase=float(0),
+                                   row_size=row_size, end_pad=end_pad)
+
+            out_refs = [graph.add_vertex(qubit=q, row=row + 1) for q in range(qubit_number)]
+            graph.add_edges(list(zip(vtx_refs, out_refs)))
+            return graph
+
+        return ansatz_to_graph()
+
 
 class OperatorPool:
-    def __init__(self, geometry: str):
+    def __init__(self, geometry: str = 'H4_linear'):
         self.geometry = geometry
         self.operators = self._get_operators()
         self.graph = operator_graphs.get(self.geometry)
@@ -94,63 +202,31 @@ class OperatorPool:
         extracted_operators = [o.strip() for o in re.split(r'Operator\s+\d+:', extracted_text)[1:]]
         return [Operator(op) for op in extracted_operators]
 
-
-class DiscoData:
-    """Class to parse and store results of DISCO-VQE algorithm"""
-    def __init__(self, geometry: str, result_id: str):
-        try:
-            with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
-                data = file.read()
-        except FileNotFoundError as exception:
-            raise MissingDiscoData(exception)
-
-        self.qubit_number = 8
-        self.geometry = geometry
-        self.result_id = result_id
-        self.operator_pool = OperatorPool(self.geometry).operators
-        self.energy = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', data).group(1))
-
-        self.phases = [float(c.strip()) for c in data.splitlines()[2:]]
-        self.operator_order = self._get_operator_order()
-        self.operators = [self.operator_pool[i - 1] for i in self.operator_order]
-
-        self.ansatz_data = {
-            'qubit_number': self.qubit_number,
-            'operators': self.operators,
-            'phases': self.phases,
-            'geometry': self.geometry,
-            'energy': self.energy,
-            'operator_order': self.operator_order,
-            'result_id': self.result_id
-        }
-
-    def _get_operator_order(self):
-        with open(f'DISCO_data/{self.geometry}/oporder.{self.result_id}') as file:
-            return [int(op.strip()) for op in file.read().splitlines()][::-1]
+    def get_index(self, operator: Operator) -> str:
+        return {op: idx+1 for idx, op in enumerate(self.operators)}.get(operator)
 
 
 class Ansatz:
     """Class to represent UPS ansätze. Required arguments: number of qubits, list of operators and list of phases."""
-    def __init__(self,
-                 qubit_number: int,
-                 operators: list[Operator],
-                 phases: list[float],
-                 geometry: str = 'undefined',
-                 energy: float | str = 'undefined',
-                 operator_order: list[int] | None = None,
-                 result_id: str = 'undefined'):
+    def __init__(self, result_id: str, geometry: str = 'H4_linear', qubit_number: int = 8):
+        try:
+            with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
+                ansatz_data = file.read()
+        except FileNotFoundError as exception:
+            raise MissingDiscoData(exception)
 
-        self.energy = energy
-        self.geometry = geometry
         self.result_id = result_id
+        self.geometry = geometry
         self.qubit_number = qubit_number
-        self.operator_order = operator_order
 
-        self.operators = operators
-        self.qubit_operators = [jordan_wigner(o) for o in self.operators]
-
-        self.phases = phases
+        self.energy = float(re.search(r'energy=\s*([-+]?\d*\.\d+)', ansatz_data).group(1))
+        self.phases = [float(c.strip()) for c in ansatz_data.splitlines()[2:][::-1]]
         self.phases_radians = [c / np.pi for c in self.phases]
+
+        self.operator_pool = OperatorPool(self.geometry)
+        self.operator_order = self._get_operator_order()
+        self.operators = [self.operator_pool.operators[i - 1] for i in self.operator_order]
+        self.qubit_operators = [jordan_wigner(o) for o in self.operators]
 
     def __str__(self):
         metadata_str = (f'Geometry: {self.geometry}        '
@@ -167,12 +243,29 @@ class Ansatz:
         return metadata_str + '\n'.join(data_str)
 
     def _repr_latex_(self):
-        metadata_str = (f'$$\\text{{Result }} {self.result_id}$$'
-                        f'$$\\text{{Number of qubits: }} {self.qubit_number}$$'
-                        f'$$\\text{{Lowest energy: }} {self.energy} \\,\\,\\text{{Ha}}$$'
-                        f'$$' + '\\rightarrow'.join([str(o) for o in self.operator_order]) + '$$ $$$$')
-        return metadata_str + ''.join([f'$$ \\text{{operator }} {idx} \\,\\,=\\,\\, ' + op.repr_latex + '$$'
-                                       for idx, op in zip(self.operator_order, self.operators)])
+        metadata_str = (rf'$'
+                        rf'\text{{Result: }} {self.result_id} \qquad'
+                        rf'\text{{Geometry: {self.geometry.replace("_", " ")}}} \qquad'
+                        rf'\text{{Number of qubits: }} {self.qubit_number} \qquad'
+                        rf'\text{{Lowest energy: }} {self.energy} \text{{ Ha}}' 
+                        '$' + '\n\n')
+
+        operator_order_str = (rf'$'
+                              rf'\text{{Operator Order: }}' +
+                              rf'\rightarrow'.join([str(self.operator_pool.get_index(o)) for o in self.operators]) +
+                              '$' + '\n\n')
+
+        operators_str = '\n\n'.join([rf'$'
+                                     rf'\text{{phase}} = {ph:+.5f} \,\,\pi \qquad\qquad '
+                                     rf'\text{{operator }} {self.operator_pool.get_index(op)} = {op.repr_latex}'
+                                     rf'$' for op, ph in zip(self.operators, self.phases_radians)])
+
+        display(Markdown(metadata_str + operator_order_str + operators_str))
+        return None
+
+    def _get_operator_order(self):
+        with open(f'DISCO_data/{self.geometry}/oporder.{self.result_id}') as file:
+            return [int(op.strip()) for op in file.read().splitlines()][::-1]
 
     def generate_circuits(self) -> list[zx.Circuit]:
         def _generate_circuit(qubit_operator: QubitOperator, phase: float) -> zx.Circuit:
