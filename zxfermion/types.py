@@ -1,213 +1,65 @@
 from __future__ import annotations
 
 import re
-import pyzx as zx
-import numpy as np
-
-from numbers import Real
-from typing import Literal
 from collections.abc import Sequence
+from numbers import Real
+from typing import Literal, Optional
 
+import numpy as np
+import pyzx as zx
 from IPython.display import display, Markdown
 from openfermion import jordan_wigner, QubitOperator
 from openfermion.circuits import pauli_exp_to_qasm
 from openfermion.ops import FermionOperator
 
-from DISCO_data.operator_graphs import operator_graphs
 from zxfermion.exceptions import MissingDiscoData
+from zxfermion.gadget import Operator
 
 VertexType = int
 VertexRef = int
 
 
-class Operator(FermionOperator):
-    """Wrapper class for FermionOperator class with updated __str__ dunder and make type hashable"""
-    @classmethod
-    def from_fermion_operator(cls, fermion_operator: FermionOperator) -> Operator:
-        return Operator(str(fermion_operator))
+class OperatorPoolS:
+    def __init__(self, fermion_operators: list[FermionOperator]):
+        self.fermion_operators = fermion_operators
+        self.operators = [Operator(fermion_operator) for fermion_operator in self.fermion_operators]
 
-    # define Operator hash for use in set() and dict()
-    def __hash__(self):
-        return hash(tuple((self.terms.items())))
+    @staticmethod
+    def from_disco_data(geometry: str = 'H4_linear') -> OperatorPoolS:
+        with open(f'DISCO_data/{geometry}/operator_pool.txt') as file:
+            raw_operators = file.read()
 
-    # redefine __str__ dunder so us mere humans can understand the data
-    def __str__(self):
-        if not self.terms:
-            return '0'
-        string_rep = list()
-        for term, coeff in sorted(self.terms.items()):
-            if np.isclose(coeff, 0.0):
-                continue
-            elif coeff == 1:
-                tmp_string = ''
-            elif coeff == -1:
-                tmp_string = '- '
-            else:
-                tmp_string = f'{coeff} × '
-            for factor in term:
-                index, action = factor
-                action_string = ('†', '')[self.actions.index(action)]
-                tmp_string += f'a{action_string}({index})'
-            string_rep.append(tmp_string.strip())
-        return ' + '.join(string_rep).replace('+ -', '-')
-
-    @property
-    def repr_latex(self):
-        if not self.terms:
-            return '0'
-        string_rep = list()
-        for term, coeff in sorted(self.terms.items()):
-            if np.isclose(coeff, 0.0):
-                continue
-            elif coeff == 1:
-                tmp_string = ''
-            elif coeff == -1:
-                tmp_string = '- '
-            else:
-                tmp_string = f'{coeff} × '
-            for factor in term:
-                index, action = factor
-                action_string = ('^\\dagger', '')[self.actions.index(action)]
-                tmp_string += f'a{action_string}_{{({index})}}'
-            string_rep.append(tmp_string.strip())
-        return ' + '.join(string_rep).replace('+ -', '-')
-
-    def _repr_latex_(self):
-        return f'${self.repr_latex}$'
-
-    def generate_graph(self) -> zx.Graph:
-        def _add_vertex(graph: zx.Graph,
-                        vtx_ref: VertexRef,
-                        vtx_type: VertexType,
-                        qubit: int,
-                        row: int,
-                        phase: Real | None = None) -> VertexRef:
-
-            new_ref = graph.add_vertex(vtx_type, qubit=qubit, row=row, phase=phase)
-            graph.add_edge((vtx_ref, new_ref))
-            return new_ref
-
-        def _pauli_gadget(graph: zx.Graph,
-                          vtx_refs: Sequence[VertexRef],
-                          row: int,
-                          phase: float,
-                          paulis: Sequence[tuple[int, Literal["X", "Y", "Z"]]],
-                          # *,  # TODO
-                          row_size: Real = 1,
-                          end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
-
-            vtx_refs = list(vtx_refs)
-            assert (n := len(vtx_refs)) >= np.max([q for q, _ in paulis]) + 1
-
-            # 1. Change of basis to Z
-            for qubit, pauli in paulis:
-                match pauli:
-                    case "X":
-                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
-                                                      vtx_type=zx.VertexType.H_BOX,
-                                                      qubit=qubit,
-                                                      row=row)
-                    case "Y":
-                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
-                                                      vtx_type=zx.VertexType.X,
-                                                      qubit=qubit,
-                                                      row=row,
-                                                      phase=1/2)
-
-            # Phase gadget X spider hub
-            hub_ref = graph.add_vertex(zx.VertexType.X, qubit=n, row=row + 2 * row_size)
-
-            # Phase gadget Z spiders
-            for qubit, _ in paulis:
-                vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
-                                              vtx_type=zx.VertexType.Z,
-                                              qubit=qubit,
-                                              row=row + 1 * row_size)
-
-                graph.add_edge((vtx_refs[qubit], hub_ref))
-
-            # Phase Z spider
-            phase_hub_ref = graph.add_vertex(zx.VertexType.Z, qubit=n + 1, row=row + 2 * row_size, phase=phase)
-            graph.add_edge((hub_ref, phase_hub_ref))
-
-            # 3. Change of basis from Z
-            for qubit, pauli in paulis:
-                match pauli:
-                    case "X":
-                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
-                                                      vtx_type=zx.VertexType.H_BOX,
-                                                      qubit=qubit,
-                                                      row=row + 2 * row_size)
-                    case "Y":
-                        vtx_refs[qubit] = _add_vertex(graph, vtx_refs[qubit],
-                                                      vtx_type=zx.VertexType.X,
-                                                      qubit=qubit,
-                                                      row=row + 2 * row_size,
-                                                      phase=-1/2)
-
-            return vtx_refs, row + 3 * row_size + end_pad
-
-        def _jw_op(graph: zx.Graph,
-                   op: QubitOperator,
-                   vtx_refs: Sequence[VertexRef],
-                   row: int,
-                   phase: Real, *,  # TODO
-                   row_size: Real = 1,
-                   end_pad: Real = 1) -> tuple[Sequence[VertexRef], int]:
-
-            for paulis, c in op.terms.items():
-                phase = c.imag  # TODO plus or times?
-                vtx_refs, row = _pauli_gadget(graph, vtx_refs, row, phase, paulis, row_size=row_size, end_pad=end_pad)
-
-            return vtx_refs, row
-
-        def ansatz_to_graph(*,
-                            row: int = 1,
-                            row_size: Real = 1,
-                            end_pad: Real = 1,
-                            qubit_number: int = 8) -> zx.Graph:
-
-            graph = zx.Graph()
-
-            # instantiate boundary vertices
-            vtx_refs = [graph.add_vertex(qubit=q, row=0) for q in range(qubit_number)]
-
-            vtx_refs, row = _jw_op(graph, jordan_wigner(self), vtx_refs,
-                                   row=row, phase=float(0),
-                                   row_size=row_size, end_pad=end_pad)
-
-            out_refs = [graph.add_vertex(qubit=q, row=row + 1) for q in range(qubit_number)]
-            graph.add_edges(list(zip(vtx_refs, out_refs)))
-            return graph
-
-        return ansatz_to_graph()
+        # extract slice of text containing fermion_operators
+        pattern = r"Generating operator matrices\.\.\.(.*?)Operator matrices saved to 'opmat'"
+        match = re.search(pattern, raw_operators, re.DOTALL)
+        extracted_text = '\n'.join(match.group(1).strip().splitlines()[:-1])
+        fermion_operators = [FermionOperator(o.strip()) for o in re.split(r'Operator\s+\d+:', extracted_text)[1:]]
+        return OperatorPoolS(fermion_operators)
 
 
 class OperatorPool:
     def __init__(self, geometry: str = 'H4_linear'):
         self.geometry = geometry
         self.operators = self._get_operators()
-        self.graph = operator_graphs.get(self.geometry)
 
-    def _get_operators(self) -> list[Operator]:
+    def _get_operators(self) -> list[FermionOperator]:
         with open(f'DISCO_data/{self.geometry}/operator_pool.txt') as file:
             raw_operators = file.read()
 
-        # extract slice of text containing operators
+        # extract slice of text containing fermion_operators
         pattern = r"Generating operator matrices\.\.\.(.*?)Operator matrices saved to 'opmat'"
         match = re.search(pattern, raw_operators, re.DOTALL)
         extracted_text = '\n'.join(match.group(1).strip().splitlines()[:-1])
 
         # extract operator strings
         extracted_operators = [o.strip() for o in re.split(r'Operator\s+\d+:', extracted_text)[1:]]
-        return [Operator(op) for op in extracted_operators]
+        return [FermionOperator(op) for op in extracted_operators]
 
-    def get_index(self, operator: Operator) -> str:
+    def get_index(self, operator: FermionOperator) -> str:
         return {op: idx+1 for idx, op in enumerate(self.operators)}.get(operator)
 
 
 class Ansatz:
-    """Class to represent UPS ansätze. Required arguments: number of qubits, list of operators and list of phases."""
     def __init__(self, result_id: str, geometry: str = 'H4_linear', qubit_number: int = 8):
         try:
             with open(f'DISCO_data/{geometry}/lowest.{result_id}') as file:
@@ -397,12 +249,13 @@ class Ansatz:
                             end_pad: Real = 1) -> zx.Graph:
 
             graph = zx.Graph()
-            ops = range(self.qubit_number) if ops is None else ops
+            # ops = range(self.num_qubits) if ops is None else ops
+            ops = ops or range(self.qubit_number)
 
             # instantiate boundary vertices
             vtx_refs = [graph.add_vertex(qubit=q, row=0) for q in range(self.qubit_number)]
 
-            # select operators
+            # select fermion_operators
             all_ops_list = list(zip(self.qubit_operators, self.phases_radians))
             # select_ops_list = [all_ops_list[idx] for idx in ops]
             select_ops_list = all_ops_list

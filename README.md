@@ -1,5 +1,5 @@
 ## Example Circuit
-![circuit](img/circuit_example.png)
+![circuit](circuit_example.png)
 
 ## Example Phase Gadget Contraction
-![phase_gadget](img/phase_gadget_example.png)
+![phase_gadget](phase_gadget_example.png)
