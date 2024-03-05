@@ -42,20 +42,23 @@ cz_rules = {
 
 # commutation rules for the Pauli Z gate
 z_rules = {
-    LegType.X: -1,
-    LegType.Y: -1,
-    LegType.Z: 1,
+    LegType.I: (LegType.I, 1),
+    LegType.X: (LegType.X, -1),
+    LegType.Y: (LegType.Y, -1),
+    LegType.Z: (LegType.Z, 1),
 }
 
 # commutation rules for the Pauli X gate
 x_rules = {
-    LegType.X: 1,
-    LegType.Y: -1,
-    LegType.Z: -1,
+    LegType.I: (LegType.I, 1),
+    LegType.X: (LegType.X, 1),
+    LegType.Y: (LegType.Y, -1),
+    LegType.Z: (LegType.Z, -1),
 }
 
 # commutation rules for the Hadamard gate
 hadamard_rules = {
+    LegType.I: (LegType.I, 1),
     LegType.X: (LegType.Z, 1),
     LegType.Y: (LegType.Y, -1),
     LegType.Z: (LegType.X, 1)
@@ -63,6 +66,7 @@ hadamard_rules = {
 
 # commutation rules for the Clifford Rz(π/2) gate
 cliff_z_rules = {
+    LegType.I: (LegType.I, 1),
     LegType.X: (LegType.Y, -1),
     LegType.Y: (LegType.X, 1),
     LegType.Z: (LegType.Z, 1)
@@ -70,6 +74,7 @@ cliff_z_rules = {
 
 # commutation rules for the Clifford Rz(3π/2) gate
 cliff_z_minus_rules = {
+    LegType.I: (LegType.I, 1),
     LegType.X: (),
     LegType.Y: (),
     LegType.Z: ()
@@ -77,6 +82,7 @@ cliff_z_minus_rules = {
 
 # commutation rules for the Clifford Rx(π/2) gate
 cliff_x_rules = {
+    LegType.I: (LegType.I, 1),
     LegType.X: (LegType.X, 1),
     LegType.Y: (LegType.Z, -1),
     LegType.Z: (LegType.Y, 1)
@@ -84,6 +90,7 @@ cliff_x_rules = {
 
 # commutation rules for the Clifford Rx(3π/2) gate
 cliff_x_minus_rules = {
+    LegType.I: (LegType.I, 1),
     LegType.X: (),
     LegType.Y: (),
     LegType.Z: ()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union, Type
 from enum import Enum
 
 
@@ -11,11 +11,25 @@ class VertexType:
     H: int = 3
 
 
+class EdgeType:
+    S: int = 1
+    H: int = 2
+
+
 class LegType(str, Enum):
     I = 'I'
     X = 'X'
     Y = 'Y'
     Z = 'Z'
+
+    @staticmethod
+    def get_object(type: LegType, qubit: int) -> Union[LegX, LegY, LegZ, None]:
+        return {
+            LegType.I: LegI(qubit),
+            LegType.X: LegX(qubit),
+            LegType.Y: LegY(qubit),
+            LegType.Z: LegZ(qubit),
+        }[type]
 
 
 class Node(BaseModel):
@@ -23,6 +37,16 @@ class Node(BaseModel):
     qubit: int
     type: Optional[int] = None
     phase: Optional[float] = None
+
+
+class LegI:
+    def __init__(self, qubit: int):
+        self.qubit = qubit
+        self.type = LegType.I
+        self.middle = None
+        self.left = None
+        self.right = None
+        self.nodes = None
 
 
 class LegX:
@@ -50,5 +74,6 @@ class LegZ:
         self.qubit = qubit
         self.type = LegType.Z
         self.middle = Node(row=2, qubit=self.qubit, type=VertexType.Z)
-        self.left, self.right = None, None
+        self.left = None
+        self.right = None
         self.nodes = [self.middle]
