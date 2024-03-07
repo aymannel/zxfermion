@@ -28,8 +28,8 @@ circuit.surround_cx(control=3, target=1)
 circuit.surround_cx(control=3, target=2)
 ```
 
-<div style="width: 70%; margin: 0 auto; overflow: hidden; border-radius: 20px;">
-    <img src="figures/first.png" alt="first" style="width: 70%; display: block; border-radius: 20px;">
+<div style="width: 100%; margin: 0 auto; overflow: hidden; border-radius: 50px;">
+    <img src="figures/first.png" alt="first" style="width: 70%; display: block; border-radius: 50px;">
 </div>
 
 ![second](figures/second.png)
