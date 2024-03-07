@@ -29,6 +29,7 @@ circuit.surround_cx(control=3, target=2)
 ```
 
 <img src="figures/first.png" width="48">
+
 ![first|50%](figures/first.png)
 ![second](figures/second.png)
 ![third](figures/third.png)
