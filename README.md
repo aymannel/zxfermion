@@ -28,7 +28,7 @@ circuit.surround_cx(control=3, target=1)
 circuit.surround_cx(control=3, target=2)
 ```
 
-![first](figures/first.png)
+![first](figures/first.png width=90%)
 ![second](figures/second.png)
 ![third](figures/third.png)
 ![fourth](figures/fourth.png)
