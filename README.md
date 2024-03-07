@@ -28,13 +28,11 @@ circuit.surround_cx(control=3, target=1)
 circuit.surround_cx(control=3, target=2)
 ```
 
-<div style="width: 100%; margin: 0 auto; overflow: hidden; border-radius: 50px;">
-    <img src="figures/first.png" alt="first" style="width: 70%; display: block; border-radius: 50%;">
-</div>
+<img src="figures/first.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
+<img src="figures/second.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
+<img src="figures/third.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
+<img src="figures/fourth.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
 
-![second](figures/second.png)
-![third](figures/third.png)
-![fourth](figures/fourth.png)
 
 ### Other Examples
 See [Jupyter Notebook](notebook.ipynb)
