@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from pydantic import BaseModel
-from typing import Optional, Union, Type
+from typing import Optional, Union
 from enum import Enum
+
+from zxfermion.graphs import BaseGraph
 
 
 class VertexType:
@@ -23,7 +25,7 @@ class LegType(str, Enum):
     Z = 'Z'
 
     @staticmethod
-    def get_object(type: LegType, qubit: int) -> Union[LegX, LegY, LegZ, None]:
+    def return_object(type: LegType, qubit: int) -> Union[LegX, LegY, LegZ, None]:
         return {
             LegType.I: LegI(qubit),
             LegType.X: LegX(qubit),
@@ -37,6 +39,32 @@ class Node(BaseModel):
     qubit: int
     type: Optional[int] = None
     phase: Optional[float] = None
+
+    def graph(self, num_qubits: int) -> BaseGraph:
+        graph = BaseGraph(num_qubits=num_qubits)
+        graph.connect_nodes(qubit=self.qubit, node_refs=[graph.add_node(node=self)])
+        graph.remove_wire(self.qubit)
+        return graph
+
+    def gadget(self, num_qubits: int) -> BaseGraph:
+        if self.type == VertexType.X or self.type == VertexType.Z:
+            opposite_type = VertexType.X if self.type == VertexType.Z else VertexType.Z
+
+            leg = Node(type=self.type, row=1, qubit=self.qubit)
+            hub_node = Node(type=opposite_type, row=2, qubit=num_qubits + 1)
+            phase_node = Node(type=self.type, row=2, qubit=num_qubits + 2, phase=self.phase)
+
+            graph = BaseGraph(num_qubits=num_qubits, num_rows=1)
+            graph.connect_nodes(qubit=self.qubit, node_refs=[ref := graph.add_node(leg)])
+            graph.remove_wire(qubit=self.qubit)
+
+            hub_ref = graph.add_node(hub_node)
+            phase_ref = graph.add_node(phase_node)
+            graph.add_edge((hub_ref, phase_ref))
+            graph.add_edge((ref, hub_ref))
+            return graph
+        else:
+            print(f'Not yet implemented gadget for {self.type}')
 
 
 class LegI:
