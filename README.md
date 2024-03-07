@@ -28,7 +28,24 @@ circuit.surround_cx(control=3, target=1)
 circuit.surround_cx(control=3, target=2)
 ```
 
-<img src='figures/first.png' width='70%'>
+<style>
+    .rounded-container {
+        width: 70%;
+        overflow: hidden;
+        border-radius: 20px;
+    }
+
+    .rounded-container img {
+        width: 100%;
+        display: block;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="rounded-container"><img src='figures/first.png'></div>
+<div class="rounded-container"><img src='figures/second.png'></div>
+<div class="rounded-container"><img src='figures/thid.png'></div>
+<div class="rounded-container"><img src='figures/fourth.png'></div>
 
 ![first|50%](figures/first.png)
 ![second](figures/second.png)
