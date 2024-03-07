@@ -9,7 +9,7 @@ The `Gadget` and `GadgetCircuit` classes represent single Pauli gadgets and circ
 
 ## Usage
 
-### Decomposition of Paired Two-Body Fermionic Excitation into Triply Controlled Rotations 
+### Decomposition of Double Fermionic Excitation to Triply Controlled Rotations 
 ```python
 circuit = GadgetCircuit(num_qubits=4, gadgets=[
     Gadget('YXXX', phase=1/4),
@@ -27,3 +27,11 @@ circuit.surround_cx(control=3, target=0)
 circuit.surround_cx(control=3, target=1)
 circuit.surround_cx(control=3, target=2)
 ```
+
+![first](figures/first.png)
+![second](figures/second.png)
+![third](figures/third.png)
+![fourth](figures/fourth.png)
+
+### Other Examples
+See [Jupyter Notebook](notebook.ipynb)
