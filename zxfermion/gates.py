@@ -149,6 +149,3 @@ class S(Node):
             type=VertexType.X,
             phase=1/2
         )
-
-
-Gate = Union[CX, CZ, X, Z, S]
