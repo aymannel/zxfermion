@@ -3,3 +3,4 @@
 .analysis
 DISCO_data/
 .DS_Store
+.gitignore
