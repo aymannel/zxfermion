@@ -6,11 +6,11 @@ from typing import Optional
 from itertools import groupby
 
 import pyzx as zx
-from zxfermion.exceptions import IncompatibleQubitDimension, IncompatibleAdditionType
+from zxfermion.graph import BaseGraph
 from zxfermion.gates import CX, CZ, X, Z
 from zxfermion.types import Node, VertexType, LegType, GateType
 from zxfermion.rules import cx_rules, cz_rules, x_rules, z_rules
-from zxfermion.graph import BaseGraph
+from zxfermion.exceptions import IncompatibleQubitDimension, IncompatibleAdditionType
 
 logging.basicConfig(format="%(levelname)s %(message)s", level=logging.ERROR)
 logger = logging.getLogger('zxfermion_logger')

@@ -1,4 +1,3 @@
-# @formatter:off
 import pytest
 from zxfermion.exceptions import IncompatibleAdditionType, IncompatibleQubitDimension
 from zxfermion.gadget import Gadget, GadgetCircuit
