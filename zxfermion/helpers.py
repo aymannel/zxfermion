@@ -46,22 +46,3 @@ def stringify_operator(operator: FermionOperator) -> str:
             tmp_string += f'a{action_string}({index})'
         string_rep.append(tmp_string.strip())
     return ' + '.join(string_rep).replace('+ -', '-')
-
-    # @staticmethod
-    # def from_operators(operators: list[QubitOperator], num_qubits: int = 8) -> GadgetCircuit:
-    #     gadgets = []
-    #     for operator in operators:
-    #         for gadget_tuple, phase in operator.terms.items():
-    #             paulis = ['I'] * num_qubits
-    #             for pauli in gadget_tuple:
-    #                 paulis[pauli[0]] = pauli[1]
-    #             gadgets.append(Gadget(num_qubits=num_qubits, pauli_str=''.join(paulis), phase=phase))
-    #     return GadgetCircuit(gadgets=gadgets, num_qubits=num_qubits)
-
-    # @staticmethod
-    # def from_operator(operator: QubitOperator, num_qubits: int = 8) -> GadgetCircuit:
-    #     return GadgetCircuit.from_operators(operators=[operator], num_qubits=num_qubits)
-
-    # @staticmethod
-    # def from_fermion_operator(operator: FermionOperator, num_qubits: int = 8) -> GadgetCircuit:
-    #     return GadgetCircuit.from_operator(operator=jordan_wigner(operator), num_qubits=num_qubits)

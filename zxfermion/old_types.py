@@ -112,3 +112,23 @@ class Ansatz:
     def _get_operator_order(self):
         with open(f'DISCO_data/{self.geometry}/oporder.{self.result_id}') as file:
             return [int(op.strip()) for op in file.read().splitlines()][::-1]
+
+    # @staticmethod
+    # def from_operators(operators: list[QubitOperator], num_qubits: int = 8) -> GadgetCircuit:
+    #     gadgets = []
+    #     for operator in operators:
+    #         for gadget_tuple, phase in operator.terms.items():
+    #             paulis = ['I'] * num_qubits
+    #             for pauli in gadget_tuple:
+    #                 paulis[pauli[0]] = pauli[1]
+    #             gadgets.append(Gadget(num_qubits=num_qubits, pauli_str=''.join(paulis), phase=0))  # change phase after
+    #     return GadgetCircuit(gadgets=gadgets, num_qubits=num_qubits)
+    #
+    # @staticmethod
+    # def from_operator(operator: QubitOperator, num_qubits: int = 8) -> GadgetCircuit:
+    #     return GadgetCircuit.from_operators(operators=[operator], num_qubits=num_qubits)
+    #
+    # @staticmethod
+    # def from_fermion_operator(operator: FermionOperator, num_qubits: int = 8) -> GadgetCircuit:
+    #     return GadgetCircuit.from_operator(operator=jordan_wigner(operator), num_qubits=num_qubits)
+    #

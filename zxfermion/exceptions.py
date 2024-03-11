@@ -3,6 +3,11 @@ class MissingDiscoData(Exception):
     pass
 
 
-class DifferentQubitDimensionException(Exception):
+class IncompatibleQubitDimension(Exception):
     """Raised when adding two objects with different num_qubits"""
+    pass
+
+
+class IncompatibleAdditionType(Exception):
+    """Raised when attempting to add non Gadget/GadgetCircuit type"""
     pass

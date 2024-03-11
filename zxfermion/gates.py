@@ -1,15 +1,16 @@
 from typing import Optional, Union
 
-from zxfermion.graphs import BaseGraph
-from zxfermion.types import Node, VertexType, EdgeType
+from zxfermion.graph import BaseGraph
+from zxfermion.types import Node, VertexType, EdgeType, GateType
 
 
 class CX:
     def __init__(self, control: int, target: int, num_qubits: Optional[int] = None):
         assert control != target
+        self.type = GateType.CX
+        self.num_qubits = num_qubits
         self.control = Node(type=VertexType.Z, qubit=control, row=1)
         self.target = Node(type=VertexType.X, qubit=target, row=1)
-        self.num_qubits = num_qubits
 
     def conjugate_x(self, **kwargs):
         """Need to rethink this business..."""
@@ -54,13 +55,20 @@ class CX:
             (hub_ref, target_ref)))
         return graph
 
+    def __eq__(self, other):
+        if self.type == other.type:
+            return (self.control.qubit, self.target.qubit) == (other.control.qubit, other.target.qubit)
+        else:
+            return False
+
 
 class CZ:
     def __init__(self, control: int, target: int, num_qubits: Optional[int] = None):
         assert control != target
+        self.type = GateType.CZ
+        self.num_qubits = num_qubits
         self.control = Node(type=VertexType.Z, qubit=control, row=1)
         self.target = Node(type=VertexType.Z, qubit=target, row=1)
-        self.num_qubits = num_qubits
 
     def conjugate_x(self, **kwargs):
         pass
@@ -99,6 +107,12 @@ class CZ:
             (hub_ref, control_ref),
             (hub_ref, target_ref)))
         return graph
+
+    def __eq__(self, other):
+        if self.type == other.type:
+            return (self.control.qubit, self.target.qubit) == (other.control.qubit, other.target.qubit)
+        else:
+            return False
 
 
 class Z(Node):

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional, Union
 from enum import Enum
 
-from zxfermion.graphs import BaseGraph
+from zxfermion.graph import BaseGraph
 
 
 class VertexType:
@@ -32,6 +32,15 @@ class LegType(str, Enum):
             LegType.Y: LegY(qubit),
             LegType.Z: LegZ(qubit),
         }[type]
+
+
+class GateType(str, Enum):
+    GADGET_CIRCUIT = 'GADGET_CIRCUIT'
+    GADGET = 'GADGET'
+    CX = 'CX'
+    CZ = 'CZ'
+    X = 'Y'
+    Z = 'Z'
 
 
 class Node(BaseModel):
