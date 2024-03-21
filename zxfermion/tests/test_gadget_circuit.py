@@ -1,5 +1,6 @@
-from zxfermion.exceptions import IncompatibleQubitDimension, IncompatibleAdditionType
-from zxfermion.gadget import Gadget, GadgetCircuit
+from zxfermion.exceptions import IncompatibleQubitDimension, IncompatibleType
+from zxfermion.gadgets import Gadget
+from zxfermion.circuits import GadgetCircuit
 from zxfermion.types import GateType
 
 
@@ -11,16 +12,19 @@ def test_instantiate_gadgetcircuit():
     pass
 
 
+# test num qubits asserts max gadget dimension
+
+
 def test_incompatible_num_qubits():
     try:
-        GadgetCircuit([Gadget('YYXXII'), Gadget('XXYY')], num_qubits=6)
+        GadgetCircuit([Gadget('YYXXII'), Gadget('XXYY')])
     except IncompatibleQubitDimension:
         pass
 
 
 def test_add_gadgetcircuit_gadget():
     gadget = Gadget('XXIIYY')
-    gadget_circuit = GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')], num_qubits=6)
+    gadget_circuit = GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')])
     circuit = gadget_circuit + gadget
     assert isinstance(circuit, GadgetCircuit)
     assert circuit.type == GateType.GADGET_CIRCUIT
@@ -30,8 +34,8 @@ def test_add_gadgetcircuit_gadget():
 
 
 def test_add_gadgetcircuit_gadgetcircuit():
-    circuit1 = GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')], num_qubits=6)
-    circuit2 = GadgetCircuit([Gadget('YYIIXX'), Gadget('XXIIYY')], num_qubits=6)
+    circuit1 = GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')])
+    circuit2 = GadgetCircuit([Gadget('YYIIXX'), Gadget('XXIIYY')])
     circuit = circuit1 + circuit2
     assert isinstance(circuit, GadgetCircuit)
     assert circuit.type == GateType.GADGET_CIRCUIT
@@ -42,21 +46,21 @@ def test_add_gadgetcircuit_gadgetcircuit():
 
 def test_add_gadgetcircuit_incompatible():
     try:
-        GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')], num_qubits=6) + None
-    except IncompatibleAdditionType:
+        GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')]) + None
+    except IncompatibleType:
         pass
 
 
 def test_add_gadgetcircuit_gadget_incompatible_qubits():
     try:
-        GadgetCircuit([Gadget('IIXXYY')], num_qubits=6) + Gadget('YYXX')
+        GadgetCircuit([Gadget('IIXXYY')]) + Gadget('YYXX')
     except IncompatibleQubitDimension:
         pass
 
 
 def test_add_gadgetcircuit_gadgetcircuit_incompatible_qubits():
     try:
-        GadgetCircuit([Gadget('IIXXYY')], num_qubits=6) + GadgetCircuit([Gadget('YYXX')], num_qubits=4)
+        GadgetCircuit([Gadget('IIXXYY')]) + GadgetCircuit([Gadget('YYXX')])
     except IncompatibleQubitDimension:
         pass
 

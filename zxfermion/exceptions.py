@@ -8,6 +8,6 @@ class IncompatibleQubitDimension(Exception):
     pass
 
 
-class IncompatibleAdditionType(Exception):
+class IncompatibleType(Exception):
     """Raised when attempting to add non Gadget/GadgetCircuit type"""
     pass

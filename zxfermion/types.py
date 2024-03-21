@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
-from typing import Optional, Union
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel
 
 from zxfermion.graph import BaseGraph
+
+
+class EdgeType:
+    S: int = 1
+    H: int = 2
 
 
 class VertexType:
@@ -13,25 +19,11 @@ class VertexType:
     H: int = 3
 
 
-class EdgeType:
-    S: int = 1
-    H: int = 2
-
-
 class LegType(str, Enum):
     I = 'I'
     X = 'X'
     Y = 'Y'
     Z = 'Z'
-
-    @staticmethod
-    def return_object(type: LegType, qubit: int) -> Union[LegX, LegY, LegZ, None]:
-        return {
-            LegType.I: LegI(qubit),
-            LegType.X: LegX(qubit),
-            LegType.Y: LegY(qubit),
-            LegType.Z: LegZ(qubit),
-        }[type]
 
 
 class GateType(str, Enum):
@@ -45,7 +37,7 @@ class GateType(str, Enum):
 
 class Node(BaseModel):
     row: int
-    qubit: int
+    qubit: Optional[int] = None
     type: Optional[int] = None
     phase: Optional[float] = None
 
@@ -77,40 +69,40 @@ class Node(BaseModel):
 
 
 class LegI:
-    def __init__(self, qubit: int):
-        self.qubit = qubit
+    def __init__(self, qubit):
         self.type = LegType.I
-        self.middle = None
+        self.qubit = qubit
         self.left = None
+        self.middle = None
         self.right = None
-        self.nodes = None
+        self.nodes = []
 
 
 class LegX:
-    def __init__(self, qubit: int):
-        self.qubit = qubit
+    def __init__(self, qubit):
         self.type = LegType.X
-        self.middle = Node(row=2, qubit=self.qubit, type=VertexType.Z)
-        self.left = Node(row=1, qubit=self.qubit, type=VertexType.H)
-        self.right = Node(row=3, qubit=self.qubit, type=VertexType.H)
+        self.qubit = qubit
+        self.left = Node(row=1, qubit=qubit, type=VertexType.H)
+        self.middle = Node(row=2, qubit=qubit, type=VertexType.Z)
+        self.right = Node(row=3, qubit=qubit, type=VertexType.H)
         self.nodes = [self.left, self.middle, self.right]
 
 
 class LegY:
-    def __init__(self, qubit: int):
-        self.qubit = qubit
+    def __init__(self, qubit):
         self.type = LegType.Y
-        self.middle = Node(row=2, qubit=self.qubit, type=VertexType.Z)
-        self.left = Node(row=1, qubit=self.qubit, type=VertexType.X, phase=1/2)
-        self.right = Node(row=3, qubit=self.qubit, type=VertexType.X, phase=-1/2)
+        self.qubit = qubit
+        self.left = Node(row=1, qubit=qubit, type=VertexType.X, phase=1/2)
+        self.middle = Node(row=2, qubit=qubit, type=VertexType.Z)
+        self.right = Node(row=3, qubit=qubit, type=VertexType.X, phase=-1/2)
         self.nodes = [self.left, self.middle, self.right]
 
 
 class LegZ:
-    def __init__(self, qubit: int):
-        self.qubit = qubit
+    def __init__(self, qubit):
         self.type = LegType.Z
-        self.middle = Node(row=2, qubit=self.qubit, type=VertexType.Z)
+        self.qubit = qubit
+        self.middle = Node(row=2, qubit=qubit, type=VertexType.Z)
         self.left = None
         self.right = None
         self.nodes = [self.middle]

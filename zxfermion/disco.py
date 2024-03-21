@@ -1,4 +1,5 @@
-from zxfermion.gadget import Gadget, GadgetCircuit
+from zxfermion.gadgets import Gadget
+from zxfermion.circuits import GadgetCircuit
 
 
 class OperatorPool:

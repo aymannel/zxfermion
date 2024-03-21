@@ -1,8 +1,11 @@
 import pytest
-from zxfermion.exceptions import IncompatibleAdditionType, IncompatibleQubitDimension
-from zxfermion.gadget import Gadget, GadgetCircuit
+from zxfermion.exceptions import IncompatibleType, IncompatibleQubitDimension
+from zxfermion.gadgets import Gadget
+from zxfermion.circuits import GadgetCircuit
 from zxfermion.types import GateType, VertexType
 
+
+# test graphing individual gadget
 
 @pytest.mark.parametrize(['pauli_str', 'phase', 'num_qubits'], [['YIXYIIYX', 1/2, 8], ['YYIIYX', -1/2, 6]])
 def test_gadget(pauli_str, phase, num_qubits):
@@ -72,7 +75,7 @@ def test_add_gadget_gadgetcircuit():
 def test_add_gadget_incompatible():
     try:
         Gadget('IIXXYY') + None
-    except IncompatibleAdditionType:
+    except IncompatibleType:
         pass
 
 
