@@ -1,82 +1,45 @@
-from zxfermion.exceptions import IncompatibleQubitDimension, IncompatibleType
+import pytest
+
 from zxfermion.gadgets import Gadget
 from zxfermion.circuits import GadgetCircuit
 from zxfermion.types import GateType
 
 
-def test_instantiate_gadgetcircuit():
-    # assert graph
-    # assert hub node
-    # assert phase node
-    # assert legs
-    pass
-
-# test input / outputs are set
-# assert number of expected vertices in graph
-# test num qubits asserts max gadget dimension
-
-
-def test_incompatible_num_qubits():
-    try:
-        GadgetCircuit([Gadget('YYXXII'), Gadget('XXYY')])
-    except IncompatibleQubitDimension:
-        pass
-
-
-def test_add_gadgetcircuit_gadget():
-    gadget = Gadget('XXIIYY')
-    gadget_circuit = GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')])
-    circuit = gadget_circuit + gadget
-    assert isinstance(circuit, GadgetCircuit)
+def test_gadgetcircuit():
+    gadgets = [Gadget(pauli_str='XYZ')]
+    circuit = GadgetCircuit(gadgets)
     assert circuit.type == GateType.GADGET_CIRCUIT
-    assert circuit.num_qubits == 6
-    assert len(circuit.gadgets) == 3
-    assert circuit.graph().depth() == 10
+    assert circuit.gadgets == gadgets
+    assert circuit.num_qubits == 3
+
+    gadgets = [Gadget(pauli_str='XYZ'), Gadget(pauli_str='IYXZ'), Gadget(pauli_str='ZYX')]
+    circuit = GadgetCircuit(gadgets)
+    assert circuit.type == GateType.GADGET_CIRCUIT
+    assert circuit.gadgets == gadgets
+    assert circuit.num_qubits == 4
 
 
-def test_add_gadgetcircuit_gadgetcircuit():
-    circuit1 = GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')])
-    circuit2 = GadgetCircuit([Gadget('YYIIXX'), Gadget('XXIIYY')])
+def test_add_gadgetcircuit():
+    circuit1 = GadgetCircuit([Gadget(pauli_str='XYZ')])
+    circuit2 = GadgetCircuit([Gadget(pauli_str='ZYX')])
     circuit = circuit1 + circuit2
     assert isinstance(circuit, GadgetCircuit)
     assert circuit.type == GateType.GADGET_CIRCUIT
-    assert circuit.num_qubits == 6
-    assert len(circuit.gadgets) == 4
-    assert circuit.graph().depth() == 13
+    assert circuit.num_qubits == 3
+    assert len(circuit.gadgets) == 2
 
 
-def test_add_gadgetcircuit_incompatible():
-    try:
-        GadgetCircuit([Gadget('YYXXII'), Gadget('IIXXYY')]) + None
-    except IncompatibleType:
-        pass
+def test_add_incompatible_gadgetcircuit():
+    circuit1 = GadgetCircuit([Gadget(pauli_str='XYZ')])
+    circuit2 = GadgetCircuit([Gadget(pauli_str='IZYX')])
+
+    with pytest.raises(AssertionError):
+        circuit1 + circuit2
 
 
-def test_add_gadgetcircuit_gadget_incompatible_qubits():
-    try:
-        GadgetCircuit([Gadget('IIXXYY')]) + Gadget('YYXX')
-    except IncompatibleQubitDimension:
-        pass
-
-
-def test_add_gadgetcircuit_gadgetcircuit_incompatible_qubits():
-    try:
-        GadgetCircuit([Gadget('IIXXYY')]) + GadgetCircuit([Gadget('YYXX')])
-    except IncompatibleQubitDimension:
-        pass
-
-
-def test_surround_x():
+def test_stack_gadgets():
     pass
 
 
-def test_surround_z():
-    pass
-
-
-def test_surround_cx():
-    pass
-
-
-def test_surround_cz():
+def test_gadgetcircuit_draw():
     pass

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 from pyzx.graph.graph_s import GraphS
-from zxfermion.gadgets import Gadget, CZ, CX, Z, X
+from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase
 from zxfermion.types import LegType, VertexType, EdgeType
 
 
@@ -23,14 +23,22 @@ class BaseGraph(GraphS):
             return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
         self.add_edges(pair_list([self.inputs()[qubit], *node_refs, self.outputs()[qubit]]))
 
-    def add_gadget(self, gadget: Gadget, graph: Optional[BaseGraph] = None):
-        graph = graph if graph else BaseGraph(num_qubits=self.num_qubits, num_rows=3)
-        legs = {qubit: leg for qubit, leg in gadget.legs.items() if leg.type != LegType.I}
+    def add_node(self, node, graph: Optional[BaseGraph] = None):
+        graph = graph if graph else BaseGraph(num_qubits=self.num_qubits)
+        ref = graph.add_vertex(ty=node.vertex_type, row=1, qubit=node.qubit, phase=node.phase)
+        graph.connect_nodes(qubit=node.qubit, node_refs=[ref])
+        graph.remove_wire(node.qubit)
+        return graph
 
-        if legs:
+    def add_gadget(self, gadget: Gadget, graph: Optional[BaseGraph] = None):
+        not_identity = all(leg.type != LegType.I for leg in gadget.legs.values())
+        phase_only = all(leg.type == LegType.Z or leg.type == LegType.I for leg in gadget.legs.values())
+
+        graph = graph if graph else BaseGraph(num_qubits=self.num_qubits, num_rows=2 if phase_only else 3)
+        if not_identity:
             hub_ref = graph.add_vertex(ty=VertexType.X, row=3, qubit=self.num_qubits + 1)
             phase_ref = graph.add_vertex(ty=VertexType.Z, row=3, qubit=self.num_qubits + 2, phase=gadget.phase)
-            for qubit, leg in legs.items():
+            for qubit, leg in gadget.legs.items():
                 match leg.type:
                     case LegType.X:
                         left_ref = graph.add_vertex(ty=VertexType.H, row=1, qubit=qubit)
@@ -54,12 +62,20 @@ class BaseGraph(GraphS):
             graph.add_edge((hub_ref, phase_ref))
         return graph
 
-    def add_x(self, x: X, graph: Optional[BaseGraph] = None):
-        graph = graph if graph else BaseGraph(num_qubits=self.num_qubits)
-        ref = graph.add_vertex(ty=VertexType.X, row=1, qubit=x.qubit, phase=1)
+    def add_expanded_gadget(self, gadget: Gadget, graph: BaseGraph):
+        """TODO complete left and right conjugation"""
+        qubits = [qubit for qubit, leg in gadget.legs.items() if leg.type != LegType.I]
 
-        graph.connect_nodes(qubit=x.qubit, node_refs=[ref])
-        graph.remove_wire(x.qubit)
+        graph = graph if graph else BaseGraph(num_qubits=self.num_qubits)
+        for cx in [CX(qubits[idx], qubits[idx + 1]) for idx in range(len(qubits) - 1)]:
+            graph.compose(graph.add_cx(cx))
+
+        phase_node = ZPhase(qubit=max(gadget.legs), phase=gadget.phase)
+        graph.compose(graph.add_node(phase_node))
+
+        for cx in [CX(qubits[idx], qubits[idx + 1]) for idx in reversed(range(len(qubits) - 1))]:
+            graph.compose(graph.add_cx(cx))
+
         return graph
 
     def add_x_gadget(self, x: X, graph: Optional[BaseGraph] = None):
@@ -72,14 +88,6 @@ class BaseGraph(GraphS):
         graph.connect_nodes(qubit=x.qubit, node_refs=[ref])
         graph.add_edge((hub_ref, phase_ref))
         graph.add_edge((ref, hub_ref))
-        return graph
-
-    def add_z(self, z: Z, graph: Optional[BaseGraph] = None):
-        graph = graph if graph else BaseGraph(num_qubits=self.num_qubits)
-        ref = graph.add_vertex(ty=VertexType.Z, row=1, qubit=z.qubit, phase=1)
-
-        graph.connect_nodes(qubit=z.qubit, node_refs=[ref])
-        graph.remove_wire(z.qubit)
         return graph
 
     def add_z_gadget(self, z: Z, graph: Optional[BaseGraph] = None):

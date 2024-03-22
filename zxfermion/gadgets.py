@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
-from zxfermion.types import LegType, GateType, GadgetLeg
+from zxfermion.types import LegType, GateType, GadgetLeg, VertexType
 
 
 class Gadget:
@@ -47,10 +47,10 @@ class CZ:
     def __init__(self, control: int, target: int):
         assert control != target
         self.type = GateType.CZ
-        self.control = control
-        self.target = target
-        self.min_qubit = min(self.control, self.target)
-        self.max_qubit = max(self.control, self.target)
+        self.control = min(control, target)
+        self.target = max(control, target)
+        self.min_qubit = self.control
+        self.max_qubit = self.target
 
     def __eq__(self, other):
         if self.type == other.type:
@@ -63,39 +63,69 @@ class CZ:
         return GadgetCircuit([self]).draw(**kwargs)
 
 
-class X:
+class Single:
+    def __init__(self, type: GateType, qubit: int, phase: Optional[float] = None):
+        self.type = type
+        self.phase = phase
+        self.qubit = qubit
+        self.min_qubit = qubit
+        self.max_qubit = qubit
+
+    def __eq__(self, other):
+        if self.type == other.type:
+            return (self.qubit, self.phase) == (other.qubit, self.phase)
+        else:
+            return False
+
+    def draw(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).draw(**kwargs)
+
+
+class XPhase(Single):
+    def __init__(self, qubit: int, phase: Optional[float] = None):
+        super().__init__(type=GateType.X_PHASE, qubit=qubit, phase=phase)
+        self.vertex_type = VertexType.X
+
+
+class ZPhase(Single):
+    def __init__(self, qubit: int, phase: Optional[float] = None):
+        super().__init__(type=GateType.Z_PHASE, qubit=qubit, phase=phase)
+        self.vertex_type = VertexType.Z
+
+
+class X(XPhase):
     def __init__(self, qubit: int):
+        super().__init__(qubit=qubit, phase=1)
         self.type = GateType.X
-        self.phase = 1
-        self.qubit = qubit
-        self.min_qubit = qubit
-        self.max_qubit = qubit
-
-    def __eq__(self, other):
-        if self.type == other.type:
-            return (self.qubit, self.phase) == (other.qubit, self.phase)
-        else:
-            return False
-
-    def draw(self, **kwargs):
-        from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).draw(**kwargs)
 
 
-class Z:
+class Z(ZPhase):
     def __init__(self, qubit: int):
+        super().__init__(qubit=qubit, phase=1)
         self.type = GateType.Z
-        self.phase = 1
-        self.qubit = qubit
-        self.min_qubit = qubit
-        self.max_qubit = qubit
 
-    def __eq__(self, other):
-        if self.type == other.type:
-            return (self.qubit, self.phase) == (other.qubit, self.phase)
-        else:
-            return False
 
-    def draw(self, **kwargs):
-        from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).draw(**kwargs)
+class XPlus(XPhase):
+    def __init__(self, qubit: int):
+        super().__init__(qubit=qubit, phase=1/2)
+        self.type = GateType.X_PLUS
+
+
+class XMinus(XPhase):
+    def __init__(self, qubit: int):
+        super().__init__(qubit=qubit, phase=-1/2)
+        self.type = GateType.X_MINUS
+
+
+class ZPlus(ZPhase):
+    def __init__(self, qubit: int):
+        super().__init__(qubit=qubit, phase=1/2)
+        self.type = GateType.Z_PLUS
+
+
+class ZMinus(ZPhase):
+    def __init__(self, qubit: int):
+        super().__init__(qubit=qubit, phase=-1/2)
+        self.type = GateType.Z_MINUS
+

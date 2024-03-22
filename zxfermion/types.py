@@ -25,10 +25,16 @@ class LegType(str, Enum):
 class GateType(str, Enum):
     GADGET_CIRCUIT = 'GADGET_CIRCUIT'
     GADGET = 'GADGET'
+    X_PHASE = 'X_PHASE'
+    Z_PHASE = 'Z_PHASE'
+    X = 'X'
+    Z = 'Z'
     CX = 'CX'
     CZ = 'CZ'
-    X = 'Y'
-    Z = 'Z'
+    X_PLUS = 'X_PLUS'
+    Z_PLUS = 'Z_PLUS'
+    X_MINUS = 'X_MINUS'
+    Z_MINUS = 'Z_MINUS'
 
 
 class GadgetLeg(BaseModel):

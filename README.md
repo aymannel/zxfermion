@@ -5,8 +5,8 @@
   - this way, each gate type (or gadget type)
   - only contains essential information about it
 
-## Gadget Types
-- MAKE ALL GADGET TYPES IMMUTABLE / CREATE NEW GADGET WHEN 'CHANGING' LEG
+## Gadget
+- add expand gadgets option/method
 
 ## GadgetCircuit
 - for now, keep conjugate_ methods but eventually this functionality should be handled by GadgetCircuit class
