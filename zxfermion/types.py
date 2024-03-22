@@ -29,6 +29,7 @@ class GateType(str, Enum):
     Z_PHASE = 'Z_PHASE'
     X = 'X'
     Z = 'Z'
+    H = 'H'
     CX = 'CX'
     CZ = 'CZ'
     X_PLUS = 'X_PLUS'

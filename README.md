@@ -8,6 +8,11 @@
 ## Gadget
 - add expand gadgets option/method
 
+## Graph
+- shouldn't methods of BaseGraph that take no graph as argument add to self?
+- or is that stupid.
+- i hate this recursive bullshit
+
 ## GadgetCircuit
 - for now, keep conjugate_ methods but eventually this functionality should be handled by GadgetCircuit class
 - this should be done by a permutation method that swaps the order of two 'gadgets' in a circuit...

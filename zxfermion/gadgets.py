@@ -94,6 +94,12 @@ class ZPhase(Single):
         self.vertex_type = VertexType.Z
 
 
+class H(Single):
+    def __init__(self, qubit: int):
+        super().__init__(type=GateType.H, qubit=qubit)
+        self.vertex_type = VertexType.H
+
+
 class X(XPhase):
     def __init__(self, qubit: int):
         super().__init__(qubit=qubit, phase=1)
@@ -128,4 +134,3 @@ class ZMinus(ZPhase):
     def __init__(self, qubit: int):
         super().__init__(qubit=qubit, phase=-1/2)
         self.type = GateType.Z_MINUS
-

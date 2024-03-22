@@ -44,6 +44,7 @@ class GadgetCircuit:
                 match gadget.type:
                     case GateType.GADGET:
                         graph = circuit.add_expanded_gadget(gadget, graph)
+                        # graph = circuit.add_gadget(gadget, graph)
                     case GateType.CX:
                         graph = circuit.add_cx_gadget(gadget, graph) if gadgets_only else circuit.add_cx(gadget, graph)
                     case GateType.CZ:
