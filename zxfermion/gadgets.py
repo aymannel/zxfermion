@@ -1,23 +1,16 @@
 from __future__ import annotations
 
-import logging
-import pyzx as zx
 from typing import Optional
-
-from zxfermion.circuits import GadgetCircuit
-from zxfermion.graph import BaseGraph
-from zxfermion.types import LegType, LegZ, LegY, LegX, LegI, GateType, Node, VertexType
-
-logging.basicConfig(format="%(levelname)s %(message)s", level=logging.ERROR)
-logger = logging.getLogger('zxfermion_logger')
-logger.setLevel(logging.DEBUG)
+from zxfermion.types import LegType, GateType, GadgetLeg
 
 
 class Gadget:
     def __init__(self, pauli_str: str, phase: Optional[float] = None):
         self.type = GateType.GADGET
         self.phase = phase
-        self.legs = self.build_legs(pauli_str)
+        self.legs = {qubit: GadgetLeg(type=LegType(pauli), qubit=qubit) for qubit, pauli in enumerate(pauli_str)}
+        self.min_qubit = min([qubit for qubit in self.legs])
+        self.max_qubit = max([qubit for qubit in self.legs])
 
     def __eq__(self, other):
         if type(self) == type(other):
@@ -25,65 +18,84 @@ class Gadget:
         else:
             return False
 
-    @property
-    def num_qubits(self) -> int:
-        return max([qubit for qubit in self.legs])
-
-    @staticmethod
-    def build_legs(pauli_str):
-        return {
-            qubit: {
-                LegType.I: LegI(qubit),
-                LegType.X: LegX(qubit),
-                LegType.Y: LegY(qubit),
-                LegType.Z: LegZ(qubit),
-            }[LegType(pauli)]
-            for qubit, pauli in enumerate(pauli_str)
-        }
-
-    def draw(self) -> BaseGraph:
-        circuit = GadgetCircuit([self])
-        circuit.draw()
-        return circuit.graph()
-
-    # def __add__(self, other: Gadget | GadgetCircuit) -> GadgetCircuit:
-    #     if (is_gadget := (other.type == GateType.GADGET)) or other.type == GateType.GADGET_CIRCUIT:
-    #         try:
-    #             assert self.num_qubits == other.num_qubits
-    #             gadget_list = [self, other] if is_gadget else [self] + other.gadgets
-    #             gadgets = [key for key, group in groupby(gadget_list) if len(list(group)) % 2]
-    #             return GadgetCircuit(num_qubits=self.num_qubits, gadgets=gadgets)
-    #         except AssertionError:
-    #             raise IncompatibleQubitDimension(f'{self.num_qubits} and {other.num_qubits}')
-    #     else:
-    #         raise IncompatibleType(f'Cannot add Gadget and {type(other)}')
+    def draw(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).draw(**kwargs)
 
 
 class CX:
     def __init__(self, control: int, target: int):
         assert control != target
         self.type = GateType.CX
-        self.num_qubits = max(control, target)
-        self.control = Node(type=VertexType.Z, qubit=control, row=1)
-        self.target = Node(type=VertexType.X, qubit=target, row=1)
+        self.control = control
+        self.target = target
+        self.min_qubit = min(self.control, self.target)
+        self.max_qubit = max(self.control, self.target)
 
     def __eq__(self, other):
         if self.type == other.type:
-            return (self.control.qubit, self.target.qubit) == (other.control.qubit, other.target.qubit)
+            return (self.control, self.target) == (other.control, other.target)
         else:
             return False
+
+    def draw(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).draw(**kwargs)
 
 
 class CZ:
     def __init__(self, control: int, target: int):
         assert control != target
         self.type = GateType.CZ
-        self.num_qubits = max(control, target)
-        self.control = Node(type=VertexType.Z, qubit=control, row=1)
-        self.target = Node(type=VertexType.Z, qubit=target, row=1)
+        self.control = control
+        self.target = target
+        self.min_qubit = min(self.control, self.target)
+        self.max_qubit = max(self.control, self.target)
 
     def __eq__(self, other):
         if self.type == other.type:
-            return (self.control.qubit, self.target.qubit) == (other.control.qubit, other.target.qubit)
+            return (self.control, self.target) == (other.control, other.target)
         else:
             return False
+
+    def draw(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).draw(**kwargs)
+
+
+class X:
+    def __init__(self, qubit: int):
+        self.type = GateType.X
+        self.phase = 1
+        self.qubit = qubit
+        self.min_qubit = qubit
+        self.max_qubit = qubit
+
+    def __eq__(self, other):
+        if self.type == other.type:
+            return (self.qubit, self.phase) == (other.qubit, self.phase)
+        else:
+            return False
+
+    def draw(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).draw(**kwargs)
+
+
+class Z:
+    def __init__(self, qubit: int):
+        self.type = GateType.Z
+        self.phase = 1
+        self.qubit = qubit
+        self.min_qubit = qubit
+        self.max_qubit = qubit
+
+    def __eq__(self, other):
+        if self.type == other.type:
+            return (self.qubit, self.phase) == (other.qubit, self.phase)
+        else:
+            return False
+
+    def draw(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).draw(**kwargs)

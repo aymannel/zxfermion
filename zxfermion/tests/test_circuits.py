@@ -11,7 +11,8 @@ def test_instantiate_gadgetcircuit():
     # assert legs
     pass
 
-
+# test input / outputs are set
+# assert number of expected vertices in graph
 # test num qubits asserts max gadget dimension
 
 

@@ -1,0 +1,1 @@
+# test remove wire method by checking connectivity of inputs outputs

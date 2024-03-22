@@ -4,38 +4,11 @@
 - move graphing functionality of each gate type to methods of BaseGraph class. eg methods for adding CX, Gadget, X, etc
   - this way, each gate type (or gadget type)
   - only contains essential information about it
-  - can do away with num_qubits parameter
-
-### Node
-- remove graph method
 
 ## Gadget Types
-
-### Gadget
-- move into single file called gadgets.py
-- do away with graph method of gadget class (that should live in BaseGraph)
-- this means that to graph a gadget it has to be put into a GadgetCircuit class
-- should also do away with num_qubits param in gadget class cos legs are saved in qubit-leg dictionary
-- so when appending a gadget to a circuit, you shouldn't assert compatible qubit dimensions
-- instead that max qubit is within circuit qubit dimension
-- move gadget leg generation into method of gadget class rather than calling GadgetType
-
-#### GadgetLeg
-- introduce GadgetLeg class. remove qubit as a parameter of GadgetLeg
-
-### CX & CZ
-- move into single file called gadgets.py
-
-### X & Z
-- move into single file called gadgets.py
-- single qubit gates should NOT inherit from Node class, wtf man?
-
-### S & T
-- move into single file called gadgets.py
-- single qubit gates should NOT inherit from Node class, wtf man?
+- MAKE ALL GADGET TYPES IMMUTABLE / CREATE NEW GADGET WHEN 'CHANGING' LEG
 
 ## GadgetCircuit
-- move into circuit.py file
 - for now, keep conjugate_ methods but eventually this functionality should be handled by GadgetCircuit class
 - this should be done by a permutation method that swaps the order of two 'gadgets' in a circuit...
 - then apply the necessary transformations. raises a not implemented error if not implemented
@@ -43,7 +16,6 @@
 ### Persistence Format
 - create standard way of saving GadgetCircuits
 - move disco.py into separate package or JSON. like come up with your own standard for saving gadgets and circuits
-
 
 ---
 
