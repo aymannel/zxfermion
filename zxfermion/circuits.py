@@ -36,15 +36,16 @@ class GadgetCircuit:
                 layers.append([gadget])
         return layers
 
-    def draw(self, gadgets_only: Optional[bool] = False, stack: Optional[bool] = True) -> BaseGraph:
+    def draw(self, gadgets_only: bool = False, stack: bool = True, expand: bool = False) -> BaseGraph:
+        layers = self.stack_gadgets() if stack else [[gadget] for gadget in self.gadgets]
+
         circuit = BaseGraph(num_qubits=self.num_qubits)
-        for layer in self.stack_gadgets() if stack else [[gadget] for gadget in self.gadgets]:
+        for layer in layers:
             graph = None
             for gadget in layer:
                 match gadget.type:
                     case GateType.GADGET:
-                        graph = circuit.add_expanded_gadget(gadget, graph)
-                        # graph = circuit.add_gadget(gadget, graph)
+                        graph = circuit.add_expanded_gadget(gadget, graph) if expand else circuit.add_gadget(gadget, graph)
                     case GateType.CX:
                         graph = circuit.add_cx_gadget(gadget, graph) if gadgets_only else circuit.add_cx(gadget, graph)
                     case GateType.CZ:
@@ -54,5 +55,5 @@ class GadgetCircuit:
                     case GateType.Z:
                         graph = circuit.add_z_gadget(gadget, graph) if gadgets_only else circuit.add_node(gadget, graph)
             circuit.compose(graph)
-        zx.draw(circuit, labels=True)
+        zx.draw(circuit)  ## , labels=True)
         return circuit

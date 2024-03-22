@@ -63,6 +63,15 @@ class BaseGraph(GraphS):
         return graph
 
     def add_expanded_gadget(self, gadget: Gadget, graph: BaseGraph):
+        qubits = [qubit for qubit, leg in gadget.legs.items() if leg.type != LegType.I]
+        ladder_left = BaseGraph(num_qubits=self.num_qubits)
+        ladder_right = BaseGraph(num_qubits=self.num_qubits)
+        ladder_middle = self.add_node(ZPhase(qubit=max(qubits), phase=gadget.phase))
+
+        for left, right in zip(range(len(qubits) - 1), reversed(range(len(qubits) - 1))):
+            ladder_left.compose(ladder_left.add_cx(CX(qubits[left], qubits[left + 1])))
+            ladder_right.compose(ladder_right.add_cx(CX(qubits[right], qubits[right + 1])))
+
         clifford_left = BaseGraph(num_qubits=self.num_qubits)
         clifford_right = BaseGraph(num_qubits=self.num_qubits)
 
@@ -73,15 +82,6 @@ class BaseGraph(GraphS):
             elif leg.type == LegType.Y:
                 clifford_left = self.add_node(node=XPlus(qubit), graph=clifford_left)
                 clifford_right = self.add_node(node=XMinus(qubit), graph=clifford_right)
-
-        qubits = [qubit for qubit, leg in gadget.legs.items() if leg.type != LegType.I]
-        ladder_left = BaseGraph(num_qubits=self.num_qubits)
-        ladder_right = BaseGraph(num_qubits=self.num_qubits)
-        ladder_middle = self.add_node(ZPhase(qubit=max(qubits), phase=gadget.phase))
-
-        for left, right in zip(range(len(qubits) - 1), reversed(range(len(qubits) - 1))):
-            ladder_left.compose(ladder_left.add_cx(CX(qubits[left], qubits[left + 1])))
-            ladder_right.compose(ladder_right.add_cx(CX(qubits[right], qubits[right + 1])))
 
         graph = BaseGraph(num_qubits=self.num_qubits) if graph is None else graph
         graph.compose(clifford_left + ladder_left + ladder_middle + ladder_right + clifford_right)
