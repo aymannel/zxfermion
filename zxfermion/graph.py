@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pyzx.graph.graph_s import GraphS
-
 from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus
 from zxfermion.types import LegType, VertexType, EdgeType
 
@@ -16,7 +15,7 @@ class BaseGraph(GraphS):
 
     def update_num_rows(self, num_rows: int):
         self.remove_vertices(self.outputs())
-        self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 1) for qubit in range(self.num_qubits)])
+        self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 2) for qubit in range(self.num_qubits)])
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
 
     def remove_wire(self, qubit: int):
@@ -28,13 +27,13 @@ class BaseGraph(GraphS):
             return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
         self.add_edges(pair_list([self.inputs()[qubit], *node_refs, self.outputs()[qubit]]))
 
-    def add_node(self, node):
+    def add_single(self, node):
         ref = self.add_vertex(ty=node.vertex_type, row=1, qubit=node.qubit, phase=node.phase)
         self.connect_nodes(qubit=node.qubit, node_refs=[ref])
         self.remove_wire(node.qubit)
 
     def add_gadget(self, gadget: Gadget):
-        self.update_num_rows(1 if all(leg == LegType.Z or leg == LegType.I for leg in gadget.legs) else 3)
+        self.update_num_rows(1 if all(leg == LegType.Z or leg == LegType.I for leg in gadget.legs.values()) else 2)
         if not all(leg == LegType.I for leg in gadget.legs.values()):
             hub_ref = self.add_vertex(ty=VertexType.X, row=3, qubit=self.num_qubits + 1)
             phase_ref = self.add_vertex(ty=VertexType.Z, row=3, qubit=self.num_qubits + 2, phase=gadget.phase)
@@ -78,16 +77,17 @@ class BaseGraph(GraphS):
         clifford_right = BaseGraph(num_qubits=self.num_qubits)
         for qubit, leg in gadget.legs.items():
             if leg == LegType.X:
-                clifford_left.add_node(node=H(qubit))
-                clifford_right.add_node(node=H(qubit))
+                clifford_left.add_single(H(qubit=qubit))
+                clifford_right.add_single(H(qubit=qubit))
             elif leg == LegType.Y:
-                clifford_left.add_node(node=XPlus(qubit))
-                clifford_right.add_node(node=XMinus(qubit))
+                clifford_left.add_single(XPlus(qubit=qubit))
+                clifford_right.add_single(XMinus(qubit=qubit))
 
         ladder_middle = BaseGraph(num_qubits=self.num_qubits)
-        ladder_middle.add_node(ZPhase(qubit=max(qubits), phase=gadget.phase))
+        ladder_middle.add_single(ZPhase(qubit=max(qubits), phase=gadget.phase))
 
-        self.compose(clifford_left + ladder_left + ladder_middle + ladder_right + clifford_right)
+        for graph in clifford_left, ladder_left, ladder_middle, ladder_right, clifford_right:
+            self.compose(graph)
 
     def add_x_gadget(self, x: X):
         ref = self.add_vertex(ty=VertexType.X, row=1, qubit=x.qubit)
@@ -130,6 +130,7 @@ class BaseGraph(GraphS):
         self.remove_wire(cz.target)
 
     def add_cx_gadget(self, cx: CX):
+        self.update_num_rows(1)
         hub_ref = self.add_vertex(ty=VertexType.X, qubit=self.num_qubits + 1, row=2)
         phase_ref = self.add_vertex(ty=VertexType.Z, qubit=self.num_qubits + 2, row=2, phase=-1/2)
         control_ref = self.add_vertex(ty=VertexType.Z, qubit=cx.control, row=1, phase=1/2)

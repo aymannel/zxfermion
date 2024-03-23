@@ -1,9 +1,14 @@
 import pytest
 from pyzx import VertexType, EdgeType
 
-from zxfermion.gadgets import Gadget, CX, CZ, X, Z
 from zxfermion.graph import BaseGraph
 from zxfermion.types import GateType, LegType
+from zxfermion.gadgets import Gadget, CX, CZ, X, Z
+
+# you need way more test cases
+# test other types like Single, XPhase, ZPhase, XPlus, XMinus, ZPlus, ZMinus
+# test default qubit == 1 for Single etc
+# test kwarg business
 
 
 def test_gadget():

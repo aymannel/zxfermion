@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-import json
-from random import getrandbits
-
-import numpy as np
-import pyzx as zx
 from copy import deepcopy
 from typing import Optional
 from itertools import groupby
 
-from IPython.display import display, Markdown
-
+import pyzx as zx
+import numpy as np
 from zxfermion.config import mapping
-from zxfermion.types import GateType
 from zxfermion.gadgets import Gadget
 from zxfermion.graph import BaseGraph
+from zxfermion.types import GateType
+from IPython.display import display, Markdown
+
+from zxfermion.utilities import latex_matrix
 
 
 class GadgetCircuit:
@@ -26,24 +24,6 @@ class GadgetCircuit:
     def __add__(self, other: GadgetCircuit) -> GadgetCircuit:
         assert self.num_qubits == other.num_qubits
         return GadgetCircuit(gadgets=self.fuse_gadgets(self.gadgets + other.gadgets))
-
-    def matrix(self, return_latex = False):
-        latex_str = r'\begin{pmatrix}'
-        for row in self.graph().to_matrix():
-            for elem in row:
-                real_part = np.real(elem)
-                imag_part = np.imag(elem)
-                if np.isclose(imag_part, 0):
-                    latex_str += f'{real_part:.0f}'
-                elif np.isclose(real_part, 0):
-                    latex_str += f'{imag_part:.0f}i'
-                else:
-                    latex_str += f'({real_part:.0f}{"+" if imag_part > 0 else ""}{imag_part:.0f}i)'
-                latex_str += ' & '
-            latex_str = latex_str[:-2] + r'\\'
-        latex_str = latex_str[:-2] + r'\end{pmatrix}'
-        display(Markdown(latex_str))
-        return latex_str if return_latex else None
 
     def fuse_gadgets(self, gadgets: Optional[list] = None) -> list:
         return [key for key, group in groupby(gadgets if gadgets else self.gadgets) if len(list(group)) % 2]
@@ -78,9 +58,9 @@ class GadgetCircuit:
                 elif gadget.type == GateType.CZ:
                     layer.add_cz_gadget(gadget) if gadgets_only else layer.add_cz(gadget)
                 elif gadget.type == GateType.X:
-                    layer.add_x_gadget(gadget) if gadgets_only else layer.add_node(gadget)
+                    layer.add_x_gadget(gadget) if gadgets_only else layer.add_single(gadget)
                 elif gadget.type == GateType.Z:
-                    layer.add_z_gadget(gadget) if gadgets_only else layer.add_node(gadget)
+                    layer.add_z_gadget(gadget) if gadgets_only else layer.add_single(gadget)
             circuit.compose(layer)
         return circuit
 
@@ -90,9 +70,20 @@ class GadgetCircuit:
             r'$\frac{\pi}{2}$': r'$+$',
             r'$\frac{3\pi}{2}$': r'$-$',
         }
+        # phase_qubit = self.num_qubits + 2
+        # content = content.replace(rf'-{phase_qubit}.00) {{$\pi$}};', rf'-{phase_qubit}.00) {{$\theta$}};')
+        # match line by regex then replace \pi with \theta
         for key in mapping:
             content = content.replace(f'style={key}', f'style={mapping[key]}')
         for key in labels:
             content = content.replace(f'{key}', f'{labels[key]}')
         with open(f'{name}.tikz', 'w') as file:
             file.write(content)
+
+    def matrix(self, return_latex=False, override_max=False):
+        if self.num_qubits <= 5 or override_max:
+            latex_string = latex_matrix(self.graph(expand=False, gadgets_only=False, stack=False).to_matrix())
+            display(Markdown(latex_string))
+            return latex_string if return_latex else None
+        else:
+            print(f'{2 ** self.num_qubits} x {2 ** self.num_qubits} matrix too large.')

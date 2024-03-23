@@ -1,5 +1,6 @@
 # TODO
 - move project to ~/Documents/Dev/zxfermion/ and create alias for Obsidian folder
+- fix BaseGraph.update_rows() method
 
 ## BaseGraph
 - move graphing functionality of each gate type to methods of BaseGraph class. eg methods for adding CX, Gadget, X, etc
@@ -10,14 +11,13 @@
 - add expand gadgets option/method
 - fuse gadgets after 'stacking'. will require you to check gadgets in adjacent layers can't just use fuse_gadgets()
 
-## calculate matrix
-
 ## GadgetCircuit
 - for now, keep conjugate_ methods but eventually this functionality should be handled by GadgetCircuit class
 - this should be done by a permutation method that swaps the order of two 'gadgets' in a circuit...
 - then apply the necessary transformations. raises a not implemented error if not implemented
 
 ### Persistence Formats
+- use pickle!
 - create standard way of saving GadgetCircuits
 - move disco.py into separate package or JSON. like come up with your own standard for saving gadgets and circuits
 

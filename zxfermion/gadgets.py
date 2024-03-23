@@ -5,7 +5,24 @@ from typing import Optional
 from zxfermion.types import LegType, GateType, VertexType
 
 
-class Gadget:
+class BaseGadget:
+    def draw(self, labels=False, **kwargs):
+        zx.draw(self.graph(**kwargs), labels=labels)
+
+    def graph(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).graph(**kwargs)
+
+    def matrix(self, return_latex=False):
+        from zxfermion.circuits import GadgetCircuit
+        return GadgetCircuit([self]).matrix(return_latex)
+
+    def to_tikz(self, **kwargs):
+        from zxfermion.circuits import GadgetCircuit
+        GadgetCircuit([self]).to_tikz(**kwargs)
+
+
+class Gadget(BaseGadget):
     def __init__(self, pauli_str: str, phase: Optional[float] = None):
         self.type = GateType.GADGET
         self.phase = phase
@@ -19,15 +36,8 @@ class Gadget:
         else:
             return False
 
-    def draw(self, labels = False, **kwargs):
-        zx.draw(self.graph(**kwargs), labels=labels)
 
-    def graph(self, **kwargs):
-        from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).graph(**kwargs)
-
-
-class CX:
+class CX(BaseGadget):
     def __init__(self, control: int, target: int):
         assert control != target
         self.type = GateType.CX
@@ -42,15 +52,8 @@ class CX:
         else:
             return False
 
-    def draw(self, labels = False, **kwargs):
-        zx.draw(self.graph(**kwargs), labels=labels)
 
-    def graph(self, **kwargs):
-        from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).graph(**kwargs)
-
-
-class CZ:
+class CZ(BaseGadget):
     def __init__(self, control: int, target: int):
         assert control != target
         self.type = GateType.CZ
@@ -65,16 +68,9 @@ class CZ:
         else:
             return False
 
-    def draw(self, labels = False, **kwargs):
-        zx.draw(self.graph(**kwargs), labels=labels)
 
-    def graph(self, **kwargs):
-        from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).graph(**kwargs)
-
-
-class Single:
-    def __init__(self, type: GateType, qubit: int, phase: Optional[float] = None):
+class Single(BaseGadget):
+    def __init__(self, type: GateType, qubit: Optional[int] = 0, phase: Optional[float] = None):
         self.type = type
         self.phase = phase
         self.qubit = qubit
@@ -87,63 +83,56 @@ class Single:
         else:
             return False
 
-    def draw(self, labels = False, **kwargs):
-        zx.draw(self.graph(**kwargs), labels=labels)
-
-    def graph(self, **kwargs):
-        from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).graph(**kwargs)
-
 
 class XPhase(Single):
-    def __init__(self, qubit: int, phase: Optional[float] = None):
-        super().__init__(type=GateType.X_PHASE, qubit=qubit, phase=phase)
+    def __init__(self, **kwargs):
+        super().__init__(type=GateType.X_PHASE, **kwargs)
         self.vertex_type = VertexType.X
 
 
 class ZPhase(Single):
-    def __init__(self, qubit: int, phase: Optional[float] = None):
-        super().__init__(type=GateType.Z_PHASE, qubit=qubit, phase=phase)
+    def __init__(self, **kwargs):
+        super().__init__(type=GateType.Z_PHASE, **kwargs)
         self.vertex_type = VertexType.Z
 
 
 class H(Single):
-    def __init__(self, qubit: int):
-        super().__init__(type=GateType.H, qubit=qubit)
+    def __init__(self, **kwargs):
+        super().__init__(type=GateType.H, **kwargs)
         self.vertex_type = VertexType.H
 
 
 class X(XPhase):
-    def __init__(self, qubit: int):
-        super().__init__(qubit=qubit, phase=1)
+    def __init__(self, **kwargs):
+        super().__init__(phase=1, **kwargs)
         self.type = GateType.X
 
 
 class Z(ZPhase):
-    def __init__(self, qubit: int):
-        super().__init__(qubit=qubit, phase=1)
+    def __init__(self, **kwargs):
+        super().__init__(phase=1, **kwargs)
         self.type = GateType.Z
 
 
 class XPlus(XPhase):
-    def __init__(self, qubit: int):
-        super().__init__(qubit=qubit, phase=1/2)
+    def __init__(self, **kwargs):
+        super().__init__(phase=1/2, **kwargs)
         self.type = GateType.X_PLUS
 
 
 class XMinus(XPhase):
-    def __init__(self, qubit: int):
-        super().__init__(qubit=qubit, phase=-1/2)
+    def __init__(self, **kwargs):
+        super().__init__(phase=-1/2, **kwargs)
         self.type = GateType.X_MINUS
 
 
 class ZPlus(ZPhase):
-    def __init__(self, qubit: int):
-        super().__init__(qubit=qubit, phase=1/2)
+    def __init__(self, **kwargs):
+        super().__init__(phase=1/2, **kwargs)
         self.type = GateType.Z_PLUS
 
 
 class ZMinus(ZPhase):
-    def __init__(self, qubit: int):
-        super().__init__(qubit=qubit, phase=-1/2)
+    def __init__(self, **kwargs):
+        super().__init__(phase=-1/2, **kwargs)
         self.type = GateType.Z_MINUS

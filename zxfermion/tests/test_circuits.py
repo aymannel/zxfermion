@@ -5,7 +5,9 @@ from zxfermion.circuits import GadgetCircuit
 from zxfermion.types import GateType
 
 
+# you need way more test cases
 # test tikz output
+# test matrix()
 
 
 def test_gadgetcircuit():
