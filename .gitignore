@@ -1,0 +1,8 @@
+DISCO_data/
+analysis.ipynb
+notebook.ipynb
+.ipynb_checkpoints
+.DS_Store
+.idea
+zxfermion/__pycache__/
+zxfermion/tests/__pycache__/
