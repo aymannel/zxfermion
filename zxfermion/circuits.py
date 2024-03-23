@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import json
+from random import getrandbits
+
 import pyzx as zx
 from copy import deepcopy
 from typing import Optional
 from itertools import groupby
 
+from zxfermion.config import mapping
 from zxfermion.types import GateType
 from zxfermion.gadgets import Gadget
 from zxfermion.graph import BaseGraph
@@ -23,9 +27,9 @@ class GadgetCircuit:
     def fuse_gadgets(self, gadgets: Optional[list] = None) -> list:
         return [key for key, group in groupby(gadgets if gadgets else self.gadgets) if len(list(group)) % 2]
 
-    def stack_gadgets(self):
+    def stack_gadgets(self, gadgets: Optional[list] = None) -> list[list]:
         layers = []
-        for gadget in self.fuse_gadgets():
+        for gadget in gadgets if gadgets else self.fuse_gadgets():
             placed = False
             for layer in layers:
                 if all(gadget.max_qubit < other.min_qubit or gadget.min_qubit > other.max_qubit for other in layer):
@@ -36,24 +40,38 @@ class GadgetCircuit:
                 layers.append([gadget])
         return layers
 
-    def draw(self, gadgets_only: bool = False, stack: bool = True, expand: bool = False) -> BaseGraph:
-        layers = self.stack_gadgets() if stack else [[gadget] for gadget in self.gadgets]
+    def draw(self, labels = False, **kwargs):
+        zx.draw(self.graph(**kwargs), labels=labels)
+
+    def graph(self, gadgets_only: bool = False, stack: bool = True, expand: bool = False) -> BaseGraph:
+        gadget_layers = self.stack_gadgets() if stack else [[gadget] for gadget in self.gadgets]
 
         circuit = BaseGraph(num_qubits=self.num_qubits)
-        for layer in layers:
-            graph = None
-            for gadget in layer:
-                match gadget.type:
-                    case GateType.GADGET:
-                        graph = circuit.add_expanded_gadget(gadget, graph) if expand else circuit.add_gadget(gadget, graph)
-                    case GateType.CX:
-                        graph = circuit.add_cx_gadget(gadget, graph) if gadgets_only else circuit.add_cx(gadget, graph)
-                    case GateType.CZ:
-                        graph = circuit.add_cz_gadget(gadget, graph) if gadgets_only else circuit.add_cz(gadget, graph)
-                    case GateType.X:
-                        graph = circuit.add_x_gadget(gadget, graph) if gadgets_only else circuit.add_node(gadget, graph)
-                    case GateType.Z:
-                        graph = circuit.add_z_gadget(gadget, graph) if gadgets_only else circuit.add_node(gadget, graph)
-            circuit.compose(graph)
-        zx.draw(circuit)  ## , labels=True)
+        for gadget_layer in gadget_layers:
+            layer = BaseGraph(num_qubits=self.num_qubits)
+            for gadget in gadget_layer:
+                if gadget.type == GateType.GADGET:
+                    layer.add_expanded_gadget(gadget) if expand else layer.add_gadget(gadget)
+                elif gadget.type == GateType.CX:
+                    layer.add_cx_gadget(gadget) if gadgets_only else layer.add_cx(gadget)
+                elif gadget.type == GateType.CZ:
+                    layer.add_cz_gadget(gadget) if gadgets_only else layer.add_cz(gadget)
+                elif gadget.type == GateType.X:
+                    layer.add_x_gadget(gadget) if gadgets_only else layer.add_node(gadget)
+                elif gadget.type == GateType.Z:
+                    layer.add_z_gadget(gadget) if gadgets_only else layer.add_node(gadget)
+            circuit.compose(layer)
         return circuit
+
+    def to_tikz(self, name: str, **kwargs):
+        content = self.graph(**kwargs).to_tikz()
+        labels = {
+            r'$\frac{\pi}{2}$': r'$+$',
+            r'$\frac{3\pi}{2}$': r'$-$',
+        }
+        for key in mapping:
+            content = content.replace(f'style={key}', f'style={mapping[key]}')
+        for key in labels:
+            content = content.replace(f'{key}', f'{labels[key]}')
+        with open(f'{name}.tikz', 'w') as file:
+            file.write(content)

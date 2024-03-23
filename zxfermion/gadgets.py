@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import pyzx as zx
 from typing import Optional
-from zxfermion.types import LegType, GateType, GadgetLeg, VertexType
+from zxfermion.types import LegType, GateType, VertexType
 
 
 class Gadget:
     def __init__(self, pauli_str: str, phase: Optional[float] = None):
         self.type = GateType.GADGET
         self.phase = phase
-        self.legs = {qubit: GadgetLeg(type=LegType(pauli), qubit=qubit) for qubit, pauli in enumerate(pauli_str)}
+        self.legs = {qubit: LegType(pauli) for qubit, pauli in enumerate(pauli_str)}
         self.min_qubit = min([qubit for qubit in self.legs])
         self.max_qubit = max([qubit for qubit in self.legs])
 
@@ -18,9 +19,12 @@ class Gadget:
         else:
             return False
 
-    def draw(self, **kwargs):
+    def draw(self, labels = False, **kwargs):
+        zx.draw(self.graph(**kwargs), labels=labels)
+
+    def graph(self, **kwargs):
         from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).draw(**kwargs)
+        return GadgetCircuit([self]).graph(**kwargs)
 
 
 class CX:
@@ -38,9 +42,12 @@ class CX:
         else:
             return False
 
-    def draw(self, **kwargs):
+    def draw(self, labels = False, **kwargs):
+        zx.draw(self.graph(**kwargs), labels=labels)
+
+    def graph(self, **kwargs):
         from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).draw(**kwargs)
+        return GadgetCircuit([self]).graph(**kwargs)
 
 
 class CZ:
@@ -58,9 +65,12 @@ class CZ:
         else:
             return False
 
-    def draw(self, **kwargs):
+    def draw(self, labels = False, **kwargs):
+        zx.draw(self.graph(**kwargs), labels=labels)
+
+    def graph(self, **kwargs):
         from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).draw(**kwargs)
+        return GadgetCircuit([self]).graph(**kwargs)
 
 
 class Single:
@@ -77,9 +87,12 @@ class Single:
         else:
             return False
 
-    def draw(self, **kwargs):
+    def draw(self, labels = False, **kwargs):
+        zx.draw(self.graph(**kwargs), labels=labels)
+
+    def graph(self, **kwargs):
         from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).draw(**kwargs)
+        return GadgetCircuit([self]).graph(**kwargs)
 
 
 class XPhase(Single):

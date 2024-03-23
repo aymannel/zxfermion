@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from pydantic import BaseModel
 
 
 class EdgeType:
@@ -36,8 +35,3 @@ class GateType(str, Enum):
     Z_PLUS = 'Z_PLUS'
     X_MINUS = 'X_MINUS'
     Z_MINUS = 'Z_MINUS'
-
-
-class GadgetLeg(BaseModel):
-    type: LegType
-    qubit: int

@@ -5,6 +5,9 @@ from zxfermion.circuits import GadgetCircuit
 from zxfermion.types import GateType
 
 
+# test tikz output
+
+
 def test_gadgetcircuit():
     gadgets = [Gadget(pauli_str='XYZ')]
     circuit = GadgetCircuit(gadgets)

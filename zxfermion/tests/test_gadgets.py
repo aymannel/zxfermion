@@ -1,9 +1,7 @@
 import pytest
-from pyzx import VertexType, EdgeType
 
 from zxfermion.gadgets import Gadget, CX, CZ, X, Z
-from zxfermion.graph import BaseGraph
-from zxfermion.types import GateType, LegType, GadgetLeg
+from zxfermion.types import GateType, LegType
 
 
 def test_gadget():
@@ -13,7 +11,7 @@ def test_gadget():
     assert len(gadget.legs) == 3
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
-    assert all(isinstance(leg, GadgetLeg) for leg in gadget.legs.values())
+    assert all(isinstance(leg, LegType) for leg in gadget.legs.values())
 
 
 def test_gadget_phase():
@@ -23,7 +21,7 @@ def test_gadget_phase():
     assert len(gadget.legs) == 3
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
-    assert all(isinstance(leg.type, LegType) for leg in gadget.legs.values())
+    assert all(isinstance(leg, LegType) for leg in gadget.legs.values())
 
 
 def test_gadget_equality():
@@ -35,29 +33,6 @@ def test_gadget_equality():
     assert gadget1 == gadget2
     assert gadget1 != gadget3
     assert gadget1 != gadget4
-
-
-def test_gadget_draw():
-    gadget = Gadget(pauli_str='XYZ', phase=1/2)
-    circuit = gadget.draw()
-    assert isinstance(circuit, BaseGraph)
-    assert circuit.num_qubits == gadget.max_qubit + 1
-    assert circuit.num_vertices() == 15
-    assert circuit.num_edges() == 14
-    assert circuit.num_inputs() == 3
-    assert circuit.num_outputs() == 3
-    assert list(circuit.inputs()) == [0, 1, 2]
-    assert list(circuit.outputs()) == [3, 4, 5]
-    assert circuit.type(6) == VertexType.X
-    assert circuit.type(7) == VertexType.Z
-    assert circuit.type(8) == VertexType.H_BOX
-    assert circuit.type(9) == VertexType.Z
-    assert circuit.type(10) == VertexType.H_BOX
-    assert circuit.type(11) == VertexType.X
-    assert circuit.type(12) == VertexType.Z
-    assert circuit.type(13) == VertexType.X
-    assert circuit.type(14) == VertexType.Z
-    assert circuit.phase(7) == 1/2
 
 
 def test_cx():
@@ -78,21 +53,6 @@ def test_cx_equality():
     cx3 = CX(control=1, target=2)
     assert cx1 == cx2
     assert cx1 != cx3
-
-
-def test_cx_draw():
-    cx = CX(control=0, target=1)
-    circuit = cx.draw()
-    assert isinstance(circuit, BaseGraph)
-    assert circuit.num_qubits == cx.max_qubit + 1
-    assert circuit.num_vertices() == 6
-    assert circuit.num_edges() == 5
-    assert circuit.num_inputs() == 2
-    assert circuit.num_outputs() == 2
-    assert list(circuit.inputs()) == [0, 1]
-    assert list(circuit.outputs()) == [2, 3]
-    assert circuit.type(4) == VertexType.Z
-    assert circuit.type(5) == VertexType.X
 
 
 def test_cz():
@@ -117,22 +77,6 @@ def test_cz_equality():
     assert cz1 != cz4
 
 
-def test_cz_draw():
-    cz = CZ(control=0, target=1)
-    circuit = cz.draw()
-    assert isinstance(circuit, BaseGraph)
-    assert circuit.num_qubits == cz.max_qubit + 1
-    assert circuit.num_vertices() == 6
-    assert circuit.num_edges() == 5
-    assert circuit.num_inputs() == 2
-    assert circuit.num_outputs() == 2
-    assert list(circuit.inputs()) == [0, 1]
-    assert list(circuit.outputs()) == [2, 3]
-    assert circuit.type(4) == VertexType.Z
-    assert circuit.type(5) == VertexType.Z
-    assert circuit.edge_type((4, 5)) == EdgeType.HADAMARD
-
-
 def test_x():
     x = X(qubit=0)
     assert x.type == GateType.X
@@ -148,21 +92,6 @@ def test_x_equality():
     x3 = X(qubit=1)
     assert x1 == x2
     assert x1 != x3
-
-
-def test_x_draw():
-    x = X(qubit=0)
-    circuit = x.draw()
-    assert isinstance(circuit, BaseGraph)
-    assert circuit.num_qubits == 1
-    assert circuit.num_vertices() == 3
-    assert circuit.num_edges() == 2
-    assert circuit.num_inputs() == 1
-    assert circuit.num_outputs() == 1
-    assert list(circuit.inputs()) == [0]
-    assert list(circuit.outputs()) == [1]
-    assert circuit.type(2) == VertexType.X
-    assert circuit.phase(2) == 1
 
 
 def test_z():
@@ -182,16 +111,3 @@ def test_z_equality():
     assert z1 != z3
 
 
-def test_z_draw():
-    z = Z(qubit=0)
-    circuit = z.draw()
-    assert isinstance(circuit, BaseGraph)
-    assert circuit.num_qubits == 1
-    assert circuit.num_vertices() == 3
-    assert circuit.num_edges() == 2
-    assert circuit.num_inputs() == 1
-    assert circuit.num_outputs() == 1
-    assert list(circuit.inputs()) == [0]
-    assert list(circuit.outputs()) == [1]
-    assert circuit.type(2) == VertexType.Z
-    assert circuit.phase(2) == 1

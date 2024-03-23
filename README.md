@@ -1,4 +1,5 @@
 # TODO
+- move project to ~/Documents/Dev/zxfermion/ and create alias for Obsidian folder
 
 ## BaseGraph
 - move graphing functionality of each gate type to methods of BaseGraph class. eg methods for adding CX, Gadget, X, etc
@@ -7,20 +8,26 @@
 
 ## Gadget
 - add expand gadgets option/method
+- fuse gadgets after 'stacking'. will require you to check gadgets in adjacent layers can't just use fuse_gadgets()
 
-## Graph
-- shouldn't methods of BaseGraph that take no graph as argument add to self?
-- or is that stupid.
-- i hate this recursive bullshit
+## Tests
+- move draw tests from test_gadgets.py to test_graph.py
 
 ## GadgetCircuit
 - for now, keep conjugate_ methods but eventually this functionality should be handled by GadgetCircuit class
 - this should be done by a permutation method that swaps the order of two 'gadgets' in a circuit...
 - then apply the necessary transformations. raises a not implemented error if not implemented
 
-### Persistence Format
+### Persistence Formats
 - create standard way of saving GadgetCircuits
 - move disco.py into separate package or JSON. like come up with your own standard for saving gadgets and circuits
+
+### TikZ Export
+- replace \pi for \theta where not \frac{\pi}...
+
+### PDF Export
+- inspect tikz log file in tikzit
+- write seperate python script that creates template
 
 ---
 
@@ -36,20 +43,21 @@ The `Gadget` and `GadgetCircuit` classes represent single Pauli gadgets and circ
 
 ## Usage
 
-### Decomposition of Double Fermionic Excitation to Triply Controlled Rotations 
+### Decomposition of Double Fermionic Excitation to Triply Controlled Rotations
+
 ```python
 circuit = GadgetCircuit(num_qubits=4, gadgets=[
-    Gadget('YXXX', phase=1/4),
-    Gadget('XYXX', phase=1/4),
-    Gadget('XXYX', phase=-1/4),
-    Gadget('YYYX', phase=-1/4),
-    Gadget('YYXY', phase=1/4),
-    Gadget('XXXY', phase=1/4),
-    Gadget('XYYY', phase=-1/4),
-    Gadget('YXYY', phase=-1/4),
+  Gadget('YXXX', phase=1 / 4),
+  Gadget('XYXX', phase=1 / 4),
+  Gadget('XXYX', phase=-1 / 4),
+  Gadget('YYYX', phase=-1 / 4),
+  Gadget('YYXY', phase=1 / 4),
+  Gadget('XXXY', phase=1 / 4),
+  Gadget('XYYY', phase=-1 / 4),
+  Gadget('YXYY', phase=-1 / 4),
 ])
 
-circuit.draw()
+circuit.graph()
 circuit.surround_cx(control=3, target=0)
 circuit.surround_cx(control=3, target=1)
 circuit.surround_cx(control=3, target=2)
