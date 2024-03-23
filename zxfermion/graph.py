@@ -154,5 +154,3 @@ class BaseGraph(GraphS):
         self.add_edges(((hub_ref, phase_ref), (hub_ref, control_ref), (hub_ref, target_ref)))
         self.remove_wire(cz.control)
         self.remove_wire(cz.target)
-
-

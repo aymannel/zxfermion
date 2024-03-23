@@ -10,8 +10,7 @@
 - add expand gadgets option/method
 - fuse gadgets after 'stacking'. will require you to check gadgets in adjacent layers can't just use fuse_gadgets()
 
-## Tests
-- move draw tests from test_gadgets.py to test_graph.py
+## calculate matrix
 
 ## GadgetCircuit
 - for now, keep conjugate_ methods but eventually this functionality should be handled by GadgetCircuit class

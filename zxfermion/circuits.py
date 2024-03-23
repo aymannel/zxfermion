@@ -3,10 +3,13 @@ from __future__ import annotations
 import json
 from random import getrandbits
 
+import numpy as np
 import pyzx as zx
 from copy import deepcopy
 from typing import Optional
 from itertools import groupby
+
+from IPython.display import display, Markdown
 
 from zxfermion.config import mapping
 from zxfermion.types import GateType
@@ -23,6 +26,24 @@ class GadgetCircuit:
     def __add__(self, other: GadgetCircuit) -> GadgetCircuit:
         assert self.num_qubits == other.num_qubits
         return GadgetCircuit(gadgets=self.fuse_gadgets(self.gadgets + other.gadgets))
+
+    def matrix(self, return_latex = False):
+        latex_str = r'\begin{pmatrix}'
+        for row in self.graph().to_matrix():
+            for elem in row:
+                real_part = np.real(elem)
+                imag_part = np.imag(elem)
+                if np.isclose(imag_part, 0):
+                    latex_str += f'{real_part:.0f}'
+                elif np.isclose(real_part, 0):
+                    latex_str += f'{imag_part:.0f}i'
+                else:
+                    latex_str += f'({real_part:.0f}{"+" if imag_part > 0 else ""}{imag_part:.0f}i)'
+                latex_str += ' & '
+            latex_str = latex_str[:-2] + r'\\'
+        latex_str = latex_str[:-2] + r'\end{pmatrix}'
+        display(Markdown(latex_str))
+        return latex_str if return_latex else None
 
     def fuse_gadgets(self, gadgets: Optional[list] = None) -> list:
         return [key for key, group in groupby(gadgets if gadgets else self.gadgets) if len(list(group)) % 2]
