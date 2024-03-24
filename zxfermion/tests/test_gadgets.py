@@ -11,17 +11,37 @@ from zxfermion.types import GateType, LegType
 # kwargs for drawing
 # kwargs for graphs
 # kwargs for tikz
-# kwargs for expand_gadget and as_gadget features
-# test global gadgets_only parameter works
 # test stack_gadgets gadget feature (multiple test cases, think of clever ones?)
 # test expand_gadget feature (multiple test cases! pauli vs phase gadget, gadgets skipping legs, etc)
-# test config defaults, configs passed at Gadget level and configs passed at GadgetCircuit level
 # some weird behaviour with stack_gadgets gadgets where XPlus is commuting through CZ
 # test graphing in all different modes
 
+# test expanded CX and CZ
+# test default CX() and CZ()
+
+
+@pytest.mark.parametrize('value', [True, False])
+def test_expand_gadget(value, monkeypatch):
+    monkeypatch.setattr('zxfermion.config.expand_gadgets', value)
+    gadget1 = Gadget('ZZZ')
+    gadget2 = Gadget('ZZZ', expand_gadget=value)
+    assert gadget1.expand_gadget is value
+    assert gadget2.expand_gadget is value
+
+
+@pytest.mark.parametrize('value', [True, False])
+def test_as_gadget(value, monkeypatch):
+    monkeypatch.setattr('zxfermion.config.gadgets_only', value)
+    gates = [CX, CZ, XPhase, ZPhase, XMinus, ZMinus, XPlus, ZPlus, X, Z]
+    for gate_object in gates:
+        gate1 = gate_object()
+        gate2 = gate_object(as_gadget=value)
+        assert gate1.as_gadget is value
+        assert gate2.as_gadget is value
+
 
 def test_gadget():
-    gadget = Gadget(pauli_string='XYZ')
+    gadget = Gadget('XYZ')
     assert gadget.type == GateType.GADGET
     assert not gadget.phase_gadget
     assert not gadget.phase
@@ -32,7 +52,7 @@ def test_gadget():
 
 
 def test_phase_gadget():
-    gadget = Gadget(pauli_string='ZZZ')
+    gadget = Gadget('ZZZ')
     assert gadget.type == GateType.GADGET
     assert gadget.phase_gadget
     assert not gadget.phase
@@ -54,19 +74,20 @@ def test_gadget_phase():
 
 
 def test_gadget_equality():
-    gadget1 = Gadget(pauli_string='XYZ')
-    gadget2 = Gadget(pauli_string='XYZ')
-    gadget3 = Gadget(pauli_string='ZXY')
-    gadget4 = Gadget(pauli_string='XYZ', phase=1 / 2)
+    gadget1 = Gadget('XYZ')
+    gadget2 = Gadget('XYZ')
+    gadget3 = Gadget('ZXY')
+    gadget4 = Gadget('XYZ', 1/2)
     assert gadget1 == gadget2
     assert gadget1 != gadget3
     assert gadget1 != gadget4
 
 
 def test_gadget_graph():
-    gadget = Gadget(pauli_string='XYZ', phase=1 / 2)
-    graph = gadget.graph(expand_gadgets=False)
+    gadget = Gadget('XYZ', 1 / 2)
+    graph = gadget.graph(expand_gadget=False)
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 3
     assert graph.num_qubits == gadget.max_qubit + 1
     assert graph.num_vertices() == 15
     assert graph.num_edges() == 14
@@ -97,9 +118,10 @@ def test_gadget_graph():
 
 
 def test_expanded_gadget_graph():
-    gadget = Gadget(pauli_string='XYZ', phase=1 / 2)
-    graph = gadget.graph(expand_gadgets=True)
+    gadget = Gadget('XYZ', 1/2)
+    graph = gadget.graph(expand_gadget=True)
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 7
     assert graph.num_qubits == gadget.max_qubit + 1
     assert graph.num_vertices() == 19
     assert graph.num_edges() == 20

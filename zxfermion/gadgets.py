@@ -11,9 +11,9 @@ class BaseGadget:
     def draw(self, labels=False, **kwargs):
         zx.draw(self.graph(**kwargs), labels=labels)
 
-    def graph(self, **kwargs):
+    def graph(self, expand_gadget=None, as_gadget=None):
         from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).graph(**kwargs)
+        return GadgetCircuit([self]).graph(expand_gadgets=expand_gadget, gadgets_only=as_gadget)
 
     def matrix(self, return_latex=False):
         from zxfermion.circuits import GadgetCircuit
@@ -42,7 +42,7 @@ class Gadget(BaseGadget):
 
 
 class CX(BaseGadget):
-    def __init__(self, control: int, target: int, as_gadget=None):
+    def __init__(self, control: Optional[int] = 0, target: Optional[int] = 1, as_gadget=None):
         assert control != target
         self.type = GateType.CX
         self.control = control
@@ -59,7 +59,7 @@ class CX(BaseGadget):
 
 
 class CZ(BaseGadget):
-    def __init__(self, control: int, target: int, as_gadget=None):
+    def __init__(self, control: Optional[int] = 0, target: Optional[int] = 1, as_gadget=None):
         assert control != target
         self.type = GateType.CZ
         self.control = min(control, target)
