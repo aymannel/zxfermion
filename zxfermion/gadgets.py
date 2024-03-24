@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pyzx as zx
 from typing import Optional
-
 from zxfermion import config
 from zxfermion.types import GateType, LegType, VertexType
 
@@ -19,9 +18,45 @@ class BaseGadget:
         from zxfermion.circuits import GadgetCircuit
         return GadgetCircuit([self]).matrix(return_latex)
 
-    def tikz(self, name: str, **kwargs):
+    def tikz(self, name: str, expand_gadget=None, as_gadget=None):
         from zxfermion.circuits import GadgetCircuit
-        GadgetCircuit([self]).tikz(name=name, **kwargs)
+        GadgetCircuit([self]).tikz(name=name, expand_gadgets=expand_gadget, gadgets_only=as_gadget)
+
+
+class SingleQubitGate(BaseGadget):
+    def __init__(self, qubit: Optional[int] = 0, phase: Optional[float] = None, as_gadget=None):
+        self.type = GateType.SINGLE_QUBIT_GATE
+        self.phase = phase
+        self.qubit = qubit
+        self.vertex_type = None
+        self.min_qubit = self.qubit
+        self.max_qubit = self.qubit
+        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
+
+    def __eq__(self, other):
+        if self.type == other.type:
+            return (self.qubit, self.phase) == (other.qubit, other.phase)
+        else:
+            return False
+
+
+class TwoQubitGate(BaseGadget):
+    def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
+        control = 0 if control is None else control
+        target = 1 if target is None else target
+        assert control != target
+        self.type = GateType.TWO_QUBIT_GATE
+        self.control = control
+        self.target = target
+        self.min_qubit = min(self.control, self.target)
+        self.max_qubit = max(self.control, self.target)
+        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
+
+    def __eq__(self, other):
+        if self.type == other.type:
+            return (self.control, self.target) == (other.control, other.target)
+        else:
+            return False
 
 
 class Gadget(BaseGadget):
@@ -41,72 +76,38 @@ class Gadget(BaseGadget):
             return False
 
 
-class CX(BaseGadget):
-    def __init__(self, control: Optional[int] = 0, target: Optional[int] = 1, as_gadget=None):
-        assert control != target
+class CX(TwoQubitGate):
+    def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
+        super().__init__(control=control, target=target, as_gadget=as_gadget)
         self.type = GateType.CX
-        self.control = control
-        self.target = target
-        self.min_qubit = min(self.control, self.target)
-        self.max_qubit = max(self.control, self.target)
-        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
-
-    def __eq__(self, other):
-        if self.type == other.type:
-            return (self.control, self.target) == (other.control, other.target)
-        else:
-            return False
 
 
-class CZ(BaseGadget):
-    def __init__(self, control: Optional[int] = 0, target: Optional[int] = 1, as_gadget=None):
-        assert control != target
+class CZ(TwoQubitGate):
+    def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
+        new_control = control if control is None else min(control, target)
+        new_target = target if target is None else max(control, target)
+        super().__init__(control=new_control, target=new_target, as_gadget=as_gadget)
         self.type = GateType.CZ
-        self.control = min(control, target)
-        self.target = max(control, target)
-        self.min_qubit = self.control
-        self.max_qubit = self.target
-        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
-
-    def __eq__(self, other):
-        if self.type == other.type:
-            return (self.control, self.target) == (other.control, other.target)
-        else:
-            return False
 
 
-class Single(BaseGadget):
-    def __init__(self, type: GateType, qubit: Optional[int] = 0, phase: Optional[float] = None, as_gadget=None):
-        self.type = type
-        self.phase = phase
-        self.qubit = qubit
-        self.vertex_type = None
-        self.min_qubit = self.qubit
-        self.max_qubit = self.qubit
-        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
-
-    def __eq__(self, other):
-        if self.type == other.type:
-            return (self.qubit, self.phase) == (other.qubit, other.phase)
-        else:
-            return False
-
-
-class XPhase(Single):
+class XPhase(SingleQubitGate):
     def __init__(self, **kwargs):
-        super().__init__(type=GateType.X_PHASE, **kwargs)
+        super().__init__(**kwargs)
+        self.type = GateType.X_PHASE
         self.vertex_type = VertexType.X
 
 
-class ZPhase(Single):
+class ZPhase(SingleQubitGate):
     def __init__(self, **kwargs):
-        super().__init__(type=GateType.Z_PHASE, **kwargs)
+        super().__init__(**kwargs)
+        self.type = GateType.Z_PHASE
         self.vertex_type = VertexType.Z
 
 
-class H(Single):
+class H(SingleQubitGate):
     def __init__(self, **kwargs):
-        super().__init__(type=GateType.H, **kwargs)
+        super().__init__(**kwargs)
+        self.type = GateType.H
         self.vertex_type = VertexType.H
 
 
@@ -114,6 +115,7 @@ class X(XPhase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = GateType.X
+        self.vertex_type = VertexType.X
         self.phase = 1
 
 
@@ -121,6 +123,7 @@ class Z(ZPhase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = GateType.Z
+        self.vertex_type = VertexType.Z
         self.phase = 1
 
 
@@ -128,6 +131,7 @@ class XPlus(XPhase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = GateType.X_PLUS
+        self.vertex_type = VertexType.X
         self.phase = 1/2
 
 
@@ -135,6 +139,7 @@ class XMinus(XPhase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = GateType.X_MINUS
+        self.vertex_type = VertexType.X
         self.phase = -1/2
 
 
@@ -142,6 +147,7 @@ class ZPlus(ZPhase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = GateType.Z_PLUS
+        self.vertex_type = VertexType.Z
         self.phase = 1/2
 
 
@@ -149,4 +155,5 @@ class ZMinus(ZPhase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = GateType.Z_MINUS
+        self.vertex_type = VertexType.Z
         self.phase = -1/2

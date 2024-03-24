@@ -6,7 +6,6 @@ from zxfermion.gadgets import Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus
 from zxfermion.types import GateType, LegType
 
 
-# assert graph depth
 # test kwarg business
 # kwargs for drawing
 # kwargs for graphs
@@ -18,6 +17,7 @@ from zxfermion.types import GateType, LegType
 
 # test expanded CX and CZ
 # test default CX() and CZ()
+# test vertex type for all SingleQubitGate children
 
 
 @pytest.mark.parametrize('value', [True, False])
@@ -145,8 +145,9 @@ def test_expanded_gadget_graph():
     assert graph.phase(9) == 1/2
 
 
-def test_cx():
-    cx = CX(control=0, target=1)
+@pytest.mark.parametrize(['control', 'target'], [[None, None], [0, 1]])
+def test_cx(control, target):
+    cx = CX(control=control, target=target)
     assert cx.type == GateType.CX
     assert cx.control == 0
     assert cx.target == 1
@@ -168,6 +169,7 @@ def test_cx_graph():
     cx = CX(control=0, target=1)
     graph = cx.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == cx.max_qubit + 1
     assert graph.num_vertices() == 6
     assert graph.num_edges() == 5
@@ -184,8 +186,9 @@ def test_cx_graph():
     assert graph.connected(4, 5)
 
 
-def test_cz():
-    cz = CZ(control=0, target=1)
+@pytest.mark.parametrize(['control', 'target'], [[None, None], [0, 1]])
+def test_cz(control, target):
+    cz = CZ(control=control, target=target)
     assert cz.type == GateType.CZ
     assert cz.control == 0
     assert cz.target == 1
@@ -209,6 +212,7 @@ def test_cz_graph():
     cz = CZ(control=0, target=1)
     graph = cz.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == cz.max_qubit + 1
     assert graph.num_vertices() == 6
     assert graph.num_edges() == 5
@@ -250,6 +254,7 @@ def test_x_phase_graph():
     x_phase = XPhase(phase=3/4)
     graph = x_phase.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2
@@ -287,6 +292,7 @@ def test_z_phase_graph():
     z_phase = ZPhase(phase=3/4)
     graph = z_phase.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2
@@ -321,6 +327,7 @@ def test_x_graph():
     x = X()
     graph = x.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2
@@ -355,6 +362,7 @@ def test_z_graph():
     z = Z()
     graph = z.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2
@@ -389,6 +397,7 @@ def test_x_plus_graph():
     x_plus = XPlus()
     graph = x_plus.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2
@@ -423,6 +432,7 @@ def test_z_plus_graph():
     z_plus = ZPlus()
     graph = z_plus.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2
@@ -457,6 +467,7 @@ def test_x_minus_graph():
     x_minus = XMinus()
     graph = x_minus.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2
@@ -491,6 +502,7 @@ def test_z_minus_graph():
     z_minus = ZMinus()
     graph = z_minus.graph()
     assert isinstance(graph, BaseGraph)
+    assert graph.depth() == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
     assert graph.num_edges() == 2

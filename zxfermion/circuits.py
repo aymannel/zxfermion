@@ -84,11 +84,12 @@ class GadgetCircuit:
         return layers
 
     def tikz(self, name: str, **kwargs):
+        graph = self.graph(**kwargs)
         pattern = rf'\[style=Z phase dot\]\s*\((\d+)\)\s*at\s*\((.*?),\s*-{self.num_qubits + 2}\.00\)\s*{{\$(.*?)\$}};'
         content = '\n'.join([
             line.replace(r'\pi', r'\theta')
             if re.search(pattern, line) else line
-            for line in self.graph(**kwargs).to_tikz().splitlines()
+            for line in graph.to_tikz().splitlines()
         ])
 
         labels = {r'$\frac{\pi}{2}$': r'$+$', r'$\frac{3\pi}{2}$': r'$-$'}

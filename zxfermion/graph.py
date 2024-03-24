@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pyzx as zx
 from pyzx.graph.graph_s import GraphS
-from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, Single
+from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, SingleQubitGate
 from zxfermion.types import VertexType, LegType, EdgeType
 
 
@@ -35,7 +35,7 @@ class BaseGraph(GraphS):
             return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
         self.add_edges(pair_list([self.inputs()[qubit], *node_refs, self.outputs()[qubit]]))
 
-    def add_single(self, gate: Single):
+    def add_single(self, gate: SingleQubitGate):
         ref = self.add_vertex(ty=gate.vertex_type, row=1, qubit=gate.qubit, phase=gate.phase)
         self.connect_nodes(qubit=gate.qubit, node_refs=[ref])
         self.remove_wire(gate.qubit)
