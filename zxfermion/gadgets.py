@@ -25,13 +25,14 @@ class BaseGadget:
 
 
 class Gadget(BaseGadget):
-    def __init__(self, pauli_string: str, phase: Optional[float] = None, expand_gadget=config.expand_gadgets):
+    def __init__(self, pauli_string: str, phase: Optional[float] = None, expand_gadget=None):
         self.type = GateType.GADGET
         self.phase = phase
         self.legs = {qubit: LegType(pauli) for qubit, pauli in enumerate(pauli_string)}
         self.min_qubit = min([qubit for qubit in self.legs])
         self.max_qubit = max([qubit for qubit in self.legs])
-        self.expand_gadget = expand_gadget
+        self.phase_gadget = all(leg == LegType.Z or leg == LegType.I for leg in self.legs.values())
+        self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
 
     def __eq__(self, other):
         if type(self) == type(other):
@@ -41,14 +42,14 @@ class Gadget(BaseGadget):
 
 
 class CX(BaseGadget):
-    def __init__(self, control: int, target: int, as_gadget=config.gadgets_only):
+    def __init__(self, control: int, target: int, as_gadget=None):
         assert control != target
         self.type = GateType.CX
         self.control = control
         self.target = target
         self.min_qubit = min(self.control, self.target)
         self.max_qubit = max(self.control, self.target)
-        self.as_gadget = as_gadget
+        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
 
     def __eq__(self, other):
         if self.type == other.type:
@@ -58,14 +59,14 @@ class CX(BaseGadget):
 
 
 class CZ(BaseGadget):
-    def __init__(self, control: int, target: int, as_gadget=config.gadgets_only):
+    def __init__(self, control: int, target: int, as_gadget=None):
         assert control != target
         self.type = GateType.CZ
         self.control = min(control, target)
         self.target = max(control, target)
         self.min_qubit = self.control
         self.max_qubit = self.target
-        self.as_gadget = as_gadget
+        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
 
     def __eq__(self, other):
         if self.type == other.type:
@@ -75,17 +76,18 @@ class CZ(BaseGadget):
 
 
 class Single(BaseGadget):
-    def __init__(self, type: GateType, qubit: Optional[int] = 0, phase: Optional[float] = None, as_gadget=config.gadgets_only):
+    def __init__(self, type: GateType, qubit: Optional[int] = 0, phase: Optional[float] = None, as_gadget=None):
         self.type = type
         self.phase = phase
         self.qubit = qubit
+        self.vertex_type = None
         self.min_qubit = self.qubit
         self.max_qubit = self.qubit
-        self.as_gadget = as_gadget
+        self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
 
     def __eq__(self, other):
         if self.type == other.type:
-            return (self.qubit, self.phase) == (other.qubit, self.phase)
+            return (self.qubit, self.phase) == (other.qubit, other.phase)
         else:
             return False
 
@@ -110,35 +112,41 @@ class H(Single):
 
 class X(XPhase):
     def __init__(self, **kwargs):
-        super().__init__(phase=1, **kwargs)
+        super().__init__(**kwargs)
         self.type = GateType.X
+        self.phase = 1
 
 
 class Z(ZPhase):
     def __init__(self, **kwargs):
-        super().__init__(phase=1, **kwargs)
+        super().__init__(**kwargs)
         self.type = GateType.Z
+        self.phase = 1
 
 
 class XPlus(XPhase):
     def __init__(self, **kwargs):
-        super().__init__(phase=1/2, **kwargs)
+        super().__init__(**kwargs)
         self.type = GateType.X_PLUS
+        self.phase = 1/2
 
 
 class XMinus(XPhase):
     def __init__(self, **kwargs):
-        super().__init__(phase=-1/2, **kwargs)
+        super().__init__(**kwargs)
         self.type = GateType.X_MINUS
+        self.phase = -1/2
 
 
 class ZPlus(ZPhase):
     def __init__(self, **kwargs):
-        super().__init__(phase=1/2, **kwargs)
+        super().__init__(**kwargs)
         self.type = GateType.Z_PLUS
+        self.phase = 1/2
 
 
 class ZMinus(ZPhase):
     def __init__(self, **kwargs):
-        super().__init__(phase=-1/2, **kwargs)
+        super().__init__(**kwargs)
         self.type = GateType.Z_MINUS
+        self.phase = -1/2
