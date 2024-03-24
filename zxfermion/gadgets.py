@@ -7,8 +7,9 @@ from zxfermion.types import GateType, LegType, VertexType
 
 
 class BaseGadget:
-    def draw(self, labels=False, **kwargs):
-        zx.draw(self.graph(**kwargs), labels=labels)
+    def draw(self, expand_gadget=None, as_gadget=None):
+        from zxfermion.circuits import GadgetCircuit
+        zx.draw(GadgetCircuit([self]).graph(expand_gadgets=expand_gadget, gadgets_only=as_gadget))
 
     def graph(self, expand_gadget=None, as_gadget=None):
         from zxfermion.circuits import GadgetCircuit
@@ -16,11 +17,28 @@ class BaseGadget:
 
     def matrix(self, return_latex=False):
         from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).matrix(return_latex)
+        return GadgetCircuit([self]).matrix(return_latex=return_latex)
 
     def tikz(self, name: str, expand_gadget=None, as_gadget=None):
         from zxfermion.circuits import GadgetCircuit
         GadgetCircuit([self]).tikz(name=name, expand_gadgets=expand_gadget, gadgets_only=as_gadget)
+
+
+class Gadget(BaseGadget):
+    def __init__(self, pauli_string: str, phase: Optional[float] = None, expand_gadget=None):
+        self.type = GateType.GADGET
+        self.phase = phase
+        self.legs = {qubit: LegType(pauli) for qubit, pauli in enumerate(pauli_string)}
+        self.min_qubit = min([qubit for qubit in self.legs])
+        self.max_qubit = max([qubit for qubit in self.legs])
+        self.phase_gadget = all(leg == LegType.Z or leg == LegType.I for leg in self.legs.values())
+        self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
+
+    def __eq__(self, other):
+        if type(self) == type(other):
+            return (self.phase, self.legs) == (other.phase, other.legs)
+        else:
+            return False
 
 
 class SingleQubitGate(BaseGadget):
@@ -45,7 +63,7 @@ class ControlledGate(BaseGadget):
         control = 0 if control is None else control
         target = 1 if target is None else target
         assert control != target
-        self.type = GateType.TWO_QUBIT_GATE
+        self.type = GateType.CONTROLLED_GATE
         self.control = control
         self.target = target
         self.min_qubit = min(self.control, self.target)
@@ -59,23 +77,6 @@ class ControlledGate(BaseGadget):
             return False
 
 
-class Gadget(BaseGadget):
-    def __init__(self, pauli_string: str, phase: Optional[float] = None, expand_gadget=None):
-        self.type = GateType.GADGET
-        self.phase = phase
-        self.legs = {qubit: LegType(pauli) for qubit, pauli in enumerate(pauli_string)}
-        self.min_qubit = min([qubit for qubit in self.legs])
-        self.max_qubit = max([qubit for qubit in self.legs])
-        self.phase_gadget = all(leg == LegType.Z or leg == LegType.I for leg in self.legs.values())
-        self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
-
-    def __eq__(self, other):
-        if type(self) == type(other):
-            return (self.phase, self.legs) == (other.phase, other.legs)
-        else:
-            return False
-
-
 class CX(ControlledGate):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         super().__init__(control=control, target=target, as_gadget=as_gadget)
@@ -84,9 +85,9 @@ class CX(ControlledGate):
 
 class CZ(ControlledGate):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
-        new_control = control if control is None else min(control, target)
-        new_target = target if target is None else max(control, target)
-        super().__init__(control=new_control, target=new_target, as_gadget=as_gadget)
+        if not (control is None and target is None):
+            control, target = (target, control) if control > target else (control, target)
+        super().__init__(control=control, target=target, as_gadget=as_gadget)
         self.type = GateType.CZ
 
 

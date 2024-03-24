@@ -6,9 +6,6 @@ from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, Si
 from zxfermion.types import VertexType, LegType, EdgeType
 
 
-# assert graph depth doesn't change when graph is larger than gadget size
-
-
 class BaseGraph(GraphS):
     def __init__(self, num_qubits: int, num_rows: int = 1):
         super().__init__()

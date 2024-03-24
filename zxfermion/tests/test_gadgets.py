@@ -14,8 +14,8 @@ from zxfermion.types import GateType, LegType
 # test expand_gadget feature (multiple test cases! pauli vs phase gadget, gadgets skipping legs, etc)
 # some weird behaviour with stack_gadgets gadgets where XPlus is commuting through CZ
 # test graphing in all different modes
-
 # test expanded CX and CZ
+# assert graph depth doesn't change when graph is larger than gadget size
 
 
 @pytest.mark.parametrize('value', [True, False])
