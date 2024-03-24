@@ -40,7 +40,7 @@ class SingleQubitGate(BaseGadget):
             return False
 
 
-class TwoQubitGate(BaseGadget):
+class ControlledGate(BaseGadget):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         control = 0 if control is None else control
         target = 1 if target is None else target
@@ -76,13 +76,13 @@ class Gadget(BaseGadget):
             return False
 
 
-class CX(TwoQubitGate):
+class CX(ControlledGate):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         super().__init__(control=control, target=target, as_gadget=as_gadget)
         self.type = GateType.CX
 
 
-class CZ(TwoQubitGate):
+class CZ(ControlledGate):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         new_control = control if control is None else min(control, target)
         new_target = target if target is None else max(control, target)

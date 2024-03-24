@@ -16,7 +16,6 @@ from zxfermion.types import GateType, LegType
 # test graphing in all different modes
 
 # test expanded CX and CZ
-# test default CX() and CZ()
 # test vertex type for all SingleQubitGate children
 
 
@@ -234,6 +233,7 @@ def test_cz_graph():
 def test_x_phase(phase):
     x_phase = XPhase(phase=phase)
     assert x_phase.type == GateType.X_PHASE
+    assert x_phase.vertex_type == VertexType.X
     assert x_phase.phase == phase
     assert x_phase.qubit == 0
     assert x_phase.min_qubit == 0
@@ -272,6 +272,7 @@ def test_x_phase_graph():
 def test_z_phase(phase):
     z_phase = ZPhase(phase=phase)
     assert z_phase.type == GateType.Z_PHASE
+    assert z_phase.vertex_type == VertexType.Z
     assert z_phase.phase == phase
     assert z_phase.qubit == 0
     assert z_phase.min_qubit == 0
@@ -309,6 +310,7 @@ def test_z_phase_graph():
 def test_x():
     x = X()
     assert x.type == GateType.X
+    assert x.vertex_type == VertexType.X
     assert x.phase == 1
     assert x.qubit == 0
     assert x.min_qubit == 0
@@ -344,6 +346,7 @@ def test_x_graph():
 def test_z():
     z = Z()
     assert z.type == GateType.Z
+    assert z.vertex_type == VertexType.Z
     assert z.phase == 1
     assert z.qubit == 0
     assert z.min_qubit == 0
@@ -379,6 +382,7 @@ def test_z_graph():
 def test_x_plus():
     x_plus = XPlus()
     assert x_plus.type == GateType.X_PLUS
+    assert x_plus.vertex_type == VertexType.X
     assert x_plus.phase == 1/2
     assert x_plus.qubit == 0
     assert x_plus.min_qubit == 0
@@ -414,6 +418,7 @@ def test_x_plus_graph():
 def test_z_plus():
     z_plus = ZPlus()
     assert z_plus.type == GateType.Z_PLUS
+    assert z_plus.vertex_type == VertexType.Z
     assert z_plus.phase == 1/2
     assert z_plus.qubit == 0
     assert z_plus.min_qubit == 0
@@ -449,6 +454,7 @@ def test_z_plus_graph():
 def test_x_minus():
     x_minus = XMinus()
     assert x_minus.type == GateType.X_MINUS
+    assert x_minus.vertex_type == VertexType.X
     assert x_minus.phase == -1/2
     assert x_minus.qubit == 0
     assert x_minus.min_qubit == 0
@@ -484,6 +490,7 @@ def test_x_minus_graph():
 def test_z_minus():
     z_minus = ZMinus()
     assert z_minus.type == GateType.Z_MINUS
+    assert z_minus.vertex_type == VertexType.Z
     assert z_minus.phase == -1/2
     assert z_minus.qubit == 0
     assert z_minus.min_qubit == 0
