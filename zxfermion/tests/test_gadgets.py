@@ -16,7 +16,6 @@ from zxfermion.types import GateType, LegType
 # test graphing in all different modes
 
 # test expanded CX and CZ
-# test vertex type for all SingleQubitGate children
 
 
 @pytest.mark.parametrize('value', [True, False])

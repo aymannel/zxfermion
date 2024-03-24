@@ -61,12 +61,27 @@ def test_graph_update_num_rows(num_rows):
 
 
 @pytest.mark.parametrize('qubit', [0, 1, 2, 3])
-@pytest.mark.parametrize(['gate', 'phase'], [
-    [XPhase, 1/2], [XPhase, None], [X, None], [XPlus, None], [XMinus, None],
-    [ZPhase, 3/2], [ZPhase, None], [Z, None], [ZPlus, None], [ZMinus, None]])
-def test_graph_add_single(qubit, gate, phase):
+@pytest.mark.parametrize(['gate', 'phase'], [[XPhase, 1/2], [XPhase, None], [ZPhase, 3/2], [ZPhase, None]])
+def test_graph_add_phase_nodes(qubit, gate, phase):
     graph = BaseGraph(num_qubits=4)
-    ref = graph.add_single(gate=gate(qubit=qubit, phase=phase))
+    gate = gate(qubit=qubit, phase=phase)
+    ref = graph.add_single(gate=gate)
+    assert graph.depth() == 1
+    assert graph.num_qubits == 4
+    assert list(graph.inputs()) == [0, 1, 2, 3]
+    assert list(graph.outputs()) == [4, 5, 6, 7]
+    assert all(graph.connected(graph.inputs()[q], graph.outputs()[q]) for q in range(4) if qubit != qubit)
+    assert graph.connected(graph.inputs()[qubit], ref)
+    assert graph.connected(ref, graph.outputs()[qubit])
+    assert graph.type(8) == gate.vertex_type
+    assert graph.phase(8) == 0 if phase is None else phase
+
+
+@pytest.mark.parametrize('qubit', [0, 1, 2, 3])
+@pytest.mark.parametrize('gate', [X, XPlus, XMinus, Z, ZPlus, ZMinus])
+def test_graph_add_single_qubit_gates(qubit, gate):
+    graph = BaseGraph(num_qubits=4)
+    ref = graph.add_single(gate=gate(qubit=qubit))
     assert graph.depth() == 1
     assert graph.num_qubits == 4
     assert list(graph.inputs()) == [0, 1, 2, 3]

@@ -24,11 +24,11 @@ class BaseGadget:
 
 
 class SingleQubitGate(BaseGadget):
-    def __init__(self, qubit: Optional[int] = 0, phase: Optional[float] = None, as_gadget=None):
+    def __init__(self, qubit: Optional[int] = None, phase: Optional[float] = None, as_gadget=None):
         self.type = GateType.SINGLE_QUBIT_GATE
-        self.phase = phase
-        self.qubit = qubit
+        self.qubit = 0 if qubit is None else qubit
         self.vertex_type = None
+        self.phase = phase
         self.min_qubit = self.qubit
         self.max_qubit = self.qubit
         self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
@@ -91,69 +91,69 @@ class CZ(ControlledGate):
 
 
 class XPhase(SingleQubitGate):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, phase: Optional[float] = None, as_gadget=None):
+        super().__init__(qubit=qubit, phase=phase, as_gadget=as_gadget)
         self.type = GateType.X_PHASE
         self.vertex_type = VertexType.X
 
 
 class ZPhase(SingleQubitGate):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, phase: Optional[float] = None, as_gadget=None):
+        super().__init__(qubit=qubit, phase=phase, as_gadget=as_gadget)
         self.type = GateType.Z_PHASE
         self.vertex_type = VertexType.Z
 
 
 class H(SingleQubitGate):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.H
         self.vertex_type = VertexType.H
 
 
 class X(XPhase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.X
         self.vertex_type = VertexType.X
         self.phase = 1
 
 
 class Z(ZPhase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.Z
         self.vertex_type = VertexType.Z
         self.phase = 1
 
 
 class XPlus(XPhase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.X_PLUS
         self.vertex_type = VertexType.X
         self.phase = 1/2
 
 
 class XMinus(XPhase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.X_MINUS
         self.vertex_type = VertexType.X
         self.phase = -1/2
 
 
 class ZPlus(ZPhase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.Z_PLUS
         self.vertex_type = VertexType.Z
         self.phase = 1/2
 
 
 class ZMinus(ZPhase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.Z_MINUS
         self.vertex_type = VertexType.Z
         self.phase = -1/2
