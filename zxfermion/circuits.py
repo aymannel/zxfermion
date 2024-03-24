@@ -43,27 +43,27 @@ class GadgetCircuit:
                 if gadget.type == GateType.GADGET:
                     layer.add_expanded_gadget(gadget) if gadget.expand_gadget else layer.add_gadget(gadget)
                 elif gadget.type == GateType.X_PHASE:
-                    layer.add_single(gadget)
+                    layer.add_single_gate(gadget)
                 elif gadget.type == GateType.Z_PHASE:
-                    layer.add_single(gadget)
+                    layer.add_single_gate(gadget)
                 elif gadget.type == GateType.X:
-                    layer.add_x_gadget(gadget) if gadget.as_gadget else layer.add_single(gadget)
+                    layer.add_x_gadget(gadget) if gadget.as_gadget else layer.add_single_gate(gadget)
                 elif gadget.type == GateType.Z:
-                    layer.add_z_gadget(gadget) if gadget.as_gadget else layer.add_single(gadget)
+                    layer.add_z_gadget(gadget) if gadget.as_gadget else layer.add_single_gate(gadget)
                 elif gadget.type == GateType.H:
-                    layer.add_single(gadget)
+                    layer.add_single_gate(gadget)
                 elif gadget.type == GateType.CX:
                     layer.add_cx_gadget(gadget) if gadget.as_gadget else layer.add_cx(gadget)
                 elif gadget.type == GateType.CZ:
                     layer.add_cz_gadget(gadget) if gadget.as_gadget else layer.add_cz(gadget)
                 elif gadget.type == GateType.X_PLUS:
-                    layer.add_single(gadget)
+                    layer.add_single_gate(gadget)
                 elif gadget.type == GateType.Z_PLUS:
-                    layer.add_single(gadget)
+                    layer.add_single_gate(gadget)
                 elif gadget.type == GateType.X_MINUS:
-                    layer.add_single(gadget)
+                    layer.add_single_gate(gadget)
                 elif gadget.type == GateType.Z_MINUS:
-                    layer.add_single(gadget)
+                    layer.add_single_gate(gadget)
             circuit.compose(layer)
         return circuit
 

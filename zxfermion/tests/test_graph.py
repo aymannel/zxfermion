@@ -65,7 +65,7 @@ def test_graph_update_num_rows(num_rows):
 def test_graph_add_phase_nodes(qubit, gate, phase):
     graph = BaseGraph(num_qubits=4)
     gate = gate(qubit=qubit, phase=phase)
-    ref = graph.add_single(gate=gate)
+    ref = graph.add_single_gate(gate=gate)
     assert graph.depth() == 1
     assert graph.num_qubits == 4
     assert list(graph.inputs()) == [0, 1, 2, 3]
@@ -81,7 +81,7 @@ def test_graph_add_phase_nodes(qubit, gate, phase):
 @pytest.mark.parametrize('gate', [X, XPlus, XMinus, Z, ZPlus, ZMinus])
 def test_graph_add_single_qubit_gates(qubit, gate):
     graph = BaseGraph(num_qubits=4)
-    ref = graph.add_single(gate=gate(qubit=qubit))
+    ref = graph.add_single_gate(gate=gate(qubit=qubit))
     assert graph.depth() == 1
     assert graph.num_qubits == 4
     assert list(graph.inputs()) == [0, 1, 2, 3]

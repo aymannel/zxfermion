@@ -32,7 +32,7 @@ class BaseGraph(GraphS):
             return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
         self.add_edges(pair_list([self.inputs()[qubit], *node_refs, self.outputs()[qubit]]))
 
-    def add_single(self, gate: SingleQubitGate):
+    def add_single_gate(self, gate: SingleQubitGate):
         ref = self.add_vertex(ty=gate.vertex_type, row=1, qubit=gate.qubit, phase=gate.phase)
         self.connect_nodes(qubit=gate.qubit, node_refs=[ref])
         self.remove_wire(gate.qubit)
@@ -86,14 +86,14 @@ class BaseGraph(GraphS):
         clifford_right = BaseGraph(num_qubits=self.num_qubits)
         for qubit, leg in gadget.legs.items():
             if leg == LegType.X:
-                clifford_left.add_single(H(qubit=qubit))
-                clifford_right.add_single(H(qubit=qubit))
+                clifford_left.add_single_gate(H(qubit=qubit))
+                clifford_right.add_single_gate(H(qubit=qubit))
             elif leg == LegType.Y:
-                clifford_left.add_single(XPlus(qubit=qubit))
-                clifford_right.add_single(XMinus(qubit=qubit))
+                clifford_left.add_single_gate(XPlus(qubit=qubit))
+                clifford_right.add_single_gate(XMinus(qubit=qubit))
 
         ladder_middle = BaseGraph(num_qubits=self.num_qubits)
-        ladder_middle.add_single(ZPhase(qubit=max(qubits), phase=gadget.phase))
+        ladder_middle.add_single_gate(ZPhase(qubit=max(qubits), phase=gadget.phase))
 
         for graph in clifford_left, ladder_left, ladder_middle, ladder_right, clifford_right:
             self.compose(graph)
