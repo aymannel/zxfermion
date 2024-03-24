@@ -2,17 +2,36 @@ import pytest
 from pyzx import VertexType, EdgeType
 
 from zxfermion.graph import BaseGraph
-from zxfermion.types import GateType, LegType
 from zxfermion.gadgets import Gadget, CX, CZ, X, Z
+from zxfermion.types import GateType, LegType
 
+
+# are the graph tests too assertive?
 # you need way more test cases
-# test other types like Single, XPhase, ZPhase, XPlus, XMinus, ZPlus, ZMinus
-# test default qubit == 1 for Single etc
+# test other types
+# Single
+# XPhase
+# ZPhase
+# XPlus
+# XMinus
+# ZPlus
+# ZMinus
+# test default qubit == 1 for Single
 # test kwarg business
+# kwargs for drawing
+# kwargs for graphs
+# kwargs for tikz
+# kwargs for expand_gadget and as_gadget features
+# test global gadgets_only parameter works
+# test stack_gadgets gadget feature (multiple test cases, think of clever ones?)
+# test expand_gadget feature (multiple test cases! pauli vs phase gadget, gadgets skipping legs, etc)
+# test config defaults, configs passed at Gadget level and configs passed at GadgetCircuit level
+# some weird behaviour with stack_gadgets gadgets where XPlus is commuting through CZ
+# test graphing in all different modes
 
 
 def test_gadget():
-    gadget = Gadget(pauli_str='XYZ')
+    gadget = Gadget(pauli_string='XYZ')
     assert gadget.type == GateType.GADGET
     assert not gadget.phase
     assert len(gadget.legs) == 3
@@ -32,19 +51,18 @@ def test_gadget_phase():
 
 
 def test_gadget_equality():
-    gadget1 = Gadget(pauli_str='XYZ')
-    gadget2 = Gadget(pauli_str='XYZ')
-    gadget3 = Gadget(pauli_str='ZXY')
-    gadget4 = Gadget(pauli_str='XYZ', phase=1/2)
-
+    gadget1 = Gadget(pauli_string='XYZ')
+    gadget2 = Gadget(pauli_string='XYZ')
+    gadget3 = Gadget(pauli_string='ZXY')
+    gadget4 = Gadget(pauli_string='XYZ', phase=1 / 2)
     assert gadget1 == gadget2
     assert gadget1 != gadget3
     assert gadget1 != gadget4
 
 
 def test_gadget_graph():
-    gadget = Gadget(pauli_str='XYZ', phase=1/2)
-    graph = gadget.graph(expand=False)
+    gadget = Gadget(pauli_string='XYZ', phase=1 / 2)
+    graph = gadget.graph(expand_gadgets=False)
     assert isinstance(graph, BaseGraph)
     assert graph.num_qubits == gadget.max_qubit + 1
     assert graph.num_vertices() == 15
@@ -66,8 +84,8 @@ def test_gadget_graph():
 
 
 def test_expanded_gadget_graph():
-    gadget = Gadget(pauli_str='XYZ', phase=1/2)
-    graph = gadget.graph(expand=True)
+    gadget = Gadget(pauli_string='XYZ', phase=1 / 2)
+    graph = gadget.graph(expand_gadgets=True)
     assert isinstance(graph, BaseGraph)
     assert graph.num_qubits == gadget.max_qubit + 1
     assert graph.num_vertices() == 19
@@ -99,7 +117,6 @@ def test_cx():
     assert cx.target == 1
     assert cx.min_qubit == 0
     assert cx.max_qubit == 1
-
     with pytest.raises(AssertionError):
         CX(control=1, target=1)
 
@@ -134,7 +151,6 @@ def test_cz():
     assert cz.target == 1
     assert cz.min_qubit == 0
     assert cz.max_qubit == 1
-
     with pytest.raises(AssertionError):
         CZ(control=1, target=1)
 

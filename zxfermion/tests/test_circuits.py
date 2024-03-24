@@ -11,13 +11,13 @@ from zxfermion.types import GateType
 
 
 def test_gadgetcircuit():
-    gadgets = [Gadget(pauli_str='XYZ')]
+    gadgets = [Gadget(pauli_string='XYZ')]
     circuit = GadgetCircuit(gadgets)
     assert circuit.type == GateType.GADGET_CIRCUIT
     assert circuit.gadgets == gadgets
     assert circuit.num_qubits == 3
 
-    gadgets = [Gadget(pauli_str='XYZ'), Gadget(pauli_str='IYXZ'), Gadget(pauli_str='ZYX')]
+    gadgets = [Gadget(pauli_string='XYZ'), Gadget(pauli_string='IYXZ'), Gadget(pauli_string='ZYX')]
     circuit = GadgetCircuit(gadgets)
     assert circuit.type == GateType.GADGET_CIRCUIT
     assert circuit.gadgets == gadgets
@@ -25,8 +25,8 @@ def test_gadgetcircuit():
 
 
 def test_add_gadgetcircuit():
-    circuit1 = GadgetCircuit([Gadget(pauli_str='XYZ')])
-    circuit2 = GadgetCircuit([Gadget(pauli_str='ZYX')])
+    circuit1 = GadgetCircuit([Gadget(pauli_string='XYZ')])
+    circuit2 = GadgetCircuit([Gadget(pauli_string='ZYX')])
     circuit = circuit1 + circuit2
     assert isinstance(circuit, GadgetCircuit)
     assert circuit.type == GateType.GADGET_CIRCUIT
@@ -35,8 +35,8 @@ def test_add_gadgetcircuit():
 
 
 def test_add_incompatible_gadgetcircuit():
-    circuit1 = GadgetCircuit([Gadget(pauli_str='XYZ')])
-    circuit2 = GadgetCircuit([Gadget(pauli_str='IZYX')])
+    circuit1 = GadgetCircuit([Gadget(pauli_string='XYZ')])
+    circuit2 = GadgetCircuit([Gadget(pauli_string='IZYX')])
 
     with pytest.raises(AssertionError):
         circuit1 + circuit2

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def latex_matrix(array: np.array):
+def matrix_to_latex(array: np.array) -> str:
     latex_str = r'\begin{pmatrix}'
     for row in array:
         for elem in row:

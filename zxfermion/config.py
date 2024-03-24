@@ -1,10 +1,8 @@
-config = {
-    'stack_gadgets': True,
-    'expand_gadgets': False,
-    'gadgets_only': False,
-}
+stack_gadgets = True
+expand_gadgets = False
+gadgets_only = False
 
-mapping = {
+tikz_types = {
   'X dot': 'x_node',
   'Z dot': 'z_node',
   'X phase dot': 'x_phase',

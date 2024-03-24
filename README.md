@@ -1,6 +1,20 @@
+# TESTS
+- think about it this way...
+- if you don't get your tests written and work in a more software engineering way (git branching etc)
+- you won't be able to implement the clifford tableau shit any time soon!
+
 # TODO
-- move project to ~/Documents/Dev/zxfermion/ and create alias for Obsidian folder
+## 24/03/24
+- create branch from main to save old progress
+- finish writing tests and commit to main. stop implementing new features!!!!!!!!!!!!!!!!!
+
 - fix BaseGraph.update_rows() method
+- use README to write docs!
+- use cirq or some other package to do clifford tableau stuff
+- potentially can use copy instead of deepcopy when handling gadgets since legs are now Enums (LegType)
+
+## utilities.py
+- write utility function for converting tikz into proper format
 
 ## BaseGraph
 - move graphing functionality of each gate type to methods of BaseGraph class. eg methods for adding CX, Gadget, X, etc
@@ -8,8 +22,14 @@
   - only contains essential information about it
 
 ## Gadget
-- add expand gadgets option/method
 - fuse gadgets after 'stacking'. will require you to check gadgets in adjacent layers can't just use fuse_gadgets()
+- rename BaseGadget to Gate
+- split into XGadget and ZGadget and inherit from BaseGadget
+- use standard and orthogonal as names for spiders e.g. ZGadget has standard=Z and orthogonal=X (BasisType in types)
+- have self.basis attribute for all gates
+- calling Gadget should yield ZGadget?
+- add static method for graphing Single as gadget
+- when graphing single as gadget, call static method of either XGadget or ZGadget
 
 ## GadgetCircuit
 - for now, keep conjugate_ methods but eventually this functionality should be handled by GadgetCircuit class
@@ -27,6 +47,10 @@
 ### PDF Export
 - inspect tikz log file in tikzit
 - write seperate python script that creates template
+
+### config
+- eventually move to yaml
+- make matrix num max qubits an option
 
 ---
 

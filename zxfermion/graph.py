@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pyzx.graph.graph_s import GraphS
 from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus
-from zxfermion.types import LegType, VertexType, EdgeType
+from zxfermion.types import VertexType, LegType, EdgeType
 
 
 class BaseGraph(GraphS):
@@ -13,11 +13,6 @@ class BaseGraph(GraphS):
         self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 1) for qubit in range(self.num_qubits)])
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
 
-    def update_num_rows(self, num_rows: int):
-        self.remove_vertices(self.outputs())
-        self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 2) for qubit in range(self.num_qubits)])
-        self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
-
     def remove_wire(self, qubit: int):
         if self.connected(self.inputs()[qubit], self.outputs()[qubit]):
             self.remove_edge((self.inputs()[qubit], self.outputs()[qubit]))
@@ -26,6 +21,11 @@ class BaseGraph(GraphS):
         def pair_list(items: list[int]) -> list[tuple[int, int]]:
             return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
         self.add_edges(pair_list([self.inputs()[qubit], *node_refs, self.outputs()[qubit]]))
+
+    def update_num_rows(self, num_rows: int):
+        self.remove_vertices(self.outputs())
+        self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 2) for qubit in range(self.num_qubits)])
+        self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
 
     def add_single(self, node):
         ref = self.add_vertex(ty=node.vertex_type, row=1, qubit=node.qubit, phase=node.phase)
@@ -38,26 +38,25 @@ class BaseGraph(GraphS):
             hub_ref = self.add_vertex(ty=VertexType.X, row=3, qubit=self.num_qubits + 1)
             phase_ref = self.add_vertex(ty=VertexType.Z, row=3, qubit=self.num_qubits + 2, phase=gadget.phase)
             for qubit, leg in gadget.legs.items():
-                match leg:
-                    case LegType.X:
-                        left_ref = self.add_vertex(ty=VertexType.H, row=1, qubit=qubit)
-                        middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
-                        right_ref = self.add_vertex(ty=VertexType.H, row=3, qubit=qubit)
-                        self.connect_nodes(qubit=qubit, node_refs=[left_ref, middle_ref, right_ref])
-                        self.add_edge((middle_ref, hub_ref))
-                        self.remove_wire(qubit=qubit)
-                    case LegType.Y:
-                        left_ref = self.add_vertex(ty=VertexType.X, row=1, qubit=qubit, phase=1/2,)
-                        middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
-                        right_ref = self.add_vertex(ty=VertexType.X, row=3, qubit=qubit, phase=-1/2)
-                        self.connect_nodes(qubit=qubit, node_refs=[left_ref, middle_ref, right_ref])
-                        self.add_edge((middle_ref, hub_ref))
-                        self.remove_wire(qubit=qubit)
-                    case LegType.Z:
-                        middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
-                        self.connect_nodes(qubit=qubit, node_refs=[middle_ref])
-                        self.add_edge((middle_ref, hub_ref))
-                        self.remove_wire(qubit=qubit)
+                if leg == LegType.X:
+                    left_ref = self.add_vertex(ty=VertexType.H, row=1, qubit=qubit)
+                    middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
+                    right_ref = self.add_vertex(ty=VertexType.H, row=3, qubit=qubit)
+                    self.connect_nodes(qubit=qubit, node_refs=[left_ref, middle_ref, right_ref])
+                    self.add_edge((middle_ref, hub_ref))
+                    self.remove_wire(qubit=qubit)
+                elif leg == LegType.Y:
+                    left_ref = self.add_vertex(ty=VertexType.X, row=1, qubit=qubit, phase=1/2,)
+                    middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
+                    right_ref = self.add_vertex(ty=VertexType.X, row=3, qubit=qubit, phase=-1/2)
+                    self.connect_nodes(qubit=qubit, node_refs=[left_ref, middle_ref, right_ref])
+                    self.add_edge((middle_ref, hub_ref))
+                    self.remove_wire(qubit=qubit)
+                elif leg == LegType.Z:
+                    middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
+                    self.connect_nodes(qubit=qubit, node_refs=[middle_ref])
+                    self.add_edge((middle_ref, hub_ref))
+                    self.remove_wire(qubit=qubit)
             self.add_edge((hub_ref, phase_ref))
 
     def add_expanded_gadget(self, gadget: Gadget):
@@ -130,7 +129,6 @@ class BaseGraph(GraphS):
         self.remove_wire(cz.target)
 
     def add_cx_gadget(self, cx: CX):
-        self.update_num_rows(1)
         hub_ref = self.add_vertex(ty=VertexType.X, qubit=self.num_qubits + 1, row=2)
         phase_ref = self.add_vertex(ty=VertexType.Z, qubit=self.num_qubits + 2, row=2, phase=-1/2)
         control_ref = self.add_vertex(ty=VertexType.Z, qubit=cx.control, row=1, phase=1/2)
