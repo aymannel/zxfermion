@@ -5,7 +5,7 @@ from pyzx import VertexType, EdgeType
 
 from zxfermion.exceptions import IncompatibleGatesException
 from zxfermion.graph import GadgetGraph
-from zxfermion.gadgets import Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus
+from zxfermion.gadgets import Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, Identity, H
 from zxfermion.types import GateType, LegType
 
 
@@ -24,50 +24,15 @@ from zxfermion.types import GateType, LegType
 # add two self inverse gadgets like CX
 # add is_identity() method for gadget and single qubits and return None
 
+# rethink mixed equality stuff. possibly use for lop
 
 # finish identity stuff
-# __eq__(self, other) if other.type = GateType.IDENTITY and self.is_identity() return true
 # __add__ GateType.IDENTITY returns self
 # __eq__ between SingleGateQubit children and Gadget
 
-# assert identity behaviour of XPhase and ZPhase
-# assert VertexType stuff for XPhase, ZPhase and H
 # assert __repr__ for PhaseGate children and H gate
 
 # go through all __repr__, __add__, __eq__ for all GateType classes and write tests for expected behaviour + edge cases
-
-# don't forget why you introduced Identity() in the first place! So you can add cancelling gadgets and continue adding.
-# e.g. X() + X() + X() -> X()
-
-"""
-GADGET
-    def __eq__(self, other):
-        if other.type == GateType.IDENTITY and self.identity:
-            return True
-        elif self.type == other.type:
-            return self.legs == other.legs and math.isclose(self.phase, other.phase)
-        else:
-            raise IncompatibleGatesException(f'Cannot assert equality between f{self.type} and {other.type}.')
-
-SINGLE QUBIT GATE
-    def __eq__(self, other):
-        if other.type == GateType.IDENTITY and self.identity:
-            return True
-        elif isinstance(other, SingleQubitGate):
-            phase_equality = math.isclose(self.phase, other.phase)
-            return (self.qubit, self.vertex_type) == (other.qubit, other.vertex_type) and phase_equality
-        else:
-            raise IncompatibleGatesException(f'Cannot assert equality between f{self.type} and {other.type}.')
-
-
-CONTROLLED GATE
-    def __eq__(self, other):
-        if self.type == other.type:
-            return (self.control, self.target) == (other.control, other.target)
-        else:
-            return False
-
-"""
 
 
 # GADGET TESTS
@@ -76,9 +41,10 @@ def test_gadget():
     assert gadget.type == GateType.GADGET
     assert not gadget.phase_gadget
     assert not gadget.phase
-    assert len(gadget.legs) == 3
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
+    assert len(gadget.legs) == 3
+    assert repr(gadget) == 'Gadget(pauli_string="XYZ", phase=0)'
     assert all(isinstance(leg, LegType) for leg in gadget.legs.values())
 
 
@@ -90,30 +56,21 @@ def test_phase_gadget():
     assert len(gadget.legs) == 3
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
+    assert repr(gadget) == 'Gadget(pauli_string="ZZZ", phase=0)'
     assert all(leg == LegType.Z for leg in gadget.legs.values())
 
 
-def test_phase_gadget():
-    gadget = Gadget('XYZ', phase=1/2)
-    assert gadget.type == GateType.GADGET
-    assert not gadget.phase_gadget
-    assert gadget.phase == 1/2
-    assert len(gadget.legs) == 3
-    assert gadget.min_qubit == 0
-    assert gadget.max_qubit == 2
-    assert all(isinstance(leg, LegType) for leg in gadget.legs.values())
-
-
+@pytest.mark.parametrize('pauli_string', ['YZX', 'ZZZ'])
 @pytest.mark.parametrize(
     ['phase', 'expected'],
     [[None, 0], [0, 0], [1, 1], [1/4, 1/4], [3/4, 3/4], [5/7, 5/7], [2, 0], [3, 1], [5.5, 1.5], [12/5, 2/5]])
-def test_gadget_phase(phase, expected):
-    gadget = Gadget('ZZZ', phase=phase)
+def test_gadget_phase(phase, expected, pauli_string):
+    gadget = Gadget(pauli_string, phase=phase)
     assert gadget.type == GateType.GADGET
     assert math.isclose(gadget.phase, expected)
 
 
-def test_identity():
+def test_identity_gadget():
     gadget1 = Gadget('ZZZ')
     gadget2 = Gadget('XYZ')
     gadget3 = Gadget('ZZZ', phase=1)
@@ -132,6 +89,7 @@ def test_cx(control, target):
     assert cx.target == 1
     assert cx.min_qubit == 0
     assert cx.max_qubit == 1
+    assert repr(cx) == f'CX(control={0 if control is None else control}, target={1 if target is None else target})'
     with pytest.raises(AssertionError):
         CX(control=1, target=1)
 
@@ -144,6 +102,7 @@ def test_cz(control, target):
     assert cz.target == 1
     assert cz.min_qubit == 0
     assert cz.max_qubit == 1
+    assert repr(cz) == f'CZ(control={0 if control is None else control}, target={1 if target is None else target})'
     with pytest.raises(AssertionError):
         CZ(control=1, target=1)
 
@@ -174,6 +133,14 @@ def test_z_phase(phase, expected):
     assert math.isclose(z_phase.phase, expected)
 
 
+def test_phase_gates_repr():
+    assert repr(XPhase()) == f'XPhase(qubit=0, phase=0)'
+    assert repr(ZPhase()) == f'ZPhase(qubit=0, phase=0)'
+    assert repr(XPhase(qubit=1)) == f'XPhase(qubit=1, phase=0)'
+    assert repr(ZPhase(qubit=1, phase=1)) == f'ZPhase(qubit=1, phase=1)'
+    assert repr(XPhase(qubit=1, phase=1)) == f'XPhase(qubit=1, phase=1)'
+
+
 def test_x():
     x = X()
     assert x.type == GateType.X
@@ -182,6 +149,7 @@ def test_x():
     assert x.qubit == 0
     assert x.min_qubit == 0
     assert x.max_qubit == 0
+    assert repr(x) == 'X(qubit=0, phase=1)'
 
 
 def test_z():
@@ -192,6 +160,7 @@ def test_z():
     assert z.qubit == 0
     assert z.min_qubit == 0
     assert z.max_qubit == 0
+    assert repr(z) == 'Z(qubit=0, phase=1)'
 
 
 def test_x_plus():
@@ -202,6 +171,7 @@ def test_x_plus():
     assert x_plus.qubit == 0
     assert x_plus.min_qubit == 0
     assert x_plus.max_qubit == 0
+    assert repr(x_plus) == 'XPlus(qubit=0, phase=0.5)'
 
 
 def test_z_plus():
@@ -212,6 +182,7 @@ def test_z_plus():
     assert z_plus.qubit == 0
     assert z_plus.min_qubit == 0
     assert z_plus.max_qubit == 0
+    assert repr(z_plus) == 'ZPlus(qubit=0, phase=0.5)'
 
 
 def test_x_minus():
@@ -222,6 +193,7 @@ def test_x_minus():
     assert x_minus.qubit == 0
     assert x_minus.min_qubit == 0
     assert x_minus.max_qubit == 0
+    assert repr(x_minus) == 'XMinus(qubit=0, phase=1.5)'
 
 
 def test_z_minus():
@@ -232,198 +204,193 @@ def test_z_minus():
     assert z_minus.qubit == 0
     assert z_minus.min_qubit == 0
     assert z_minus.max_qubit == 0
+    assert repr(z_minus) == 'ZMinus(qubit=0, phase=1.5)'
+
+
+def test_hadamard():
+    hadamard1 = H()
+    hadamard2 = H(qubit=1)
+    assert hadamard1.type == GateType.H
+    assert hadamard1.vertex_type == VertexType.H_BOX
+    assert not hadamard1.phase
+    assert hadamard1.qubit == 0
+    assert hadamard2.qubit == 1
+    assert hadamard1.min_qubit == 0
+    assert hadamard1.max_qubit == 0
+    assert repr(hadamard1) == 'H(qubit=0)'
+    assert repr(hadamard2) == 'H(qubit=1)'
 
 
 # EQUALITY TESTS
+def test_identity_equality():
+    assert Identity() == Identity()
+    assert Identity() == Gadget('ZZZ')
+    assert Identity() == XPhase()
+    assert Identity() == ZPhase()
+    assert Identity() != XMinus()
+    assert Identity() != ZMinus()
+    assert Identity() != XPlus()
+    assert Identity() != ZPlus()
+    assert Identity() != X()
+    assert Identity() != Z()
+
+
 def test_gadget_equality():
-    gadget1 = Gadget('XYZ')
-    gadget2 = Gadget('XYZ')
-    gadget3 = Gadget('ZXY')
-    gadget4 = Gadget('XYZ', 0)
-    gadget5 = Gadget('XYZ', 1/2)
-    assert gadget1 == gadget2
-    assert gadget1 != gadget3
-    assert gadget1 == gadget4
-    assert gadget1 != gadget5
+    assert Gadget('XYZ') == Gadget('XYZ')
+    assert Gadget('XYZ') == Gadget('XYZ', 0)
+    assert Gadget('XYZ') != Gadget('ZXY')
+    assert Gadget('XYZ') != Gadget('XYZ', 1/2)
+    assert Gadget('ZZZ') == Identity()
 
 
 def test_x_phase_equality():
-    x_phase1 = XPhase()
-    x_phase2 = XPhase()
-    x_phase3 = XPhase(qubit=1)
-    x_phase4 = XPhase(phase=1)
-    x_phase5 = XPhase(phase=0)
-    assert x_phase1 == x_phase2
-    assert x_phase1 != x_phase3
-    assert x_phase1 != x_phase4
-    assert x_phase1 == x_phase5
+    assert XPhase() == XPhase()
+    assert XPhase() == XPhase(phase=0)
+    assert XPhase() != XPhase(qubit=1)
+    assert XPhase() != XPhase(phase=1)
+    assert XPhase(phase=-1/2) == XMinus()
+    assert XPhase(phase=1/2) == XPlus()
+    assert XPhase(phase=1) == X()
+    assert XPhase() == Identity()
+    assert XPhase() != ZPhase()
 
 
 def test_z_phase_equality():
-    z_phase1 = ZPhase()
-    z_phase2 = ZPhase()
-    z_phase3 = ZPhase(qubit=1)
-    z_phase4 = ZPhase(phase=1)
-    z_phase5 = ZPhase(phase=0)
-    assert z_phase1 == z_phase2
-    assert z_phase1 != z_phase3
-    assert z_phase1 != z_phase4
-    assert z_phase1 == z_phase5
+    assert ZPhase() == ZPhase()
+    assert ZPhase() == ZPhase(phase=0)
+    assert ZPhase() != ZPhase(qubit=1)
+    assert ZPhase() != ZPhase(phase=1)
+    assert ZPhase(phase=-1/2) == ZMinus()
+    assert ZPhase(phase=1/2) == ZPlus()
+    assert ZPhase(phase=1) == Z()
+    assert ZPhase() == Identity()
+    assert ZPhase() != XPhase()
 
 
 def test_x_equality():
-    x1 = X()
-    x2 = X()
-    x3 = X(qubit=1)
-    assert x1 == x2
-    assert x1 != x3
+    assert X() == X()
+    assert X() != X(qubit=1)
+    assert X(qubit=1) == X(qubit=1)
 
 
 def test_z_equality():
-    z1 = Z()
-    z2 = Z()
-    z3 = Z(qubit=1)
-    assert z1 == z2
-    assert z1 != z3
+    assert Z() == Z()
+    assert Z() != Z(qubit=1)
+    assert Z(qubit=1) == Z(qubit=1)
 
 
 def test_x_plus_equality():
-    x_plus1 = XPlus()
-    x_plus12 = XPlus()
-    x_plus13 = XPlus(qubit=1)
-    assert x_plus1 == x_plus12
-    assert x_plus1 != x_plus13
+    assert XPlus() == XPlus()
+    assert XPlus() != XPlus(qubit=1)
+    assert XPlus(qubit=1) == XPlus(qubit=1)
 
 
 def test_z_plus_equality():
-    z_plus1 = ZPlus()
-    z_plus2 = ZPlus()
-    z_plus3 = ZPlus(qubit=1)
-    assert z_plus1 == z_plus2
-    assert z_plus1 != z_plus3
+    assert ZPlus() == ZPlus()
+    assert ZPlus() != ZPlus(qubit=1)
+    assert ZPlus(qubit=1) == ZPlus(qubit=1)
 
 
 def test_x_minus_equality():
-    x_minus1 = XMinus()
-    x_minus2 = XMinus()
-    x_minus3 = XMinus(qubit=1)
-    assert x_minus1 == x_minus2
-    assert x_minus1 != x_minus3
+    assert XMinus() == XMinus()
+    assert XMinus() != XMinus(qubit=1)
+    assert XMinus(qubit=1) == XMinus(qubit=1)
 
 
 def test_z_minus_equality():
-    z_minus1 = ZMinus()
-    z_minus2 = ZMinus()
-    z_minus3 = ZMinus(qubit=1)
-    assert z_minus1 == z_minus2
-    assert z_minus1 != z_minus3
+    assert ZMinus() == ZMinus()
+    assert ZMinus() != ZMinus(qubit=1)
+    assert ZMinus(qubit=1) == ZMinus(qubit=1)
 
 
 def test_cx_equality():
-    cx1 = CX(control=0, target=1)
-    cx2 = CX(control=0, target=1)
-    cx3 = CX(control=1, target=2)
-    assert cx1 == cx2
-    assert cx1 != cx3
+    assert CX() == CX()
+    assert CX() == CX(control=0, target=1)
+    assert CX(control=0, target=1) == CX(control=0, target=1)
+    assert CX(control=0, target=1) != CX(control=1, target=2)
 
 
 def test_cz_equality():
-    cz1 = CZ(control=0, target=1)
-    cz2 = CZ(control=0, target=1)
-    cz3 = CZ(control=1, target=0)
-    cz4 = CZ(control=1, target=2)
-    assert cz1 == cz2
-    assert cz1 == cz3
-    assert cz1 != cz4
-
-
-def test_mixed_equalities():
-    assert XPhase(phase=1) == X()
-    assert XPhase(phase=1/2) == XPlus()
-    assert XPhase(phase=-1/2) == XMinus()
-    assert XPhase() != ZPhase()
-    assert XPhase() != ZPlus()
-    assert XPhase() != ZMinus()
-    assert XPhase() != XPlus()
-    assert XPhase() != XMinus()
-
-    assert ZPhase(phase=1) == Z()
-    assert ZPhase(phase=1/2) == ZPlus()
-    assert ZPhase(phase=-1/2) == ZMinus()
-    assert ZPhase() != XPhase()
-    assert ZPhase() != XPhase()
-    assert ZPhase() != XPlus()
-    assert ZPhase() != XMinus()
-    assert ZPhase() != ZPlus()
-    assert ZPhase() != ZMinus()
-
-    assert X() != Z()
-    assert XPlus() != XMinus()
-    assert XPlus() != ZMinus()
-    assert ZPlus() != ZMinus()
+    assert CZ() == CZ()
+    assert CZ() == CZ(control=0, target=1)
+    assert CZ(control=0, target=1) == CZ(control=0, target=1)
+    assert CZ(control=0, target=1) == CZ(control=1, target=0)
+    assert CZ(control=0, target=1) != CZ(control=1, target=2)
 
 
 # ADDITION TESTS
+def test_equality_addition():
+    assert Identity() + Gadget('ZZZ') == Gadget('ZZZ')
+    assert Identity() + XPhase() == XPhase()
+    assert Identity() + ZPhase() == ZPhase()
+    assert Identity() + XMinus() == XMinus()
+    assert Identity() + ZMinus() == ZMinus()
+    assert Identity() + XPlus() == XPlus()
+    assert Identity() + ZPlus() == ZPlus()
+    assert Identity() + X() == X()
+    assert Identity() + Z() == Z()
+
+
 def test_gadget_addition():
-    gadget1 = Gadget('ZZZ')
-    gadget2 = Gadget('YZX')
-    gadget3 = Gadget('ZZZ', 1/2)
-    gadget4 = Gadget('ZZZ', -1/2)
-    gadget5 = Gadget('YZX', 1)
-    assert gadget3 + gadget4 == gadget1
-    assert gadget3 + gadget4 == Gadget('ZZZ', 0)
-    assert gadget3 + gadget3 == Gadget('ZZZ', 1)
-    assert gadget5 + gadget2 == Gadget('YZX', 1)
+    assert Gadget('ZZZ', 1/2) + Gadget('ZZZ', -1/2) == Gadget('ZZZ')
+    assert Gadget('ZZZ', 1/2) + Gadget('ZZZ', -1/2) == Gadget('ZZZ', 0)
+    assert Gadget('ZZZ', 1/2) + Gadget('ZZZ', 1/2) == Gadget('ZZZ', 1)
+    assert Gadget('YZX', 1) + Gadget('YZX') == Gadget('YZX', 1)
+    assert Gadget('ZZZ', 1) + Gadget('ZZZ', -1) == Identity()
+    assert Gadget('ZZZ', 1) + Identity() == Gadget('ZZZ', 1)
+    assert Gadget('ZZZ') + Identity() == Gadget('ZZZ')
     with pytest.raises(IncompatibleGatesException):
-        gadget1 + gadget2
-    with pytest.raises(IncompatibleGatesException):
-        gadget3 + gadget5
+        Gadget('ZZZ') + Gadget('YZX')
 
 
 def test_x_phase_addition():
-    x_phase1 = XPhase()
-    x_phase2 = XPhase(phase=1/2)
-    x_phase3 = XPhase(phase=-1/2)
-    x_phase4 = XPhase(qubit=1)
-    assert x_phase1 == x_phase2 + x_phase3
-    assert x_phase2 + x_phase2 == XPhase(phase=1)
-    assert x_phase1 + x_phase2 == XPhase(phase=1/2)
-    assert x_phase2 + x_phase2 + x_phase2 == XPhase(phase=3/2)
-    assert x_phase3 + x_phase3 + x_phase3 == XPhase(phase=1/2)
+    assert XPhase() == XPhase(phase=1/2) + XPhase(phase=-1/2)
+    assert XPhase() + XPhase(phase=1/2) == XPhase(phase=1/2)
+    assert XPhase(phase=1/2) + XPhase(phase=1/2) == XPhase(phase=1)
+    assert XPhase(phase=1/2) + XPhase(phase=1/2) + XPhase(phase=1/2) == XPhase(phase=3/2)
+    assert XPhase(phase=-1/2) + XPhase(phase=-1/2) + XPhase(phase=-1/2) == XPhase(phase=1/2)
+    assert XPhase(qubit=1, phase=1) + Identity() == XPhase(qubit=1, phase=1)
+    assert XPhase(phase=1) + Identity() == XPhase(phase=1)
+    assert XPhase() + Identity() == XPhase()
     with pytest.raises(IncompatibleGatesException):
-        x_phase1 + x_phase4
+        XPhase() + XPhase(qubit=1)
 
 
 def test_z_phase_addition():
-    z_phase1 = ZPhase()
-    z_phase2 = ZPhase(phase=1/2)
-    z_phase3 = ZPhase(phase=-1/2)
-    z_phase4 = ZPhase(qubit=1)
-    assert z_phase1 == z_phase2 + z_phase3
-    assert z_phase2 + z_phase2 == ZPhase(phase=1)
-    assert z_phase1 + z_phase2 == ZPhase(phase=1/2)
-    assert z_phase2 + z_phase2 + z_phase2 == ZPhase(phase=3/2)
-    assert z_phase3 + z_phase3 + z_phase3 == ZPhase(phase=1/2)
+    assert ZPhase() == ZPhase(phase=1/2) + ZPhase(phase=-1/2)
+    assert ZPhase() + ZPhase(phase=1/2) == ZPhase(phase=1/2)
+    assert ZPhase(phase=1/2) + ZPhase(phase=1/2) == ZPhase(phase=1)
+    assert ZPhase(phase=1/2) + ZPhase(phase=1/2) + ZPhase(phase=1/2) == ZPhase(phase=3/2)
+    assert ZPhase(phase=-1/2) + ZPhase(phase=-1/2) + ZPhase(phase=-1/2) == ZPhase(phase=1/2)
+    assert ZPhase(qubit=1, phase=1) + Identity() == ZPhase(qubit=1, phase=1)
+    assert ZPhase(phase=1) + Identity() == ZPhase(phase=1)
+    assert ZPhase() + Identity() == ZPhase()
     with pytest.raises(IncompatibleGatesException):
-        z_phase1 + z_phase4
+        ZPhase() + ZPhase(qubit=1)
 
 
 def test_x_addition():
-    x1 = X()
-    x2 = X(qubit=1)
-    assert x1 + x1 + x1 == XPhase(phase=1)
+    assert X() + X() + X() == X()
+    assert X() + X() == Identity()
+    assert X() + Identity() == X()
+    assert X(1) + Identity() == X(1)
     with pytest.raises(IncompatibleGatesException):
-        x1 + x2
+        X() + X(qubit=1)
+
+
+def test_z_addition():
+    assert Z() + Z() + Z() == Z()
+    assert Z() + Z() == Identity()
+    assert Z() + Identity() == Z()
+    assert Z(1) + Identity() == Z(1)
+    with pytest.raises(IncompatibleGatesException):
+        Z() + Z(qubit=1)
 
 
 def test_x_addition_mixed():
-    x_phase = XPhase()
-    x = X()
-    x_plus = XPlus()
-    x_minus = XMinus()
-    assert x_phase + x == XPhase(phase=1)
-    assert x_phase + x_plus == XPhase(phase=1/2)
-    assert x_phase + x_minus == XPhase(phase=-1/2)
+    assert XPhase() + X() == XPhase(phase=1)
+    assert XPhase() + XPlus() == XPhase(phase=1/2)
+    assert XPhase() + XMinus() == XPhase(phase=-1/2)
 
 
 # CONFIG TESTS

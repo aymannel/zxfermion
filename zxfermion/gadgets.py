@@ -13,13 +13,12 @@ from zxfermion.types import GateType, LegType, VertexType
 class Identity:
     def __init__(self):
         self.type = GateType.IDENTITY
-        self.identity = True
 
     def __add__(self, other):
         return other
 
     def __eq__(self, other):
-        return other.identity if hasattr(other, 'identity') else False
+        return True if other.type == GateType.IDENTITY else other.identity if hasattr(other, 'identity') else False
 
 
 class BaseGadget:
@@ -48,6 +47,9 @@ class Gadget(BaseGadget):
         self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
         self.phase_gadget = all(leg == LegType.Z or leg == LegType.I for leg in self.legs.values())
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
+
+    def __repr__(self):
+        return f'Gadget(pauli_string="{"".join(self.legs.values())}", phase={self.phase})'
 
     def __eq__(self, other):
         if self.identity and other.type == GateType.IDENTITY:
@@ -82,7 +84,6 @@ class PhaseGate(SingleQubitGate):
         self.type = GateType.PHASE_GATE
         self.phase = 0 if phase is None else round(phase % 2, 15)
         self.identity = math.isclose(self.phase, 0)
-        self.self_inverse = None
 
     def __repr__(self):
         return f'{self.__class__.__name__}(qubit={self.qubit}, phase={self.phase})'
@@ -95,19 +96,16 @@ class XPhase(PhaseGate):
         self.vertex_type = VertexType.X
 
     def __eq__(self, other):
-        if isinstance(other, XPhase):
-            return (self.qubit, self.phase) == (other.qubit, other.phase)
+        if other.type == GateType.IDENTITY:
+            return self.phase == 0
         else:
-            return False
+            return (self.qubit, self.phase) == (other.qubit, other.phase) if isinstance(other, XPhase) else False
 
     def __add__(self, other):
         if other.type == GateType.IDENTITY:
             return self
         elif isinstance(other, XPhase) and self.qubit == other.qubit:
-            if self.type == other.type and (self.self_inverse and other.self_inverse):
-                return Identity()
-            else:
-                return XPhase(qubit=self.qubit, phase=round(self.phase + other.phase, 15))
+            return XPhase(qubit=self.qubit, phase=round(self.phase + other.phase, 15))
         else:
             raise IncompatibleGatesException(f'Cannot add {self.type} and {other.type}')
 
@@ -119,19 +117,16 @@ class ZPhase(PhaseGate):
         self.vertex_type = VertexType.Z
 
     def __eq__(self, other):
-        if isinstance(other, ZPhase):
-            return (self.qubit, self.phase) == (other.qubit, other.phase)
+        if other.type == GateType.IDENTITY:
+            return self.phase == 0
         else:
-            return False
+            return (self.qubit, self.phase) == (other.qubit, other.phase) if isinstance(other, ZPhase) else False
 
     def __add__(self, other):
         if other.type == GateType.IDENTITY:
             return self
         elif isinstance(other, ZPhase) and self.qubit == other.qubit:
-            if self.type == other.type and (self.self_inverse and other.self_inverse):
-                return Identity()
-            else:
-                return ZPhase(qubit=self.qubit, phase=round(self.phase + other.phase, 15))
+            return ZPhase(qubit=self.qubit, phase=round(self.phase + other.phase, 15))
         else:
             raise IncompatibleGatesException(f'Cannot add {self.type} and {other.type}')
 
@@ -140,14 +135,18 @@ class X(XPhase):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
         super().__init__(qubit=qubit, phase=1, as_gadget=as_gadget)
         self.type = GateType.X
-        self.self_inverse = True
+
+    def __add__(self, other):
+        return Identity() if other.type == GateType.X and self.qubit == other.qubit else super().__add__(other)
 
 
 class Z(ZPhase):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
         super().__init__(qubit=qubit, phase=1, as_gadget=as_gadget)
         self.type = GateType.Z
-        self.self_inverse = True
+
+    def __add__(self, other):
+        return Identity() if other.type == GateType.Z and self.qubit == other.qubit else super().__add__(other)
 
 
 class XPlus(XPhase):
@@ -207,16 +206,12 @@ class ControlledGate(BaseGadget):
         self.min_qubit = min(self.control, self.target)
         self.max_qubit = max(self.control, self.target)
         self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
-        self.inverse = True
 
     def __repr__(self):
         return f'{self.__class__.__name__}(control={self.control}, target={self.target})'
 
     def __eq__(self, other):
-        if self.type == other.type:
-            return (self.control, self.target) == (other.control, other.target)
-        else:
-            return False
+        return (self.control, self.target) == (other.control, other.target) if self.type == other.type else False
 
     def __add__(self, other):
         if other.type == GateType.IDENTITY:
