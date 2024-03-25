@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from copy import deepcopy
 from typing import Optional
-from itertools import groupby
 
 import pyzx as zx
 from IPython.display import display, Markdown
 
 from zxfermion import config
 from zxfermion.gadgets import Gadget
-from zxfermion.graph import BaseGraph
+from zxfermion.graph import GadgetGraph
 from zxfermion.types import GateType
 from zxfermion.utilities import matrix_to_latex
 
@@ -27,12 +26,12 @@ class GadgetCircuit:
     def draw(self, labels=False, **kwargs):
         zx.draw(self.graph(**kwargs), labels=labels)
 
-    def graph(self, gadgets_only=None, stack_gadgets=None, expand_gadgets=None) -> BaseGraph:
+    def graph(self, gadgets_only=None, stack_gadgets=None, expand_gadgets=None) -> GadgetGraph:
         stack_gadgets = stack_gadgets if stack_gadgets is not None else config.stack_gadgets
         gadget_layers = self.stack_gadgets() if stack_gadgets else [[gadget] for gadget in self.gadgets]
-        circuit = BaseGraph(num_qubits=self.num_qubits)
+        circuit = GadgetGraph(num_qubits=self.num_qubits)
         for gadget_layer in gadget_layers:
-            layer = BaseGraph(num_qubits=self.num_qubits)
+            layer = GadgetGraph(num_qubits=self.num_qubits)
             for gadget in gadget_layer:
 
                 if gadget.type == GateType.GADGET:
@@ -68,7 +67,9 @@ class GadgetCircuit:
         return circuit
 
     def cancel_gadgets(self, gadgets: Optional[list] = None) -> list:
-        return [key for key, group in groupby(gadgets if gadgets else self.gadgets) if len(list(group)) % 2]
+        """Needs work. Use __add__() to check behaviour"""
+        # return [key for key, group in groupby(gadgets if gadgets else self.gadgets) if len(list(group)) % 2]
+        return gadgets if gadgets else self.gadgets
 
     def stack_gadgets(self, gadgets: Optional[list] = None) -> list[list]:
         layers = []

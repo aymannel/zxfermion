@@ -1,0 +1,2 @@
+class IncompatibleGatesException(Exception):
+    pass

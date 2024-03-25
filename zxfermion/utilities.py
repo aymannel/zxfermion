@@ -1,7 +1,17 @@
 import re
 import numpy as np
 from typing import Optional
-from zxfermion.config import tikz_styles
+
+
+tikz_styles = {
+    'X dot': 'x_node',
+    'Z dot': 'z_node',
+    'X phase dot': 'x_phase',
+    'Z phase dot': 'z_phase',
+    'hadamard': 'hadamard',
+    'hadamard edge': 'blue_dashed',
+    'none': 'black'
+}
 
 
 def matrix_to_latex(array: np.array) -> str:

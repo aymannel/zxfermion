@@ -22,10 +22,12 @@ class LegType(str, Enum):
 
 
 class GateType(str, Enum):
+    IDENTITY = 'IDENTITY'
     SINGLE_QUBIT_GATE = 'SINGLE_QUBIT_GATE'
     CONTROLLED_GATE = 'CONTROLLED_GATE'
     GADGET_CIRCUIT = 'GADGET_CIRCUIT'
     GADGET = 'GADGET'
+    PHASE_GATE = 'PHASE_GATE'
     X_PHASE = 'X_PHASE'
     Z_PHASE = 'Z_PHASE'
     X = 'X'

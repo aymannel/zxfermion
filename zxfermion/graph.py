@@ -1,22 +1,20 @@
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Optional
+from pdflatex import PDFLaTeX
 
 import pyzx as zx
-from pdflatex import PDFLaTeX
 from pyzx.graph.graph_s import GraphS
-from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, SingleQubitGate
-from zxfermion.types import VertexType, LegType, EdgeType
 from zxfermion.utilities import tex_parse_tikz
+from zxfermion.types import VertexType, LegType, EdgeType
+from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, SingleQubitGate
 
 
 class BaseGraph(GraphS):
     def __init__(self, num_qubits: int, num_rows: int = 1):
         super().__init__()
         self.num_qubits = num_qubits
-        # self.depth = depth
         self.set_inputs([self.add_vertex(qubit=qubit, row=0) for qubit in range(self.num_qubits)])
         self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 1) for qubit in range(self.num_qubits)])
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
@@ -37,6 +35,29 @@ class BaseGraph(GraphS):
         def pair_list(items: list[int]) -> list[tuple[int, int]]:
             return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
         self.add_edges(pair_list([self.inputs()[qubit], *node_refs, self.outputs()[qubit]]))
+
+    def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
+        Path('output/').mkdir(parents=True, exist_ok=True)
+        tex_output = tex_parse_tikz(content=self.to_tikz(), phase_row=self.num_qubits + 2, symbol=symbol, scale=scale)
+        if name:
+            with open(f'output/{name}.tex', 'w') as file: file.write(tex_output)
+        else:
+            return tex_output
+
+    def pdf(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
+        self.tikz(name=name, symbol=symbol, scale=scale)
+        pdf = PDFLaTeX.from_texfile(f'output/{name}.tex')
+        pdf.set_pdf_filename(f'{name}.pdf')
+        pdf.set_output_directory('output/')
+        pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
+
+    def draw(self):
+        zx.draw(self)
+
+
+class GadgetGraph(BaseGraph):
+    def __init__(self, num_qubits: int, num_rows: int = 1):
+        super().__init__(num_qubits=num_qubits, num_rows=num_rows)
 
     def add_single_gate(self, gate: SingleQubitGate):
         ref = self.add_vertex(ty=gate.vertex_type, row=1, qubit=gate.qubit, phase=gate.phase)
@@ -77,19 +98,19 @@ class BaseGraph(GraphS):
 
     def add_expanded_gadget(self, gadget: Gadget):
         qubits = [qubit for qubit, leg in gadget.legs.items() if leg != LegType.I]
-        ladder_left = BaseGraph(num_qubits=self.num_qubits)
-        ladder_right = BaseGraph(num_qubits=self.num_qubits)
+        ladder_left = GadgetGraph(num_qubits=self.num_qubits)
+        ladder_right = GadgetGraph(num_qubits=self.num_qubits)
         for left, right in zip(range(len(qubits) - 1), reversed(range(len(qubits) - 1))):
-            left_cx = BaseGraph(num_qubits=self.num_qubits)
+            left_cx = GadgetGraph(num_qubits=self.num_qubits)
             left_cx.add_cx(CX(qubits[left], qubits[left + 1]))
             ladder_left.compose(left_cx)
 
-            right_cx = BaseGraph(num_qubits=self.num_qubits)
+            right_cx = GadgetGraph(num_qubits=self.num_qubits)
             right_cx.add_cx(CX(qubits[right], qubits[right + 1]))
             ladder_right.compose(right_cx)
 
-        clifford_left = BaseGraph(num_qubits=self.num_qubits)
-        clifford_right = BaseGraph(num_qubits=self.num_qubits)
+        clifford_left = GadgetGraph(num_qubits=self.num_qubits)
+        clifford_right = GadgetGraph(num_qubits=self.num_qubits)
         for qubit, leg in gadget.legs.items():
             if leg == LegType.X:
                 clifford_left.add_single_gate(H(qubit=qubit))
@@ -98,7 +119,7 @@ class BaseGraph(GraphS):
                 clifford_left.add_single_gate(XPlus(qubit=qubit))
                 clifford_right.add_single_gate(XMinus(qubit=qubit))
 
-        ladder_middle = BaseGraph(num_qubits=self.num_qubits)
+        ladder_middle = GadgetGraph(num_qubits=self.num_qubits)
         ladder_middle.add_single_gate(ZPhase(qubit=max(qubits), phase=gadget.phase))
 
         for graph in clifford_left, ladder_left, ladder_middle, ladder_right, clifford_right:
@@ -172,21 +193,3 @@ class BaseGraph(GraphS):
         self.connect_nodes(qubit=z.qubit, node_refs=[ref])
         self.add_edge((hub_ref, phase_ref))
         self.add_edge((ref, hub_ref))
-
-    def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
-        Path('output/').mkdir(parents=True, exist_ok=True)
-        tex_output = tex_parse_tikz(content=self.to_tikz(), phase_row=self.num_qubits + 2, symbol=symbol, scale=scale)
-        if name:
-            with open(f'output/{name}.tex', 'w') as file: file.write(tex_output)
-        else:
-            return tex_output
-
-    def pdf(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
-        self.tikz(name=name, symbol=symbol, scale=scale)
-        pdf = PDFLaTeX.from_texfile(f'output/{name}.tex')
-        pdf.set_pdf_filename(f'{name}.pdf')
-        pdf.set_output_directory('output/')
-        pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
-
-    def draw(self):
-        zx.draw(self)
