@@ -5,9 +5,11 @@ from pathlib import Path
 from typing import Optional
 
 import pyzx as zx
+from pdflatex import PDFLaTeX
 from pyzx.graph.graph_s import GraphS
 from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, SingleQubitGate
 from zxfermion.types import VertexType, LegType, EdgeType
+from zxfermion.utilities import tex_parse_tikz
 
 
 class BaseGraph(GraphS):
@@ -171,33 +173,20 @@ class BaseGraph(GraphS):
         self.add_edge((hub_ref, phase_ref))
         self.add_edge((ref, hub_ref))
 
-    def tikz(self, name: Optional[str] = None, scale: Optional[float] = None):
-        from zxfermion.config import tikz_types
+    def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
         Path('output/').mkdir(parents=True, exist_ok=True)
-        scale = scale if scale else 0.5
-
-        content = self.to_tikz()
-        content = content.replace(r'\begin{tikzpicture}', rf'\begin{{tikzpicture}}[scale={scale}]')
-        pattern = rf'\[style=Z phase dot\]\s*\((\d+)\)\s*at\s*\((.*?),\s*-{self.num_qubits + 2}\.00\)\s*{{\$(.*?)\$}};'
-        labels = {r'$\frac{\pi}{2}$': r'$+$', r'$\frac{3\pi}{2}$': r'$-$'}
-
-        content = '\n'.join([
-            line.replace(r'\pi', r'\theta')
-            if re.search(pattern, line) else line
-            for line in content.splitlines()
-        ])
-        for key in labels:
-            content = content.replace(f'{key}', f'{labels[key]}')
-        for key in tikz_types:
-            content = content.replace(f'style={key}', f'style={tikz_types[key]}')
-        with open('tikz/template.tex', 'r') as file:
-            tex_output = file.read()
-            tex_output = tex_output.replace('TIKZ_PICTURE', content.strip())
-        if not name:
-            return tex_output
+        tex_output = tex_parse_tikz(content=self.to_tikz(), phase_row=self.num_qubits + 2, symbol=symbol, scale=scale)
+        if name:
+            with open(f'output/{name}.tex', 'w') as file: file.write(tex_output)
         else:
-            with open(f'output/{name}.tex', 'w') as file:
-                file.write(tex_output)
+            return tex_output
+
+    def pdf(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
+        self.tikz(name=name, symbol=symbol, scale=scale)
+        pdf = PDFLaTeX.from_texfile(f'output/{name}.tex')
+        pdf.set_pdf_filename(f'{name}.pdf')
+        pdf.set_output_directory('output/')
+        pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
 
     def draw(self):
         zx.draw(self)

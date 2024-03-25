@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import os
 from copy import deepcopy
 from typing import Optional
 from itertools import groupby
 
 import pyzx as zx
 from IPython.display import display, Markdown
-from pdflatex import PDFLaTeX
 
 from zxfermion import config
 from zxfermion.gadgets import Gadget
@@ -85,16 +83,6 @@ class GadgetCircuit:
                 layers.append([gadget])
         return layers
 
-    def tikz(self, name: Optional[str] = None, scale: Optional[float] = 0.5, **kwargs) -> BaseGraph:
-        return self.graph(**kwargs).tikz(name=name, scale=scale)
-
-    def pdf(self, name: str, scale: Optional[float] = 0.5, **kwargs):
-        self.tikz(name=name, scale=scale, **kwargs)
-        pdf = PDFLaTeX.from_texfile(f'output/{name}.tex')
-        pdf.set_pdf_filename(f'{name}.pdf')
-        pdf.set_output_directory('output/')
-        pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
-
     def matrix(self, return_latex=False, override_max=False):
         if self.num_qubits <= 5 or override_max:
             matrix = self.graph(expand_gadgets=False, gadgets_only=False, stack_gadgets=False).to_matrix()
@@ -103,3 +91,9 @@ class GadgetCircuit:
             return latex_string if return_latex else None
         else:
             print(f'{2 ** self.num_qubits} x {2 ** self.num_qubits} matrix too large to compute.')
+
+    def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None, **kwargs):
+        return self.graph(**kwargs).tikz(name=name, symbol=symbol, scale=scale)
+
+    def pdf(self, name: str, symbol: Optional[str] = None, scale: Optional[float] = 0.5, **kwargs):
+        return self.graph(**kwargs).pdf(name=name, symbol=symbol, scale=scale)
