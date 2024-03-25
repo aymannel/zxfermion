@@ -85,17 +85,12 @@ class GadgetCircuit:
                 layers.append([gadget])
         return layers
 
-    def tikz(self, name: str, scale=0.5, return_tikz=True, **kwargs) -> BaseGraph:
-        return self.graph(**kwargs).tikz(name=name, scale=scale, return_tikz=return_tikz)
+    def tikz(self, name: Optional[str] = None, scale: Optional[float] = 0.5, **kwargs) -> BaseGraph:
+        return self.graph(**kwargs).tikz(name=name, scale=scale)
 
-    def pdf(self, name: str, scale=0.5, **kwargs):
-        tikz_picture = self.tikz(name=name, scale=scale, return_tikz=True, **kwargs)
-        with open('tikz/template.tex', 'r') as file:
-            tikz_template = file.read()
-            tikz_template = tikz_template.replace('TIKZ_PICTURE', tikz_picture)
-        with open('tikz/temp.tex', 'w') as file:
-            file.write(tikz_template)
-        pdf = PDFLaTeX.from_texfile('tikz/temp.tex')
+    def pdf(self, name: str, scale: Optional[float] = 0.5, **kwargs):
+        self.tikz(name=name, scale=scale, **kwargs)
+        pdf = PDFLaTeX.from_texfile(f'output/{name}.tex')
         pdf.set_jobname(f'{name}.pdf')
         pdf.set_output_directory('output/')
         pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)

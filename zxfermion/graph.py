@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from typing import Optional
 
 import pyzx as zx
 from pyzx.graph.graph_s import GraphS
@@ -169,25 +170,35 @@ class BaseGraph(GraphS):
         self.add_edge((hub_ref, phase_ref))
         self.add_edge((ref, hub_ref))
 
-    def tikz(self, name: str, scale=None, return_tikz=True):
+    def tikz(self, name: Optional[str] = None, scale: Optional[float] = None):
+        from zxfermion.config import tikz_types
         scale = scale if scale else 0.5
+
+        content = self.to_tikz()
+        content = content.replace(r'\begin{tikzpicture}', rf'\begin{{tikzpicture}}[scale={scale}]')
         pattern = rf'\[style=Z phase dot\]\s*\((\d+)\)\s*at\s*\((.*?),\s*-{self.num_qubits + 2}\.00\)\s*{{\$(.*?)\$}};'
+        labels = {r'$\frac{\pi}{2}$': r'$+$', r'$\frac{3\pi}{2}$': r'$-$'}
+
         content = '\n'.join([
             line.replace(r'\pi', r'\theta')
             if re.search(pattern, line) else line
-            for line in self.to_tikz().splitlines()
+            for line in content.splitlines()
         ])
 
-        labels = {r'$\frac{\pi}{2}$': r'$+$', r'$\frac{3\pi}{2}$': r'$-$'}
-        from zxfermion.config import tikz_types
         for key in labels:
             content = content.replace(f'{key}', f'{labels[key]}')
         for key in tikz_types:
             content = content.replace(f'style={key}', f'style={tikz_types[key]}')
-        with open(f'output/{name}.tikz', 'w') as file:
-            file.write(content.strip())
-        content = content.replace(r'\begin{tikzpicture}', rf'\begin{{tikzpicture}}[scale={scale}]')
-        return content.strip() if return_tikz else None
+
+        with open('tikz/template.tex', 'r') as file:
+            tex_output = file.read()
+            tex_output = tex_output.replace('TIKZ_PICTURE', content.strip())
+
+        if not name:
+            return tex_output
+        else:
+            with open(f'output/{name}.tex', 'w') as file:
+                file.write(tex_output)
 
     def draw(self):
         zx.draw(self)
