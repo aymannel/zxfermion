@@ -91,7 +91,7 @@ class GadgetCircuit:
     def pdf(self, name: str, scale: Optional[float] = 0.5, **kwargs):
         self.tikz(name=name, scale=scale, **kwargs)
         pdf = PDFLaTeX.from_texfile(f'output/{name}.tex')
-        pdf.set_jobname(f'{name}.pdf')
+        pdf.set_pdf_filename(f'{name}.pdf')
         pdf.set_output_directory('output/')
         pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
 
