@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-import re
+import os
 from copy import deepcopy
 from typing import Optional
 from itertools import groupby
-from IPython.display import display, Markdown
 
 import pyzx as zx
+from IPython.display import display, Markdown
+from pdflatex import PDFLaTeX
+
 from zxfermion import config
-from zxfermion.types import GateType
 from zxfermion.gadgets import Gadget
 from zxfermion.graph import BaseGraph
+from zxfermion.types import GateType
 from zxfermion.utilities import matrix_to_latex
 
 
@@ -83,23 +85,20 @@ class GadgetCircuit:
                 layers.append([gadget])
         return layers
 
-    def tikz(self, name: str, **kwargs):
-        graph = self.graph(**kwargs)
-        pattern = rf'\[style=Z phase dot\]\s*\((\d+)\)\s*at\s*\((.*?),\s*-{self.num_qubits + 2}\.00\)\s*{{\$(.*?)\$}};'
-        content = '\n'.join([
-            line.replace(r'\pi', r'\theta')
-            if re.search(pattern, line) else line
-            for line in graph.to_tikz().splitlines()
-        ])
+    def tikz(self, name: str, scale=0.5, return_tikz=True, **kwargs) -> BaseGraph:
+        return self.graph(**kwargs).tikz(name=name, scale=scale, return_tikz=return_tikz)
 
-        labels = {r'$\frac{\pi}{2}$': r'$+$', r'$\frac{3\pi}{2}$': r'$-$'}
-        from zxfermion.config import tikz_types
-        for key in labels:
-            content = content.replace(f'{key}', f'{labels[key]}')
-        for key in tikz_types:
-            content = content.replace(f'style={key}', f'style={tikz_types[key]}')
-        with open(f'{name}.tikz', 'w') as file:
-            file.write(content)
+    def pdf(self, name: str, scale=0.5, **kwargs):
+        tikz_picture = self.tikz(name=name, scale=scale, return_tikz=True, **kwargs)
+        with open('tikz/template.tex', 'r') as file:
+            tikz_template = file.read()
+            tikz_template = tikz_template.replace('TIKZ_PICTURE', tikz_picture)
+        with open('tikz/temp.tex', 'w') as file:
+            file.write(tikz_template)
+        pdf = PDFLaTeX.from_texfile('tikz/temp.tex')
+        pdf.set_jobname(f'{name}.pdf')
+        pdf.set_output_directory('output/')
+        pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
 
     def matrix(self, return_latex=False, override_max=False):
         if self.num_qubits <= 5 or override_max:

@@ -7,21 +7,19 @@ from zxfermion.types import GateType, LegType, VertexType
 
 
 class BaseGadget:
-    def draw(self, expand_gadget=None, as_gadget=None):
+    def matrix(self, return_latex=False):
         from zxfermion.circuits import GadgetCircuit
-        zx.draw(GadgetCircuit([self]).graph(expand_gadgets=expand_gadget, gadgets_only=as_gadget))
+        return GadgetCircuit([self]).matrix(return_latex=return_latex)
 
     def graph(self, expand_gadget=None, as_gadget=None):
         from zxfermion.circuits import GadgetCircuit
         return GadgetCircuit([self]).graph(expand_gadgets=expand_gadget, gadgets_only=as_gadget)
 
-    def matrix(self, return_latex=False):
-        from zxfermion.circuits import GadgetCircuit
-        return GadgetCircuit([self]).matrix(return_latex=return_latex)
-
     def tikz(self, name: str, expand_gadget=None, as_gadget=None):
-        from zxfermion.circuits import GadgetCircuit
-        GadgetCircuit([self]).tikz(name=name, expand_gadgets=expand_gadget, gadgets_only=as_gadget)
+        self.graph(expand_gadget=expand_gadget, as_gadget=as_gadget).tikz(name=name)
+
+    def draw(self, expand_gadget=None, as_gadget=None):
+        zx.draw(self.graph(expand_gadget=expand_gadget, as_gadget=as_gadget))
 
 
 class Gadget(BaseGadget):

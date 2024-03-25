@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 import pyzx as zx
 from pyzx.graph.graph_s import GraphS
 from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, SingleQubitGate
@@ -166,6 +168,26 @@ class BaseGraph(GraphS):
         self.connect_nodes(qubit=z.qubit, node_refs=[ref])
         self.add_edge((hub_ref, phase_ref))
         self.add_edge((ref, hub_ref))
+
+    def tikz(self, name: str, scale=None, return_tikz=True):
+        scale = scale if scale else 0.5
+        pattern = rf'\[style=Z phase dot\]\s*\((\d+)\)\s*at\s*\((.*?),\s*-{self.num_qubits + 2}\.00\)\s*{{\$(.*?)\$}};'
+        content = '\n'.join([
+            line.replace(r'\pi', r'\theta')
+            if re.search(pattern, line) else line
+            for line in self.to_tikz().splitlines()
+        ])
+
+        labels = {r'$\frac{\pi}{2}$': r'$+$', r'$\frac{3\pi}{2}$': r'$-$'}
+        from zxfermion.config import tikz_types
+        for key in labels:
+            content = content.replace(f'{key}', f'{labels[key]}')
+        for key in tikz_types:
+            content = content.replace(f'style={key}', f'style={tikz_types[key]}')
+        with open(f'output/{name}.tikz', 'w') as file:
+            file.write(content.strip())
+        content = content.replace(r'\begin{tikzpicture}', rf'\begin{{tikzpicture}}[scale={scale}]')
+        return content.strip() if return_tikz else None
 
     def draw(self):
         zx.draw(self)
