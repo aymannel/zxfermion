@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Optional
 
 import pyzx as zx
@@ -172,6 +173,7 @@ class BaseGraph(GraphS):
 
     def tikz(self, name: Optional[str] = None, scale: Optional[float] = None):
         from zxfermion.config import tikz_types
+        Path('output/').mkdir(parents=True, exist_ok=True)
         scale = scale if scale else 0.5
 
         content = self.to_tikz()
@@ -184,16 +186,13 @@ class BaseGraph(GraphS):
             if re.search(pattern, line) else line
             for line in content.splitlines()
         ])
-
         for key in labels:
             content = content.replace(f'{key}', f'{labels[key]}')
         for key in tikz_types:
             content = content.replace(f'style={key}', f'style={tikz_types[key]}')
-
         with open('tikz/template.tex', 'r') as file:
             tex_output = file.read()
             tex_output = tex_output.replace('TIKZ_PICTURE', content.strip())
-
         if not name:
             return tex_output
         else:
