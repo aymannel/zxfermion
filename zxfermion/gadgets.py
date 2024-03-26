@@ -57,7 +57,7 @@ class Gadget(BaseGadget):
         elif other.type == GateType.GADGET:
             return self.legs == other.legs and math.isclose(self.phase, other.phase)
         else:
-            raise IncompatibleGatesException(f'Cannot assert equality between f{self.type} and {other.type}.')
+            return False
 
     def __add__(self, other):
         if other.type == GateType.IDENTITY:
@@ -137,7 +137,14 @@ class X(XPhase):
         self.type = GateType.X
 
     def __add__(self, other):
-        return Identity() if other.type == GateType.X and self.qubit == other.qubit else super().__add__(other)
+        if other.type == GateType.X and self.qubit == other.qubit:
+            return Identity()
+        elif other.type == GateType.X_PLUS and self.qubit == other.qubit:
+            return XMinus(qubit=self.qubit)
+        elif other.type == GateType.X_MINUS and self.qubit == other.qubit:
+            return XPlus(qubit=self.qubit)
+        else:
+            return super().__add__(other)
 
 
 class Z(ZPhase):
@@ -146,7 +153,14 @@ class Z(ZPhase):
         self.type = GateType.Z
 
     def __add__(self, other):
-        return Identity() if other.type == GateType.Z and self.qubit == other.qubit else super().__add__(other)
+        if other.type == GateType.Z and self.qubit == other.qubit:
+            return Identity()
+        elif other.type == GateType.Z_PLUS and self.qubit == other.qubit:
+            return ZMinus(qubit=self.qubit)
+        elif other.type == GateType.Z_MINUS and self.qubit == other.qubit:
+            return ZPlus(qubit=self.qubit)
+        else:
+            return super().__add__(other)
 
 
 class XPlus(XPhase):
@@ -154,11 +168,31 @@ class XPlus(XPhase):
         super().__init__(qubit=qubit, phase=1/2, as_gadget=as_gadget)
         self.type = GateType.X_PLUS
 
+    def __add__(self, other):
+        if other.type == GateType.X_PLUS and self.qubit == other.qubit:
+            return X(qubit=self.qubit)
+        elif other.type == GateType.X_MINUS and self.qubit == other.qubit:
+            return Identity()
+        elif other.type == GateType.X and self.qubit == other.qubit:
+            return XMinus(qubit=self.qubit)
+        else:
+            return super().__add__(other)
+
 
 class XMinus(XPhase):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
         super().__init__(qubit=qubit, phase=3/2, as_gadget=as_gadget)
         self.type = GateType.X_MINUS
+
+    def __add__(self, other):
+        if other.type == GateType.X_MINUS and self.qubit == other.qubit:
+            return X(qubit=self.qubit)
+        elif other.type == GateType.X_PLUS and self.qubit == other.qubit:
+            return Identity()
+        elif other.type == GateType.X and self.qubit == other.qubit:
+            return XPlus(qubit=self.qubit)
+        else:
+            return super().__add__(other)
 
 
 class ZPlus(ZPhase):
@@ -166,11 +200,31 @@ class ZPlus(ZPhase):
         super().__init__(qubit=qubit, phase=1/2, as_gadget=as_gadget)
         self.type = GateType.Z_PLUS
 
+    def __add__(self, other):
+        if other.type == GateType.Z_PLUS and self.qubit == other.qubit:
+            return Z(qubit=self.qubit)
+        elif other.type == GateType.Z_MINUS and self.qubit == other.qubit:
+            return Identity()
+        elif other.type == GateType.Z and self.qubit == other.qubit:
+            return ZMinus(qubit=self.qubit)
+        else:
+            return super().__add__(other)
+
 
 class ZMinus(ZPhase):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
         super().__init__(qubit=qubit, phase=3/2, as_gadget=as_gadget)
         self.type = GateType.Z_MINUS
+
+    def __add__(self, other):
+        if other.type == GateType.Z_MINUS and self.qubit == other.qubit:
+            return Z(qubit=self.qubit)
+        elif other.type == GateType.Z_PLUS and self.qubit == other.qubit:
+            return Identity()
+        elif other.type == GateType.Z and self.qubit == other.qubit:
+            return ZPlus(qubit=self.qubit)
+        else:
+            return super().__add__(other)
 
 
 class H(SingleQubitGate):
