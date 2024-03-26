@@ -9,7 +9,6 @@ from zxfermion.gadgets import Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus
 from zxfermion.types import GateType, LegType
 
 
-# test kwarg business
 # kwargs for drawing
 # kwargs for graphs
 # kwargs for tikz
@@ -23,6 +22,9 @@ from zxfermion.types import GateType, LegType
 
 # rethink mixed equality stuff. possibly use for lop
 # go through all __repr__, __add__, __eq__ for all GateType classes and write tests for expected behaviour + edge cases
+
+
+# test qubit min max for gadget and controlled rotations
 
 
 # GADGET TESTS
@@ -56,16 +58,35 @@ def test_phase_gadget():
     assert all(leg == LegType.Z for leg in gadget.legs.values())
 
 
-@pytest.mark.parametrize('pauli_string', ['YZX', 'ZZZ'])
+# @formatter:off
+@pytest.mark.parametrize(['pauli_string', 'legs'], [
+    ['ZZZ',   {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
+    ['YZX',   {0: LegType.Y, 1: LegType.Z, 2: LegType.X}],
+    ['ZIZ',   {0: LegType.Z, 1: LegType.I, 2: LegType.Z}],
+    ['IIZ',   {0: LegType.I, 1: LegType.I, 2: LegType.Z}],
+    ['ZZZII', {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
+    ['ZIZII', {0: LegType.Z, 1: LegType.I, 2: LegType.Z}],
+])  # @formatter:on
+def test_gadget_dimensions(pauli_string, legs):
+    gadget = Gadget(pauli_string)
+    assert gadget.legs == legs
+    assert gadget.min_qubit == 0
+    assert gadget.max_qubit == 2
+
+
+# @formatter:off
 @pytest.mark.parametrize(['phase', 'expected'],
-    [[None, 0], [0, 0], [1, 1], [1/4, 1/4], [3/4, 3/4], [5/7, 5/7], [2, 0], [3, 1], [5.5, 1.5], [12/5, 2/5]])
-def test_gadget_phase(phase, expected, pauli_string):
-    gadget = Gadget(pauli_string, phase=phase)
-    assert gadget.type == GateType.GADGET
-    assert math.isclose(gadget.phase, expected)
+[[None, 0], [0, 0], [1, 1], [2, 0], [3, 1], [1/4, 1/4], [3/2, 3/2], [5.5, 1.5], [12/5, 2/5]])  # @formatter:on
+def test_gadget_phase(phase, expected):
+    phase_gadget = Gadget('ZZZ', phase=phase)
+    pauli_gadget = Gadget('YZX', phase=phase)
+    assert phase_gadget.type == GateType.GADGET
+    assert pauli_gadget.type == GateType.GADGET
+    assert math.isclose(phase_gadget.phase, expected)
+    assert math.isclose(pauli_gadget.phase, expected)
 
 
-def test_identity_gadget():
+def test_gadget_identity():
     gadget1 = Gadget('ZZZ')
     gadget2 = Gadget('XYZ')
     gadget3 = Gadget('ZZZ', phase=1)
@@ -76,17 +97,27 @@ def test_identity_gadget():
     assert not gadget4.identity
 
 
-@pytest.mark.parametrize(['control', 'target'], [[None, None], [0, 1]])
-def test_cx(control, target):
+# @formatter:off
+@pytest.mark.parametrize(['control', 'target', 'expected_control', 'expected_target'],
+[[None, None, 0, 1], [0, 1, 0, 1], [0, 4, 0, 4], [3, 6, 3, 6], [6, 12, 6, 12]])  # @formatter:on
+def test_cx(control, target, expected_control, expected_target):
     cx = CX(control=control, target=target)
     assert cx.type == GateType.CX
-    assert cx.control == 0
-    assert cx.target == 1
-    assert cx.min_qubit == 0
-    assert cx.max_qubit == 1
-    assert repr(cx) == f'CX(control={0 if control is None else control}, target={1 if target is None else target})'
+    assert cx.control == expected_control
+    assert cx.target == expected_target
+    assert repr(cx) == f'CX(control={expected_control}, target={expected_target})'
     with pytest.raises(AssertionError):
         CX(control=1, target=1)
+
+
+# @formatter:off
+@pytest.mark.parametrize(['control', 'target', 'min_qubit', 'max_qubit'],
+[[0, 1, 0, 1], [0, 4, 0, 4], [6, 3, 3, 6], [12, 6, 6, 12], [2, 15, 2, 15]])  # @formatter:on
+def test_cx_min_max(control, target, min_qubit, max_qubit):
+    cx = CX(control=control, target=target)
+    assert cx.type == GateType.CX
+    assert cx.min_qubit == min_qubit
+    assert cx.max_qubit == max_qubit
 
 
 @pytest.mark.parametrize(['control', 'target'], [[None, None], [0, 1]])
@@ -102,8 +133,21 @@ def test_cz(control, target):
         CZ(control=1, target=1)
 
 
+# @formatter:off
+@pytest.mark.parametrize(['control', 'target', 'min_qubit', 'max_qubit'],
+[[0, 1, 0, 1], [0, 4, 0, 4], [6, 3, 3, 6], [12, 6, 6, 12], [2, 15, 2, 15]])  # @formatter:on
+def test_cz_min_max(control, target, min_qubit, max_qubit):
+    cz = CZ(control=control, target=target)
+    assert cz.type == GateType.CZ
+    assert cz.control == min_qubit
+    assert cz.target == max_qubit
+    assert cz.min_qubit == min_qubit
+    assert cz.max_qubit == max_qubit
+
+
+# @formatter:off
 @pytest.mark.parametrize(['phase', 'expected'],
-    [[None, 0], [0, 0], [1, 1], [1/4, 1/4], [3/4, 3/4], [5/7, 5/7], [2, 0], [3, 1], [5.5, 1.5], [12/5, 2/5]])
+[[None, 0], [0, 0], [1, 1], [1/4, 1/4], [5/7, 5/7], [2, 0], [3, 1], [5.5, 1.5], [12/5, 2/5]])  # @formatter:on
 def test_x_phase(phase, expected):
     x_phase = XPhase(phase=phase)
     assert x_phase.type == GateType.X_PHASE

@@ -41,9 +41,10 @@ class Gadget(BaseGadget):
     def __init__(self, pauli_string: str, phase: Optional[int | float] = None, expand_gadget=None):
         self.type = GateType.GADGET
         self.phase = 0 if phase is None else round(phase % 2, 15)
-        self.legs = {qubit: LegType(pauli) for qubit, pauli in enumerate(pauli_string)}
+        self.legs = {q: LegType(p) for q, p in enumerate(pauli_string.rstrip('I'))}
         self.min_qubit = min([qubit for qubit in self.legs])
         self.max_qubit = max([qubit for qubit in self.legs])
+
         self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
         self.phase_gadget = all(leg == LegType.Z or leg == LegType.I for leg in self.legs.values())
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
