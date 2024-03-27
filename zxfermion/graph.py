@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Optional, Union
 from pdflatex import PDFLaTeX
@@ -47,11 +48,13 @@ class BaseGraph(GraphS):
             return tex_output
 
     def pdf(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
-        self.tikz(name=name, symbol=symbol, scale=scale)
-        pdf = PDFLaTeX.from_texfile(f'output/{name}.tex')
+        self.tikz(name=f'{name}_temp', symbol=symbol, scale=scale)
+        pdf = PDFLaTeX.from_texfile(f'output/{name}_temp.tex')
         pdf.set_pdf_filename(f'{name}.pdf')
         pdf.set_output_directory('output/')
         pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
+        if os.path.exists(f'output/{name}_temp.tex'):
+            os.remove(f'output/{name}_temp.tex')
 
     def draw(self, labels=False):
         zx.draw(self, labels=labels)
