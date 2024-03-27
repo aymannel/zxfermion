@@ -9,7 +9,7 @@ import pyzx as zx
 from pyzx import VertexType, EdgeType
 from pyzx.graph.graph_s import GraphS
 
-from zxfermion.types import LegType
+from zxfermion.types import LegType, GateType
 from zxfermion.utilities import tex_parse_tikz
 from zxfermion.gadgets import Gadget, XPhase, ZPhase, XPlus, XMinus, CZ, CX, H
 
@@ -65,7 +65,11 @@ class GadgetGraph(BaseGraph):
         super().__init__(num_qubits=num_qubits, num_rows=num_rows)
 
     def add_single_gate(self, gate: Union[XPhase, ZPhase, H]):
-        ref = self.add_vertex(ty=gate.vertex_type, row=1, qubit=gate.qubit, phase=gate.phase)
+        ref = self.add_vertex(
+            ty=gate.vertex_type,
+            row=1, qubit=gate.qubit,
+            phase=None if gate.type == GateType.H else gate.phase
+        )
         self.connect_nodes(qubit=gate.qubit, node_refs=[ref])
         self.remove_wire(gate.qubit)
         return ref

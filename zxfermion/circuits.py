@@ -93,5 +93,6 @@ class GadgetCircuit:
 
     @classmethod
     def from_dict(cls, circuit_dict: dict):
+        assert all(gadget_dict['gate_type'] in GateType.NAMES for gadget_dict in circuit_dict['gadgets'])
         gadgets = [eval(gadget_dict['gate_type'])(**gadget_dict['params']) for gadget_dict in circuit_dict['gadgets']]
         return cls(gadgets=gadgets, num_qubits=circuit_dict.get('num_qubits'))

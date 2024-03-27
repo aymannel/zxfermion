@@ -28,11 +28,17 @@ class GateType(str, Enum):
     X_MINUS = 'X_MINUS'
     Z_MINUS = 'Z_MINUS'
 
-    SINGLE_QUBIT_GATES = [
-        SINGLE_QUBIT_GATE,
-        X_PHASE, Z_PHASE,
-        X_MINUS, Z_MINUS,
-        X_PLUS, Z_PLUS,
-        X, Z,
-        H,
+    NAMES = [
+        'Gadget',
+        'XPhase',
+        'ZPhase',
+        'X',
+        'Z',
+        'XPlus',
+        'ZPlus',
+        'XMinus',
+        'ZMinus',
+        'CX',
+        'CZ',
+        'H'
     ]

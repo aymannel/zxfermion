@@ -1,0 +1,25 @@
+\definecolor{z_color}{RGB}{216,248,216}
+\definecolor{x_color}{RGB}{232,165,165}
+\definecolor{y_color}{RGB}{88,184,244}
+\definecolor{h_color}{RGB}{255,255,0}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest, compat/show suggested version=false}
+
+\newcommand{\tikzrefsize}[1]{\scriptsize{#1}}
+\newcommand{\axref}[1]{\tikzrefsize{(#1)}}
+\newcommand{\lemref}[1]{\tikzrefsize{\ref{#1}}}
+\newcommand{\zxw}[1]{\cite[#1]{poorCompletenessArbitraryFinite2023}}
+
+\tikzstyle{hadamard}=[box, draw=black, shape=rectangle, fill={h_color}, minimum size=.55em]
+\tikzstyle{z_node}=[draw=black, shape=circle, fill={z_color}, inner sep=0.7mm, minimum width=0pt, minimum height=0pt]
+\tikzstyle{z_phase}=[shape=rectangle, fill={z_color}, draw=black, minimum size=1.2em, rounded corners=0.5em, inner sep=0.2em, outer sep=-0.2em, scale=0.8, font={\footnotesize}]
+\tikzstyle{x_node}=[{z_node}, fill={x_color}, draw=black]
+\tikzstyle{x_phase}=[{z_phase}, fill={x_color}, draw=black]
+\tikzstyle{y_node}=[{z_node}, fill={y_color}, draw=black]
+\tikzstyle{y_phase}=[{z_phase}, fill={y_color}, draw=black]
+\tikzstyle{black}=[draw=black, shape=circle, scale=0.3, fill=black, font={\footnotesize}]
+\tikzstyle{white}=[draw=black, shape=circle, scale=0.3, fill=white, font={\footnotesize}]
+\tikzstyle{box}=[draw=black, shape=rectangle, fill=white, minimum size=.95em, inner sep=0.15em, scale=0.85, font={\footnotesize}]
+\tikzstyle{blue_solid}=[-, very thick, draw=blue]
+\tikzstyle{blue_dashed}=[-, dashed, draw=blue]
