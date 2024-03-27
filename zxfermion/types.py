@@ -1,17 +1,5 @@
 from __future__ import annotations
-
 from enum import Enum
-
-
-class EdgeType:
-    S: int = 1
-    H: int = 2
-
-
-class VertexType:
-    Z: int = 1
-    X: int = 2
-    H: int = 3
 
 
 class LegType(str, Enum):
@@ -39,3 +27,12 @@ class GateType(str, Enum):
     Z_PLUS = 'Z_PLUS'
     X_MINUS = 'X_MINUS'
     Z_MINUS = 'Z_MINUS'
+
+    SINGLE_QUBIT_GATES = [
+        SINGLE_QUBIT_GATE,
+        X_PHASE, Z_PHASE,
+        X_MINUS, Z_MINUS,
+        X_PLUS, Z_PLUS,
+        X, Z,
+        H,
+    ]

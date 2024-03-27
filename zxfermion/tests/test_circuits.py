@@ -1,8 +1,10 @@
 import pytest
-
+from zxfermion.types import GateType
 from zxfermion.gadgets import Gadget
 from zxfermion.circuits import GadgetCircuit
-from zxfermion.types import GateType
+
+
+# test num_qubits > max(gadget.num_qubits...) vs num_qubits < max(gadget.num_qubits...)
 
 
 def test_circuit():

@@ -4,10 +4,11 @@ import math
 from typing import Optional
 
 import pyzx as zx
+from pyzx import VertexType
 
 from zxfermion import config
 from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.types import GateType, LegType, VertexType
+from zxfermion.types import GateType, LegType
 
 
 class Identity:
@@ -33,24 +34,28 @@ class BaseGadget:
     def tikz(self, name: str, expand_gadget=None, as_gadget=None):
         self.graph(expand_gadget=expand_gadget, as_gadget=as_gadget).tikz(name=name)
 
-    def draw(self, expand_gadget=None, as_gadget=None):
-        zx.draw(self.graph(expand_gadget=expand_gadget, as_gadget=as_gadget))
+    def draw(self, expand_gadget=None, as_gadget=None, labels=False):
+        zx.draw(self.graph(expand_gadget=expand_gadget, as_gadget=as_gadget), labels=labels)
+
+    @classmethod
+    def from_dict(cls, params: dict):
+        return cls(**params)
 
 
 class Gadget(BaseGadget):
     def __init__(self, pauli_string: str, phase: Optional[int | float] = None, expand_gadget=None):
         self.type = GateType.GADGET
+        self.pauli_string = pauli_string.rstrip('I')
         self.phase = 0 if phase is None else round(phase % 2, 15)
         self.legs = {q: LegType(p) for q, p in enumerate(pauli_string.rstrip('I'))}
         self.min_qubit = min([qubit for qubit in self.legs])
         self.max_qubit = max([qubit for qubit in self.legs])
-
         self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
         self.phase_gadget = all(leg == LegType.Z or leg == LegType.I for leg in self.legs.values())
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
 
     def __repr__(self):
-        return f'Gadget(pauli_string="{"".join(self.legs.values())}", phase={self.phase})'
+        return f"Gadget(pauli_string='{''.join(self.legs.values())}', phase={self.phase})"
 
     def __eq__(self, other):
         if self.identity and other.type == GateType.IDENTITY:
@@ -69,32 +74,52 @@ class Gadget(BaseGadget):
         else:
             raise IncompatibleGatesException
 
+    @classmethod
+    def from_gate(cls, gate: ZPhase) -> Gadget:
+        return cls(pauli_string='I' * gate.qubit + 'Z', phase=gate.phase)
+
+    def to_dict(self) -> dict:
+        return {
+            'gate_type': 'Gadget', 'params': {
+                'pauli_string': self.pauli_string,
+                'phase': self.phase
+            }
+        }
+
 
 class SingleQubitGate(BaseGadget):
-    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+    def __init__(self, qubit: Optional[int] = None, phase: Optional[int | float] = None, as_gadget=None):
         self.type = GateType.SINGLE_QUBIT_GATE
         self.qubit = 0 if qubit is None else qubit
         self.min_qubit = self.qubit
         self.max_qubit = self.qubit
         self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
-
-
-class PhaseGate(SingleQubitGate):
-    def __init__(self, qubit: Optional[int] = None, phase: Optional[int | float] = None, as_gadget=None):
-        super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.PHASE_GATE
         self.phase = 0 if phase is None else round(phase % 2, 15)
-        self.identity = math.isclose(self.phase, 0)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(qubit={self.qubit}, phase={self.phase})'
+        if self.type in (GateType.X_PHASE, GateType.Z_PHASE):
+            return f'{self.__class__.__name__}(qubit={self.qubit}, phase={self.phase})'
+        else:
+            return f'{self.__class__.__name__}(qubit={self.qubit})'
+
+    def to_dict(self) -> dict:
+        is_phase = self.type in (GateType.X_PHASE, GateType.Z_PHASE)
+        return {
+            'gate_type': self.__class__.__name__, 'params': {
+                'qubit': self.qubit, 'phase': self.phase
+            } if is_phase else {
+                'qubit': self.qubit
+            }
+        }
 
 
-class XPhase(PhaseGate):
+class XPhase(SingleQubitGate):
     def __init__(self, qubit: Optional[int] = None, phase: Optional[int | float] = None, as_gadget=None):
         super().__init__(qubit=qubit, phase=phase, as_gadget=as_gadget)
         self.type = GateType.X_PHASE
         self.vertex_type = VertexType.X
+        self.identity = math.isclose(self.phase, 0)
 
     def __eq__(self, other):
         if other.type == GateType.IDENTITY:
@@ -111,11 +136,12 @@ class XPhase(PhaseGate):
             raise IncompatibleGatesException(f'Cannot add {self.type} and {other.type}')
 
 
-class ZPhase(PhaseGate):
+class ZPhase(SingleQubitGate):
     def __init__(self, qubit: Optional[int] = None, phase: Optional[int | float] = None, as_gadget=None):
         super().__init__(qubit=qubit, phase=phase, as_gadget=as_gadget)
         self.type = GateType.Z_PHASE
         self.vertex_type = VertexType.Z
+        self.identity = math.isclose(self.phase, 0)
 
     def __eq__(self, other):
         if other.type == GateType.IDENTITY:
@@ -130,6 +156,9 @@ class ZPhase(PhaseGate):
             return ZPhase(qubit=self.qubit, phase=round(self.phase + other.phase, 15))
         else:
             raise IncompatibleGatesException(f'Cannot add {self.type} and {other.type}')
+
+    def gadget(self) -> Gadget:
+        return Gadget.from_gate(self)
 
 
 class X(XPhase):
@@ -232,8 +261,7 @@ class H(SingleQubitGate):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
         super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.H
-        self.vertex_type = VertexType.H
-        self.phase = None
+        self.vertex_type = VertexType.H_BOX
 
     def __repr__(self):
         return f'H(qubit={self.qubit})'
@@ -244,7 +272,7 @@ class H(SingleQubitGate):
     def __add__(self, other):
         if other.type == GateType.IDENTITY:
             return self
-        elif other.type == GateType.H:
+        elif other.type == GateType.H and self.qubit == other.qubit:
             return Identity()
         else:
             raise IncompatibleGatesException

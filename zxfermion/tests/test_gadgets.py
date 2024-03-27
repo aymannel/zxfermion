@@ -1,13 +1,11 @@
 import math
 
 import pytest
-from pyzx import VertexType, EdgeType
+from pyzx import VertexType
 
-from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.graph import GadgetGraph
-from zxfermion.gadgets import Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, Identity, H
 from zxfermion.types import GateType, LegType
-
+from zxfermion.exceptions import IncompatibleGatesException
+from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H
 
 # kwargs for drawing
 # kwargs for graphs
@@ -16,18 +14,14 @@ from zxfermion.types import GateType, LegType
 # test stack_gadgets gadget feature (multiple test cases, think of clever ones?)
 # test expand_gadget feature (multiple test cases! pauli vs phase gadget, gadgets skipping legs, etc)
 # some weird behaviour with stack_gadgets gadgets where XPlus is commuting through CZ
+
 # test graphing in all different modes
 # test expanded CX and CZ
-# assert graph depth doesn't change when graph is larger than gadget size
-
-# rethink mixed equality stuff. possibly use for lop
-# go through all __repr__, __add__, __eq__ for all GateType classes and write tests for expected behaviour + edge cases
+# test Gadget.from_gate()
+# assert XPhase.gadget() method returns Gadget.from_single_gate(self)
 
 
-# test qubit min max for gadget and controlled rotations
-
-
-# GADGET TESTS
+# Gadget tests
 def test_identity():
     identity = Identity()
     assert identity.type == GateType.IDENTITY
@@ -41,9 +35,10 @@ def test_gadget():
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
     assert len(gadget.legs) == 3
-    assert repr(gadget) == 'Gadget(pauli_string="XYZ", phase=0)'
+    assert repr(gadget) == "Gadget(pauli_string='XYZ', phase=0)"
     assert all(isinstance(leg, LegType) for leg in gadget.legs.values())
     assert all((gadget.legs[0] == LegType.X, gadget.legs[1] == LegType.Y, gadget.legs[2] == LegType.Z))
+    assert gadget.to_dict() == {'type': 'GADGET', 'pauli_string': 'XYZ', 'phase': 0}
 
 
 def test_phase_gadget():
@@ -54,24 +49,25 @@ def test_phase_gadget():
     assert len(gadget.legs) == 3
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
-    assert repr(gadget) == 'Gadget(pauli_string="ZZZ", phase=0)'
+    assert repr(gadget) == "Gadget(pauli_string='ZZZ', phase=0)"
     assert all(leg == LegType.Z for leg in gadget.legs.values())
+    assert gadget.to_dict() == {'type': 'GADGET', 'pauli_string': 'ZZZ', 'phase': 0}
 
 
 # @formatter:off
-@pytest.mark.parametrize(['pauli_string', 'legs'], [
-    ['ZZZ',   {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
-    ['YZX',   {0: LegType.Y, 1: LegType.Z, 2: LegType.X}],
-    ['ZIZ',   {0: LegType.Z, 1: LegType.I, 2: LegType.Z}],
-    ['IIZ',   {0: LegType.I, 1: LegType.I, 2: LegType.Z}],
-    ['ZZZII', {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
-    ['ZIZII', {0: LegType.Z, 1: LegType.I, 2: LegType.Z}],
-])  # @formatter:on
-def test_gadget_dimensions(pauli_string, legs):
+@pytest.mark.parametrize(['pauli_string', 'legs'],
+[['ZZZ',   {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
+ ['YZX',   {0: LegType.Y, 1: LegType.Z, 2: LegType.X}],
+ ['ZIZ',   {0: LegType.Z, 1: LegType.I, 2: LegType.Z}],
+ ['IIZ',   {0: LegType.I, 1: LegType.I, 2: LegType.Z}],
+ ['ZZZII', {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
+ ['ZIZII', {0: LegType.Z, 1: LegType.I, 2: LegType.Z}]])  # @formatter:on
+def test_gadget_pauli_string(pauli_string, legs):
     gadget = Gadget(pauli_string)
     assert gadget.legs == legs
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
+    assert gadget == Gadget.from_dict(gadget.to_dict())
 
 
 # @formatter:off
@@ -116,6 +112,8 @@ def test_cx(control, target, expected_control, expected_target):
 def test_cx_min_max(control, target, min_qubit, max_qubit):
     cx = CX(control=control, target=target)
     assert cx.type == GateType.CX
+    assert cx.control == control
+    assert cx.target == target
     assert cx.min_qubit == min_qubit
     assert cx.max_qubit == max_qubit
 
@@ -157,10 +155,19 @@ def test_x_phase(phase, expected):
     assert x_phase.max_qubit == 0
     assert math.isclose(x_phase.phase, expected)
 
+    x_phase_dict = x_phase.to_dict()
+    assert x_phase_dict['type'] == x_phase.type.value
+    assert x_phase_dict['qubit'] == x_phase.qubit
+    assert math.isclose(x_phase_dict['phase'], expected)
 
-@pytest.mark.parametrize(
-    ['phase', 'expected'],
-    [[None, 0], [0, 0], [1, 1], [1/4, 1/4], [3/4, 3/4], [5/7, 5/7], [2, 0], [3, 1], [5.5, 1.5], [12/5, 2/5]])
+    x_phase_from_dict = XPhase.from_dict({'type': 'X_PHASE', 'qubit': 0, 'phase': phase})
+    assert x_phase_from_dict == x_phase
+    assert isinstance(x_phase_from_dict, XPhase)
+
+
+# @formatter:off
+@pytest.mark.parametrize(['phase', 'expected'],
+[[None, 0], [0, 0], [1, 1], [1/4, 1/4], [5/7, 5/7], [2, 0], [3, 1], [5.5, 1.5], [12/5, 2/5]])  # @formatter:on
 def test_z_phase(phase, expected):
     z_phase = ZPhase(phase=phase)
     assert z_phase.type == GateType.Z_PHASE
@@ -169,6 +176,15 @@ def test_z_phase(phase, expected):
     assert z_phase.min_qubit == 0
     assert z_phase.max_qubit == 0
     assert math.isclose(z_phase.phase, expected)
+
+    z_phase_dict = z_phase.to_dict()
+    assert z_phase_dict['type'] == z_phase.type.value
+    assert z_phase_dict['qubit'] == z_phase.qubit
+    assert math.isclose(z_phase_dict['phase'], expected)
+
+    z_phase_from_dict = ZPhase.from_dict({'type': 'X_PHASE', 'qubit': 0, 'phase': phase})
+    assert z_phase_from_dict == z_phase
+    assert isinstance(z_phase_from_dict, ZPhase)
 
 
 def test_phase_gates_repr():
@@ -187,7 +203,11 @@ def test_x():
     assert x.qubit == 0
     assert x.min_qubit == 0
     assert x.max_qubit == 0
-    assert repr(x) == 'X(qubit=0, phase=1)'
+    assert repr(x) == 'X(qubit=0)'
+    assert isinstance(X.from_dict({'type': 'X', 'qubit': 0}), X)
+    assert x.to_dict() == {'type': 'X', 'qubit': 0, 'phase': 1}
+    assert x == X.from_dict({'type': 'X', 'qubit': 0, 'phase': 1})
+    assert x == X.from_dict({'type': 'X', 'qubit': 0})
 
 
 def test_z():
@@ -198,7 +218,11 @@ def test_z():
     assert z.qubit == 0
     assert z.min_qubit == 0
     assert z.max_qubit == 0
-    assert repr(z) == 'Z(qubit=0, phase=1)'
+    assert repr(z) == 'Z(qubit=0)'
+    assert isinstance(Z.from_dict({'type': 'Z', 'qubit': 0}), Z)
+    assert z.to_dict() == {'type': 'Z', 'qubit': 0, 'phase': 1}
+    assert z == Z.from_dict({'type': 'Z', 'qubit': 0, 'phase': 1})
+    assert z == Z.from_dict({'type': 'Z', 'qubit': 0})
 
 
 def test_x_plus():
@@ -209,7 +233,11 @@ def test_x_plus():
     assert x_plus.qubit == 0
     assert x_plus.min_qubit == 0
     assert x_plus.max_qubit == 0
-    assert repr(x_plus) == 'XPlus(qubit=0, phase=0.5)'
+    assert repr(x_plus) == 'XPlus(qubit=0)'
+    assert isinstance(XPlus.from_dict({'type': 'X_PLUS', 'qubit': 0}), XPlus)
+    assert x_plus.to_dict() == {'type': 'X_PLUS', 'qubit': 0, 'phase': 1/2}
+    assert x_plus == XPlus.from_dict({'type': 'X_PLUS', 'qubit': 0, 'phase': 1/2})
+    assert x_plus == XPlus.from_dict({'type': 'X_PLUS', 'qubit': 0})
 
 
 def test_z_plus():
@@ -220,7 +248,11 @@ def test_z_plus():
     assert z_plus.qubit == 0
     assert z_plus.min_qubit == 0
     assert z_plus.max_qubit == 0
-    assert repr(z_plus) == 'ZPlus(qubit=0, phase=0.5)'
+    assert repr(z_plus) == 'ZPlus(qubit=0)'
+    assert isinstance(ZPlus.from_dict({'type': 'Z_PLUS', 'qubit': 0}), ZPlus)
+    assert z_plus.to_dict() == {'type': 'Z_PLUS', 'qubit': 0, 'phase': 1/2}
+    assert z_plus == ZPlus.from_dict({'type': 'Z_PLUS', 'qubit': 0, 'phase': 1/2})
+    assert z_plus == ZPlus.from_dict({'type': 'Z_PLUS', 'qubit': 0})
 
 
 def test_x_minus():
@@ -231,7 +263,11 @@ def test_x_minus():
     assert x_minus.qubit == 0
     assert x_minus.min_qubit == 0
     assert x_minus.max_qubit == 0
-    assert repr(x_minus) == 'XMinus(qubit=0, phase=1.5)'
+    assert repr(x_minus) == 'XMinus(qubit=0)'
+    assert isinstance(XMinus.from_dict({'type': 'X_MINUS', 'qubit': 0}), XMinus)
+    assert x_minus.to_dict() == {'type': 'X_MINUS', 'qubit': 0, 'phase': 3/2}
+    assert x_minus == XMinus.from_dict({'type': 'X_MINUS', 'qubit': 0, 'phase': 3/2})
+    assert x_minus == XMinus.from_dict({'type': 'X_MINUS', 'qubit': 0})
 
 
 def test_z_minus():
@@ -242,7 +278,11 @@ def test_z_minus():
     assert z_minus.qubit == 0
     assert z_minus.min_qubit == 0
     assert z_minus.max_qubit == 0
-    assert repr(z_minus) == 'ZMinus(qubit=0, phase=1.5)'
+    assert repr(z_minus) == 'ZMinus(qubit=0)'
+    assert isinstance(ZMinus.from_dict({'type': 'Z_MINUS', 'qubit': 0}), ZMinus)
+    assert z_minus.to_dict() == {'type': 'Z_MINUS', 'qubit': 0, 'phase': 3/2}
+    assert z_minus == ZMinus.from_dict({'type': 'Z_MINUS', 'qubit': 0, 'phase': 3/2})
+    assert z_minus == ZMinus.from_dict({'type': 'Z_MINUS', 'qubit': 0})
 
 
 def test_hadamard():
@@ -257,9 +297,18 @@ def test_hadamard():
     assert hadamard1.max_qubit == 0
     assert repr(hadamard1) == 'H(qubit=0)'
     assert repr(hadamard2) == 'H(qubit=1)'
+    assert isinstance(H.from_dict({'type': 'H', 'qubit': 0}), H)
+    assert hadamard1.to_dict() == {'type': 'H', 'qubit': 0, 'phase': 0}
+    assert hadamard2.to_dict() == {'type': 'H', 'qubit': 1, 'phase': 0}
+    assert hadamard1 == H.from_dict({'type': 'H', 'qubit': 0, 'phase': 0})
+    assert hadamard2 == H.from_dict({'type': 'H', 'qubit': 1})
 
 
-# EQUALITY TESTS
+# Equality tests
+x_gates = [XPhase(), XMinus(), XPlus(), X()]
+z_gates = [ZPhase(), ZMinus(), ZPlus(), Z()]
+
+
 def test_identity_equality():
     assert Identity() == Identity()
     assert Identity() == Gadget('ZZZ')
@@ -280,10 +329,9 @@ def test_gadget_equality():
     assert Gadget('XYZ') == Gadget('XYZ', 0)
     assert Gadget('XYZ') != Gadget('ZXY')
     assert Gadget('XYZ') != Gadget('XYZ', 1/2)
-    assert Gadget('ZZZ') != XPhase()
-    assert Gadget('ZZZ') != ZPhase()
-    assert Gadget('ZZZ') != X()
-    assert Gadget('ZZZ') != Z()
+    assert all(Gadget('ZZZ') != gate for gate in x_gates)
+    assert all(Gadget('ZZZ') != gate for gate in z_gates)
+    assert Gadget('ZZZ') != H()
 
 
 def test_x_phase_equality():
@@ -294,8 +342,10 @@ def test_x_phase_equality():
     assert XPhase(phase=-1/2) == XMinus()
     assert XPhase(phase=1/2) == XPlus()
     assert XPhase(phase=1) == X()
+    assert all(XPhase() != gate for gate in z_gates)
+    assert all(XPhase(qubit=1) != gate for gate in x_gates)
     assert XPhase() == Identity()
-    assert XPhase() != ZPhase()
+    assert XPhase() != H()
 
 
 def test_z_phase_equality():
@@ -306,44 +356,70 @@ def test_z_phase_equality():
     assert ZPhase(phase=-1/2) == ZMinus()
     assert ZPhase(phase=1/2) == ZPlus()
     assert ZPhase(phase=1) == Z()
+    assert all(ZPhase() != gate for gate in x_gates)
+    assert all(ZPhase(qubit=1) != gate for gate in z_gates)
     assert ZPhase() == Identity()
-    assert ZPhase() != XPhase()
+    assert ZPhase() != H()
 
 
 def test_x_equality():
     assert X() == X()
     assert X() != X(qubit=1)
     assert X(qubit=1) == X(qubit=1)
+    assert all(X() != gate for gate in z_gates)
+    assert all(X(qubit=1) != gate for gate in x_gates)
+    assert X() != Identity()
+    assert X() != H()
 
 
 def test_z_equality():
     assert Z() == Z()
     assert Z() != Z(qubit=1)
     assert Z(qubit=1) == Z(qubit=1)
+    assert all(Z() != gate for gate in x_gates)
+    assert all(Z(qubit=1) != gate for gate in z_gates)
+    assert Z() != Identity()
+    assert Z() != H()
 
 
 def test_x_plus_equality():
     assert XPlus() == XPlus()
     assert XPlus() != XPlus(qubit=1)
     assert XPlus(qubit=1) == XPlus(qubit=1)
+    assert all(XPlus() != gate for gate in z_gates)
+    assert all(XPlus(qubit=1) != gate for gate in x_gates)
+    assert XPlus() != Identity()
+    assert XPlus() != H()
 
 
 def test_z_plus_equality():
     assert ZPlus() == ZPlus()
     assert ZPlus() != ZPlus(qubit=1)
     assert ZPlus(qubit=1) == ZPlus(qubit=1)
+    assert all(ZPlus() != gate for gate in x_gates)
+    assert all(ZPlus(qubit=1) != gate for gate in z_gates)
+    assert ZPlus() != Identity()
+    assert ZPlus() != H()
 
 
 def test_x_minus_equality():
     assert XMinus() == XMinus()
     assert XMinus() != XMinus(qubit=1)
     assert XMinus(qubit=1) == XMinus(qubit=1)
+    assert all(XMinus() != gate for gate in z_gates)
+    assert all(XMinus(qubit=1) != gate for gate in x_gates)
+    assert XMinus() != Identity()
+    assert XMinus() != H()
 
 
 def test_z_minus_equality():
     assert ZMinus() == ZMinus()
     assert ZMinus() != ZMinus(qubit=1)
     assert ZMinus(qubit=1) == ZMinus(qubit=1)
+    assert all(ZMinus() != gate for gate in x_gates)
+    assert all(ZMinus(qubit=1) != gate for gate in z_gates)
+    assert ZMinus() != Identity()
+    assert ZMinus() != H()
 
 
 def test_cx_equality():
@@ -351,6 +427,10 @@ def test_cx_equality():
     assert CX() == CX(control=0, target=1)
     assert CX(control=0, target=1) == CX(control=0, target=1)
     assert CX(control=0, target=1) != CX(control=1, target=2)
+    assert all(CX() != gate for gate in z_gates)
+    assert all(CX() != gate for gate in x_gates)
+    assert CX() != Identity()
+    assert CX() != H()
 
 
 def test_cz_equality():
@@ -359,9 +439,13 @@ def test_cz_equality():
     assert CZ(control=0, target=1) == CZ(control=0, target=1)
     assert CZ(control=0, target=1) == CZ(control=1, target=0)
     assert CZ(control=0, target=1) != CZ(control=1, target=2)
+    assert all(CZ() != gate for gate in z_gates)
+    assert all(CZ() != gate for gate in x_gates)
+    assert CZ() != Identity()
+    assert CZ() != H()
 
 
-# ADDITION TESTS
+# Addition tests
 def test_equality_addition():
     assert Identity() + Identity()
     assert Identity() + (gadget := Gadget('ZZZ')) is gadget
@@ -509,13 +593,18 @@ def test_z_minus_addition():
         ZPlus() + Gadget('ZZZ')
 
 
-def test_x_addition_mixed():
-    assert XPhase() + X() == XPhase(phase=1)
-    assert XPhase() + XPlus() == XPhase(phase=1/2)
-    assert XPhase() + XMinus() == XPhase(phase=-1/2)
+def test_hadamard_addition():
+    assert isinstance(H() + H(), Identity)
+    assert Z(qubit=1) + Z(qubit=1) == Identity()
+    assert (h := H()) + Identity() is h
+    assert H() + H() + H() == H()
+    with pytest.raises(IncompatibleGatesException):
+        H() + H(qubit=1)
+    with pytest.raises(IncompatibleGatesException):
+        H() + Gadget('ZZZ')
 
 
-# CONFIG TESTS
+# Config tests
 @pytest.mark.parametrize('value', [True, False])
 def test_expand_gadget(value, monkeypatch):
     monkeypatch.setattr('zxfermion.config.expand_gadgets', value)
@@ -534,253 +623,3 @@ def test_as_gadget(value, monkeypatch):
         gate2 = gate_object(as_gadget=value)
         assert gate1.as_gadget is value
         assert gate2.as_gadget is value
-
-
-# GRAPH TESTS
-def test_gadget_graph():
-    gadget = Gadget('XYZ', 1 / 2)
-    graph = gadget.graph(expand_gadget=False)
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 3
-    assert graph.num_qubits == gadget.max_qubit + 1
-    assert graph.num_vertices() == 15
-    assert graph.num_edges() == 14
-    assert graph.num_inputs() == 3
-    assert graph.num_outputs() == 3
-    assert list(graph.inputs()) == [0, 1, 2]
-    assert list(graph.outputs()) == [3, 4, 5]
-    assert graph.phase(7) == 1/2
-    assert graph.type(6) == VertexType.X
-    assert graph.type(7) == VertexType.Z
-    assert graph.type(8) == VertexType.H_BOX
-    assert graph.type(9) == VertexType.Z
-    assert graph.type(10) == VertexType.H_BOX
-    assert graph.type(11) == VertexType.X
-    assert graph.type(12) == VertexType.Z
-    assert graph.type(13) == VertexType.X
-    assert graph.type(14) == VertexType.Z
-    assert graph.connected(graph.inputs()[0], 8)
-    assert graph.connected(graph.inputs()[1], 11)
-    assert graph.connected(graph.inputs()[2], 14)
-    assert graph.connected(10, graph.outputs()[0])
-    assert graph.connected(13, graph.outputs()[1])
-    assert graph.connected(14, graph.outputs()[2])
-    assert graph.connected(6, 7)
-    assert graph.connected(6, 9)
-    assert graph.connected(6, 12)
-    assert graph.connected(6, 14)
-
-
-def test_expanded_gadget_graph():
-    gadget = Gadget('XYZ', 1/2)
-    graph = gadget.graph(expand_gadget=True)
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 7
-    assert graph.num_qubits == gadget.max_qubit + 1
-    assert graph.num_vertices() == 19
-    assert graph.num_edges() == 20
-    assert graph.num_inputs() == 3
-    assert graph.num_outputs() == 3
-    assert list(graph.inputs()) == [0, 1, 2]
-    assert list(graph.outputs()) == [14, 15, 16]
-    assert graph.type(3) == VertexType.H_BOX
-    assert graph.type(4) == VertexType.X
-    assert graph.type(5) == VertexType.Z
-    assert graph.type(6) == VertexType.X
-    assert graph.type(7) == VertexType.Z
-    assert graph.type(8) == VertexType.X
-    assert graph.type(9) == VertexType.Z
-    assert graph.type(10) == VertexType.Z
-    assert graph.type(11) == VertexType.X
-    assert graph.type(12) == VertexType.Z
-    assert graph.type(13) == VertexType.X
-    assert graph.type(17) == VertexType.H_BOX
-    assert graph.type(18) == VertexType.X
-    assert graph.phase(9) == 1/2
-
-
-def test_cx_graph():
-    cx = CX(control=0, target=1)
-    graph = cx.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == cx.max_qubit + 1
-    assert graph.num_vertices() == 6
-    assert graph.num_edges() == 5
-    assert graph.num_inputs() == 2
-    assert graph.num_outputs() == 2
-    assert list(graph.inputs()) == [0, 1]
-    assert list(graph.outputs()) == [2, 3]
-    assert graph.type(4) == VertexType.Z
-    assert graph.type(5) == VertexType.X
-    assert graph.connected(graph.inputs()[0], 4)
-    assert graph.connected(graph.inputs()[1], 5)
-    assert graph.connected(4, graph.outputs()[0])
-    assert graph.connected(5, graph.outputs()[1])
-    assert graph.connected(4, 5)
-
-
-def test_cz_graph():
-    cz = CZ(control=0, target=1)
-    graph = cz.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == cz.max_qubit + 1
-    assert graph.num_vertices() == 6
-    assert graph.num_edges() == 5
-    assert graph.num_inputs() == 2
-    assert graph.num_outputs() == 2
-    assert list(graph.inputs()) == [0, 1]
-    assert list(graph.outputs()) == [2, 3]
-    assert graph.type(4) == VertexType.Z
-    assert graph.type(5) == VertexType.Z
-    assert graph.edge_type((4, 5)) == EdgeType.HADAMARD
-    assert graph.connected(graph.inputs()[0], 4)
-    assert graph.connected(graph.inputs()[1], 5)
-    assert graph.connected(4, graph.outputs()[0])
-    assert graph.connected(5, graph.outputs()[1])
-    assert graph.connected(4, 5)
-
-
-def test_x_phase_graph():
-    x_phase = XPhase(phase=3/4)
-    graph = x_phase.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.X
-    assert graph.phase(2) == 3/4
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])
-
-
-def test_z_phase_graph():
-    z_phase = ZPhase(phase=3/4)
-    graph = z_phase.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.Z
-    assert graph.phase(2) == 3/4
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])
-
-
-def test_x_graph():
-    x = X()
-    graph = x.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.X
-    assert graph.phase(2) == 1
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])
-
-
-def test_z_graph():
-    z = Z()
-    graph = z.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.Z
-    assert graph.phase(2) == 1
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])
-
-
-def test_x_plus_graph():
-    x_plus = XPlus()
-    graph = x_plus.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.X
-    assert graph.phase(2) == 1/2
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])
-
-
-def test_z_plus_graph():
-    z_plus = ZPlus()
-    graph = z_plus.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.Z
-    assert graph.phase(2) == 1/2
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])
-
-
-def test_x_minus_graph():
-    x_minus = XMinus()
-    graph = x_minus.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.X
-    assert graph.phase(2) == 3/2
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])
-
-
-def test_z_minus_graph():
-    z_minus = ZMinus()
-    graph = z_minus.graph()
-    assert isinstance(graph, GadgetGraph)
-    assert graph.depth() == 1
-    assert graph.num_qubits == 1
-    assert graph.num_vertices() == 3
-    assert graph.num_edges() == 2
-    assert graph.num_inputs() == 1
-    assert graph.num_outputs() == 1
-    assert list(graph.inputs()) == [0]
-    assert list(graph.outputs()) == [1]
-    assert graph.type(2) == VertexType.Z
-    assert graph.phase(2) == 3/2
-    assert graph.connected(graph.inputs()[0], 2)
-    assert graph.connected(2, graph.outputs()[0])

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 from pdflatex import PDFLaTeX
 
 import pyzx as zx
+from pyzx import VertexType, EdgeType
 from pyzx.graph.graph_s import GraphS
+
+from zxfermion.types import LegType
 from zxfermion.utilities import tex_parse_tikz
-from zxfermion.types import VertexType, LegType, EdgeType
-from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, SingleQubitGate
+from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, XPhase
 
 
 class BaseGraph(GraphS):
@@ -51,15 +53,15 @@ class BaseGraph(GraphS):
         pdf.set_output_directory('output/')
         pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
 
-    def draw(self):
-        zx.draw(self)
+    def draw(self, labels=False):
+        zx.draw(self, labels=labels)
 
 
 class GadgetGraph(BaseGraph):
     def __init__(self, num_qubits: int, num_rows: int = 1):
         super().__init__(num_qubits=num_qubits, num_rows=num_rows)
 
-    def add_single_gate(self, gate: SingleQubitGate):
+    def add_single_gate(self, gate: Union[XPhase, ZPhase, H]):
         ref = self.add_vertex(ty=gate.vertex_type, row=1, qubit=gate.qubit, phase=gate.phase)
         self.connect_nodes(qubit=gate.qubit, node_refs=[ref])
         self.remove_wire(gate.qubit)
@@ -76,9 +78,9 @@ class GadgetGraph(BaseGraph):
             phase_ref = self.add_vertex(ty=VertexType.Z, row=hub_row, qubit=self.num_qubits + 2, phase=gadget.phase)
             for qubit, leg in gadget.legs.items():
                 if leg == LegType.X:
-                    left_ref = self.add_vertex(ty=VertexType.H, row=1, qubit=qubit)
+                    left_ref = self.add_vertex(ty=VertexType.H_BOX, row=1, qubit=qubit)
                     middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
-                    right_ref = self.add_vertex(ty=VertexType.H, row=3, qubit=qubit)
+                    right_ref = self.add_vertex(ty=VertexType.H_BOX, row=3, qubit=qubit)
                     self.connect_nodes(qubit=qubit, node_refs=[left_ref, middle_ref, right_ref])
                     self.add_edge((middle_ref, hub_ref))
                     self.remove_wire(qubit=qubit)
@@ -141,7 +143,7 @@ class GadgetGraph(BaseGraph):
 
         self.connect_nodes(qubit=cz.control, node_refs=[control_ref])
         self.connect_nodes(qubit=cz.target, node_refs=[target_ref])
-        self.add_edge((control_ref, target_ref), edgetype=EdgeType.H)
+        self.add_edge((control_ref, target_ref), edgetype=EdgeType.HADAMARD)
         self.remove_wire(cz.control)
         self.remove_wire(cz.target)
 
@@ -153,8 +155,8 @@ class GadgetGraph(BaseGraph):
         phase_ref = self.add_vertex(ty=VertexType.Z, qubit=self.num_qubits + 2, row=3, phase=-1/2)
         control_ref = self.add_vertex(ty=VertexType.Z, qubit=cx.control, row=2, phase=1/2)
         target_ref = self.add_vertex(ty=VertexType.Z, qubit=cx.target, row=2, phase=1/2)
-        left_had_ref = self.add_vertex(ty=VertexType.H, qubit=cx.target, row=1)
-        right_had_ref = self.add_vertex(ty=VertexType.H, qubit=cx.target, row=3)
+        left_had_ref = self.add_vertex(ty=VertexType.H_BOX, qubit=cx.target, row=1)
+        right_had_ref = self.add_vertex(ty=VertexType.H_BOX, qubit=cx.target, row=3)
 
         self.connect_nodes(qubit=cx.control, node_refs=[control_ref])
         self.connect_nodes(qubit=cx.target, node_refs=[left_had_ref, target_ref, right_had_ref])
@@ -173,23 +175,3 @@ class GadgetGraph(BaseGraph):
         self.add_edges(((hub_ref, phase_ref), (hub_ref, control_ref), (hub_ref, target_ref)))
         self.remove_wire(cz.control)
         self.remove_wire(cz.target)
-
-    def add_x_gadget(self, x: X):
-        ref = self.add_vertex(ty=VertexType.X, row=1, qubit=x.qubit)
-        hub_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=self.num_qubits + 1)
-        phase_ref = self.add_vertex(ty=VertexType.X, row=2, qubit=self.num_qubits + 2, phase=1)
-
-        self.remove_wire(qubit=x.qubit)
-        self.connect_nodes(qubit=x.qubit, node_refs=[ref])
-        self.add_edge((hub_ref, phase_ref))
-        self.add_edge((ref, hub_ref))
-
-    def add_z_gadget(self, z: Z):
-        ref = self.add_vertex(ty=VertexType.Z, row=1, qubit=z.qubit)
-        hub_ref = self.add_vertex(ty=VertexType.X, row=2, qubit=self.num_qubits + 1)
-        phase_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=self.num_qubits + 2, phase=1)
-
-        self.remove_wire(qubit=z.qubit)
-        self.connect_nodes(qubit=z.qubit, node_refs=[ref])
-        self.add_edge((hub_ref, phase_ref))
-        self.add_edge((ref, hub_ref))
