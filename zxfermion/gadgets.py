@@ -37,10 +37,6 @@ class BaseGadget:
     def draw(self, expand_gadget=None, as_gadget=None, labels=False):
         zx.draw(self.graph(expand_gadget=expand_gadget, as_gadget=as_gadget), labels=labels)
 
-    @classmethod
-    def from_dict(cls, params: dict):
-        return cls(**params)
-
 
 class Gadget(BaseGadget):
     def __init__(self, pauli_string: str, phase: Optional[int | float] = None, expand_gadget=None):
@@ -74,17 +70,12 @@ class Gadget(BaseGadget):
         else:
             raise IncompatibleGatesException
 
+    def to_dict(self) -> dict:
+        return {'gate_type': 'Gadget', 'params': {'pauli_string': self.pauli_string, 'phase': self.phase}}
+
     @classmethod
     def from_gate(cls, gate: ZPhase) -> Gadget:
         return cls(pauli_string='I' * gate.qubit + 'Z', phase=gate.phase)
-
-    def to_dict(self) -> dict:
-        return {
-            'gate_type': 'Gadget', 'params': {
-                'pauli_string': self.pauli_string,
-                'phase': self.phase
-            }
-        }
 
 
 class SingleQubitGate(BaseGadget):
@@ -104,14 +95,10 @@ class SingleQubitGate(BaseGadget):
             return f'{self.__class__.__name__}(qubit={self.qubit})'
 
     def to_dict(self) -> dict:
-        is_phase = self.type in (GateType.X_PHASE, GateType.Z_PHASE)
         return {
             'gate_type': self.__class__.__name__, 'params': {
-                'qubit': self.qubit, 'phase': self.phase
-            } if is_phase else {
-                'qubit': self.qubit
-            }
-        }
+                'qubit': self.qubit, 'phase': self.phase} if self.type in (GateType.X_PHASE, GateType.Z_PHASE) else {
+                'qubit': self.qubit}}
 
 
 class XPhase(SingleQubitGate):

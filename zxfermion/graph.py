@@ -10,7 +10,7 @@ from pyzx.graph.graph_s import GraphS
 
 from zxfermion.types import LegType
 from zxfermion.utilities import tex_parse_tikz
-from zxfermion.gadgets import Gadget, CZ, CX, Z, X, ZPhase, XPlus, H, XMinus, XPhase
+from zxfermion.gadgets import Gadget, XPhase, ZPhase, XPlus, XMinus, CZ, CX, H
 
 
 class BaseGraph(GraphS):

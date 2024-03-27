@@ -6,9 +6,9 @@ from zxfermion.graph import GadgetGraph
 from zxfermion.gadgets import Gadget, XPhase, ZPhase, X, Z, ZPlus, XMinus, XPlus, ZMinus, H, CX, CZ
 
 
+# implement 'efficient' gadget expansion.
 # assert graph depth doesn't change when graph is larger than gadget size
 # test increasingly large expanded gadgets. test expanded gadget that skips qubits
-# implement 'efficient' gadget expansion.
 
 
 def test_graph():
