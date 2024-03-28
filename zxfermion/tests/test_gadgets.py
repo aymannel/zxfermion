@@ -38,7 +38,7 @@ def test_gadget():
     assert repr(gadget) == "Gadget(pauli_string='XYZ', phase=0)"
     assert all(isinstance(leg, LegType) for leg in gadget.legs.values())
     assert all((gadget.legs[0] == LegType.X, gadget.legs[1] == LegType.Y, gadget.legs[2] == LegType.Z))
-    assert gadget.to_dict() == {'gate_type': 'Gadget', 'params': {'pauli_string': 'XYZ', 'phase': 0}}
+    assert gadget.to_dict() == {'Gadget': {'pauli_string': 'XYZ', 'phase': 0}}
 
 
 def test_phase_gadget():
@@ -51,7 +51,7 @@ def test_phase_gadget():
     assert gadget.max_qubit == 2
     assert repr(gadget) == "Gadget(pauli_string='ZZZ', phase=0)"
     assert all(leg == LegType.Z for leg in gadget.legs.values())
-    assert gadget.to_dict() == {'gate_type': 'Gadget', 'params': {'pauli_string': 'ZZZ', 'phase': 0}}
+    assert gadget.to_dict() == {'Gadget': {'pauli_string': 'ZZZ', 'phase': 0}}
 
 
 # @formatter:off
@@ -155,9 +155,9 @@ def test_x_phase(phase, expected):
     assert math.isclose(x_phase.phase, expected)
 
     x_phase_dict = x_phase.to_dict()
-    assert x_phase_dict['gate_type'] == 'XPhase'
-    assert x_phase_dict['params']['qubit'] == x_phase.qubit
-    assert math.isclose(x_phase_dict['params']['phase'], x_phase.phase)
+    assert next(iter(x_phase_dict)) == 'XPhase'
+    assert x_phase_dict['XPhase']['qubit'] == x_phase.qubit
+    assert math.isclose(x_phase_dict['XPhase']['phase'], x_phase.phase)
 
 
 # @formatter:off
@@ -173,9 +173,9 @@ def test_z_phase(phase, expected):
     assert math.isclose(z_phase.phase, expected)
 
     z_phase_dict = z_phase.to_dict()
-    assert z_phase_dict['gate_type'] == 'ZPhase'
-    assert z_phase_dict['params']['qubit'] == z_phase.qubit
-    assert math.isclose(z_phase_dict['params']['phase'], z_phase.phase)
+    assert next(iter(z_phase_dict)) == 'ZPhase'
+    assert z_phase_dict['ZPhase']['qubit'] == z_phase.qubit
+    assert math.isclose(z_phase_dict['ZPhase']['phase'], z_phase.phase)
 
 
 def test_phase_gates_repr():
@@ -195,7 +195,7 @@ def test_x():
     assert x.min_qubit == 0
     assert x.max_qubit == 0
     assert repr(x) == 'X(qubit=0)'
-    assert x.to_dict() == {'gate_type': 'X', 'params': {'qubit': 0}}
+    assert x.to_dict() == {'X': {'qubit': 0}}
 
 
 def test_z():
@@ -207,7 +207,7 @@ def test_z():
     assert z.min_qubit == 0
     assert z.max_qubit == 0
     assert repr(z) == 'Z(qubit=0)'
-    assert z.to_dict() == {'gate_type': 'Z', 'params': {'qubit': 0}}
+    assert z.to_dict() == {'Z': {'qubit': 0}}
 
 
 def test_x_plus():
@@ -219,7 +219,7 @@ def test_x_plus():
     assert x_plus.min_qubit == 0
     assert x_plus.max_qubit == 0
     assert repr(x_plus) == 'XPlus(qubit=0)'
-    assert x_plus.to_dict() == {'gate_type': 'XPlus', 'params': {'qubit': 0}}
+    assert x_plus.to_dict() == {'XPlus': {'qubit': 0}}
 
 
 def test_z_plus():
@@ -231,7 +231,7 @@ def test_z_plus():
     assert z_plus.min_qubit == 0
     assert z_plus.max_qubit == 0
     assert repr(z_plus) == 'ZPlus(qubit=0)'
-    assert z_plus.to_dict() == {'gate_type': 'ZPlus', 'params': {'qubit': 0}}
+    assert z_plus.to_dict() == {'ZPlus': {'qubit': 0}}
 
 
 def test_x_minus():
@@ -243,7 +243,7 @@ def test_x_minus():
     assert x_minus.min_qubit == 0
     assert x_minus.max_qubit == 0
     assert repr(x_minus) == 'XMinus(qubit=0)'
-    assert x_minus.to_dict() == {'gate_type': 'XMinus', 'params': {'qubit': 0}}
+    assert x_minus.to_dict() == {'XMinus': {'qubit': 0}}
 
 
 def test_z_minus():
@@ -255,7 +255,7 @@ def test_z_minus():
     assert z_minus.min_qubit == 0
     assert z_minus.max_qubit == 0
     assert repr(z_minus) == 'ZMinus(qubit=0)'
-    assert z_minus.to_dict() == {'gate_type': 'ZMinus', 'params': {'qubit': 0}}
+    assert z_minus.to_dict() == {'ZMinus': {'qubit': 0}}
 
 
 def test_hadamard():
@@ -269,8 +269,8 @@ def test_hadamard():
     assert hadamard1.max_qubit == 0
     assert repr(hadamard1) == 'H(qubit=0)'
     assert repr(hadamard2) == 'H(qubit=1)'
-    assert hadamard1.to_dict() == {'gate_type': 'H', 'params': {'qubit': 0}}
-    assert hadamard2.to_dict() == {'gate_type': 'H', 'params': {'qubit': 1}}
+    assert hadamard1.to_dict() == {'H': {'qubit': 0}}
+    assert hadamard2.to_dict() == {'H': {'qubit': 1}}
 
 
 # Equality tests
