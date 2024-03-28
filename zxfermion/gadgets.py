@@ -57,6 +57,7 @@ class SingleQubitGate(BaseGadget):
         self.phase = 0 if phase is None else round(phase % 2, 15)
         self.min_qubit = self.qubit
         self.max_qubit = self.qubit
+        self.qubits = [self.qubit]
         self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
 
     def __repr__(self):
@@ -82,6 +83,7 @@ class ControlledGate(BaseGadget):
         self.type = GateType.CONTROLLED_GATE
         self.control = control
         self.target = target
+        self.qubits = control, target
         self.min_qubit = min(self.control, self.target)
         self.max_qubit = max(self.control, self.target)
         self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only

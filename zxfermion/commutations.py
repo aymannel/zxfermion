@@ -62,7 +62,7 @@ hadamard_rules = {
 }
 
 # commutation rules for the Clifford Rz(π/2) gate
-cliff_z_rules = {
+z_plus_rules = {
     LegType.X: (LegType.Y, -1),
     LegType.Y: (LegType.X, 1),
     LegType.Z: (LegType.Z, 1)
@@ -76,7 +76,7 @@ cliff_z_minus_rules = {
 }
 
 # commutation rules for the Clifford Rx(π/2) gate
-cliff_x_rules = {
+x_plus_rules = {
     LegType.X: (LegType.X, 1),
     LegType.Y: (LegType.Z, -1),
     LegType.Z: (LegType.Y, 1)
