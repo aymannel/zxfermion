@@ -51,7 +51,7 @@ class Gadget(BaseGadget):
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
 
     def __repr__(self):
-        return f"Gadget(pauli_string='{''.join(self.legs.values())}', phase={self.phase})"
+        return f"Gadget(pauli_string='{self.pauli_string}', phase={self.phase})"
 
     def __eq__(self, other):
         if self.identity and other.type == GateType.IDENTITY:
@@ -65,13 +65,12 @@ class Gadget(BaseGadget):
         if other.type == GateType.IDENTITY:
             return self
         elif other.type == GateType.GADGET and self.legs == other.legs:
-            pauli_string = ''.join(leg for leg in self.legs.values())
-            return Gadget(pauli_string, self.phase + other.phase)
+            return Gadget(self.pauli_string, self.phase + other.phase)
         else:
             raise IncompatibleGatesException
 
     def to_dict(self) -> dict:
-        return {'gate_type': 'Gadget', 'params': {'pauli_string': self.pauli_string, 'phase': self.phase}}
+        return {'Gadget': {'pauli_string': self.pauli_string, 'phase': self.phase}}
 
     @classmethod
     def from_gate(cls, gate: ZPhase) -> Gadget:
@@ -79,26 +78,27 @@ class Gadget(BaseGadget):
 
 
 class SingleQubitGate(BaseGadget):
-    def __init__(self, qubit: Optional[int] = None, phase: Optional[int | float] = None, as_gadget=None):
+    def __init__(self, qubit: Optional[int] = None, as_gadget=None, phase: Optional[int | float] = None):
         self.type = GateType.SINGLE_QUBIT_GATE
         self.qubit = 0 if qubit is None else qubit
+        self.phase = 0 if phase is None else round(phase % 2, 15)
         self.min_qubit = self.qubit
         self.max_qubit = self.qubit
         self.as_gadget = as_gadget if as_gadget is not None else config.gadgets_only
-        self.type = GateType.PHASE_GATE
-        self.phase = 0 if phase is None else round(phase % 2, 15)
 
     def __repr__(self):
-        if self.type in (GateType.X_PHASE, GateType.Z_PHASE):
+        if self.type in [GateType.X_PHASE, GateType.Z_PHASE]:
             return f'{self.__class__.__name__}(qubit={self.qubit}, phase={self.phase})'
         else:
             return f'{self.__class__.__name__}(qubit={self.qubit})'
 
     def to_dict(self) -> dict:
-        return {
-            'gate_type': self.__class__.__name__, 'params': {
-                'qubit': self.qubit, 'phase': self.phase} if self.type in (GateType.X_PHASE, GateType.Z_PHASE) else {
-                'qubit': self.qubit}}
+        return {self.__class__.__name__: {
+            'qubit': self.qubit,
+            'phase': self.phase
+        } if self.type in [GateType.X_PHASE, GateType.Z_PHASE] else {
+            'qubit': self.qubit
+        }}
 
 
 class XPhase(SingleQubitGate):
@@ -119,6 +119,8 @@ class XPhase(SingleQubitGate):
             return self
         elif isinstance(other, XPhase) and self.qubit == other.qubit:
             return XPhase(qubit=self.qubit, phase=round(self.phase + other.phase, 15))
+        elif isinstance(other, ZPhase) and self.qubit == other.qubit:
+            return ZPhase(qubit=self.qubit, phase=round(self.phase + other.phase, 15))
         else:
             raise IncompatibleGatesException(f'Cannot add {self.type} and {other.type}')
 

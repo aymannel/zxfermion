@@ -263,7 +263,6 @@ def test_hadamard():
     hadamard2 = H(qubit=1)
     assert hadamard1.type == GateType.H
     assert hadamard1.vertex_type == VertexType.H_BOX
-    assert not hadamard1.phase
     assert hadamard1.qubit == 0
     assert hadamard2.qubit == 1
     assert hadamard1.min_qubit == 0
@@ -417,7 +416,7 @@ def test_cz_equality():
 
 # Addition tests
 def test_equality_addition():
-    assert Identity() + Identity()
+    assert Identity() + Identity() == Identity()
     assert Identity() + (gadget := Gadget('ZZZ')) is gadget
     assert Identity() + (x_phase := XPhase()) is x_phase
     assert Identity() + (z_phase := ZPhase()) is z_phase

@@ -7,7 +7,7 @@ import pyzx as zx
 from IPython.display import display, Markdown
 
 from zxfermion import config
-from zxfermion.gadgets import Gadget, XPhase, ZPhase, X, Z, XPlus, ZPlus, XMinus, ZMinus, H
+from zxfermion.gadgets import Gadget, SingleQubitGate
 from zxfermion.graph import GadgetGraph
 from zxfermion.types import GateType
 from zxfermion.utilities import matrix_to_latex
@@ -39,16 +39,14 @@ class GadgetCircuit:
                     gadget.as_gadget = gadget.as_gadget if gadgets_only is None else gadgets_only
                 if gadget.type == GateType.GADGET:
                     layer.add_expanded_gadget(gadget) if gadget.expand_gadget else layer.add_gadget(gadget)
-                elif gadget.type in [GateType.X_PHASE, GateType.X, GateType.X_PLUS, GateType.X_MINUS]:
-                    layer.add_single_gate(gadget)
-                elif gadget.type in [GateType.Z_PHASE, GateType.Z, GateType.Z_PLUS, GateType.Z_MINUS]:
+                elif isinstance(gadget, SingleQubitGate) and hasattr(gadget, 'phase'):
                     layer.add_gadget(Gadget.from_gate(gadget)) if gadget.as_gadget else layer.add_single_gate(gadget)
+                elif isinstance(gadget, SingleQubitGate):
+                    layer.add_single_gate(gadget)
                 elif gadget.type == GateType.CX:
                     layer.add_cx_gadget(gadget) if gadget.as_gadget else layer.add_cx(gadget)
                 elif gadget.type == GateType.CZ:
                     layer.add_cz_gadget(gadget) if gadget.as_gadget else layer.add_cz(gadget)
-                elif gadget.type == GateType.H:
-                    layer.add_single_gate(gadget)
             circuit.compose(layer)
         return circuit
 
@@ -93,6 +91,9 @@ class GadgetCircuit:
 
     @classmethod
     def from_dict(cls, circuit_dict: dict):
-        assert all(gadget_dict['gate_type'] in GateType.NAMES for gadget_dict in circuit_dict['gadgets'])
-        gadgets = [eval(gadget_dict['gate_type'])(**gadget_dict['params']) for gadget_dict in circuit_dict['gadgets']]
+        gadgets = []
+        for gadget in circuit_dict['gadgets']:
+            name = next(iter(gadget))
+            assert name in GateType.NAMES
+            gadgets.append(eval(name)(**gadget[name]))
         return cls(gadgets=gadgets, num_qubits=circuit_dict.get('num_qubits'))
