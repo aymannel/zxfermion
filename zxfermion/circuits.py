@@ -23,9 +23,6 @@ class GadgetCircuit:
         assert self.num_qubits == other.num_qubits
         return GadgetCircuit(gadgets=self.cancel_gadgets(self.gadgets + other.gadgets))
 
-    def draw(self, labels=False, **kwargs):
-        zx.draw(self.graph(**kwargs), labels=labels)
-
     def graph(self, gadgets_only=None, stack_gadgets=None, expand_gadgets=None) -> GadgetGraph:
         stack_gadgets = stack_gadgets if stack_gadgets is not None else config.stack_gadgets
         gadget_layers = self.stack_gadgets() if stack_gadgets else [[gadget] for gadget in self.gadgets]
@@ -76,6 +73,9 @@ class GadgetCircuit:
             return latex_string if return_latex else None
         else:
             print(f'{2 ** self.num_qubits} x {2 ** self.num_qubits} matrix too large to compute.')
+
+    def draw(self, labels=False, **kwargs):
+        zx.draw(self.graph(**kwargs), labels=labels)
 
     def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None, **kwargs):
         return self.graph(**kwargs).tikz(name=name, symbol=symbol, scale=scale)
