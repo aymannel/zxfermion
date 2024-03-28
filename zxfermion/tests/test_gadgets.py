@@ -5,7 +5,9 @@ from pyzx import VertexType
 
 from zxfermion.types import GateType, LegType
 from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H
+from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H, \
+    PauliGate, CliffordGate, ControlledGate, FixedPhaseGate
+
 
 # kwargs for drawing
 # kwargs for graphs
@@ -19,6 +21,20 @@ from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZP
 # test expanded CX and CZ
 # test Gadget.from_gate()
 # assert XPhase.gadget() method returns Gadget.from_single_gate(self)
+
+
+def test_inheritance():
+    assert all(isinstance(gate, PauliGate) for gate in [X(), Z()])
+    assert all(isinstance(gate, CliffordGate) for gate in [CX(), CZ()])
+    assert all(isinstance(gate, CliffordGate) for gate in [XPlus(), ZPlus(), XMinus(), ZMinus()])
+    assert all(isinstance(gate, FixedPhaseGate) for gate in [XPlus(), ZPlus(), XMinus(), ZMinus()])
+
+    assert all(isinstance(gate, ControlledGate) for gate in [CX(), CZ()])
+
+    with pytest.raises(IncompatibleGatesException):
+        XPhase() + ZPhase()
+    with pytest.raises(IncompatibleGatesException):
+        ZPhase() + XPhase()
 
 
 # Gadget tests

@@ -7,8 +7,9 @@ import pyzx as zx
 from IPython.display import display, Markdown
 
 from zxfermion import config
-from zxfermion.gadgets import Gadget, SingleQubitGate
+from zxfermion.gadgets import Gadget, SingleQubitGate, CX
 from zxfermion.graph import GadgetGraph
+from zxfermion.tableaus import CliffordTableau
 from zxfermion.types import GateType
 from zxfermion.utilities import matrix_to_latex
 
@@ -22,6 +23,17 @@ class GadgetCircuit:
     def __add__(self, other: GadgetCircuit) -> GadgetCircuit:
         assert self.num_qubits == other.num_qubits
         return GadgetCircuit(gadgets=self.cancel_gadgets(self.gadgets + other.gadgets))
+
+    def apply_cx(self, control: int, target: int, left_index: int = None, right_index: int = None):
+        left_index = 0 if left_index is None else left_index
+        right_index = len(self.gadgets) if right_index is None else right_index
+
+        tableau = CliffordTableau(CX(control, target))
+        for index, gadget in enumerate(self.gadgets[left_index:right_index + 1]):
+            if isinstance(gadget, Gadget):
+                self.gadgets[index] = tableau.apply(gadget)
+                self.gadgets.insert(left_index, CX(control, target))
+                self.gadgets.insert(right_index + 1, CX(control, target))
 
     def graph(self, gadgets_only=None, stack_gadgets=None, expand_gadgets=None) -> GadgetGraph:
         stack_gadgets = stack_gadgets if stack_gadgets is not None else config.stack_gadgets
@@ -37,7 +49,7 @@ class GadgetCircuit:
                 if gadget.type == GateType.GADGET:
                     layer.add_expanded_gadget(gadget) if gadget.expand_gadget else layer.add_gadget(gadget)
                 elif isinstance(gadget, SingleQubitGate) and hasattr(gadget, 'phase'):
-                    layer.add_gadget(Gadget.from_gate(gadget)) if gadget.as_gadget else layer.add_single_gate(gadget)
+                    layer.add_gadget(Gadget.from_single(gadget)) if gadget.as_gadget else layer.add_single_gate(gadget)
                 elif isinstance(gadget, SingleQubitGate):
                     layer.add_single_gate(gadget)
                 elif gadget.type == GateType.CX:
