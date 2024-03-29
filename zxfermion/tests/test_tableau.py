@@ -8,3 +8,6 @@ def test_tableau_cx():
     # assert tableau(Gadget('XY')) == Gadget('YZ')
     # assert tableau(Gadget('XZ')) == Gadget('YY')
     # assert tableau(Gadget('XI')) == Gadget('XX')
+
+
+# assert correct phases are being applied!

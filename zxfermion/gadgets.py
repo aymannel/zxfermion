@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from copy import deepcopy
 from typing import Optional
 
 import pyzx as zx
@@ -9,18 +10,6 @@ from pyzx import VertexType
 from zxfermion import config
 from zxfermion.types import GateType, PauliType
 from zxfermion.exceptions import IncompatibleGatesException
-
-
-class FixedPhaseGate:
-    qubit: int
-
-
-class CliffordGate(FixedPhaseGate):
-    pass
-
-
-class PauliGate(FixedPhaseGate):
-    pass
 
 
 class Identity:
@@ -32,6 +21,28 @@ class Identity:
 
     def __eq__(self, other):
         return True if other.type == GateType.IDENTITY else other.identity if hasattr(other, 'identity') else False
+
+    @property
+    def inverse(self) -> Identity:
+        return Identity()
+
+
+class FixedPhaseGate:
+    qubit: int
+
+
+class SelfInverse:
+    @property
+    def inverse(self) -> X:
+        return deepcopy(self)
+
+
+class CliffordGate(FixedPhaseGate):
+    pass
+
+
+class PauliGate(SelfInverse, FixedPhaseGate):
+    pass
 
 
 class BaseGadget:
@@ -74,8 +85,14 @@ class SingleQubitGate(BaseGadget):
             'phase': self.phase
         }}
 
+    @property
+    def inverse(self) -> SingleQubitGate:
+        inverse = deepcopy(self)
+        inverse.phase *= -1
+        return inverse
 
-class ControlledGate(BaseGadget):
+
+class ControlledGate(BaseGadget, SelfInverse):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         control = 0 if control is None else control
         target = 1 if target is None else target
@@ -107,10 +124,7 @@ class Gadget(BaseGadget):
     def __init__(self, pauli_string: str, phase: Optional[int | float] = None, expand_gadget=None):
         self.type = GateType.GADGET
         self.phase = 0 if phase is None else round(phase % 2, 15)
-        self.pauli_string = pauli_string.rstrip('I')
         self.paulis = {q: PauliType(p) for q, p in enumerate(pauli_string.rstrip('I'))}
-        self.min_qubit = min([qubit for qubit in self.paulis])
-        self.max_qubit = max([qubit for qubit in self.paulis])
         self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
         self.phase_gadget = all(pauli == PauliType.Z or pauli == PauliType.I for pauli in self.paulis.values())
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
@@ -133,6 +147,24 @@ class Gadget(BaseGadget):
             return Gadget(self.pauli_string, self.phase + other.phase)
         else:
             raise IncompatibleGatesException
+
+    @property
+    def pauli_string(self) -> str:
+        return ''.join(self.paulis.get(pauli, 'I') for pauli in range(self.max_qubit + 1))
+
+    @property
+    def min_qubit(self) -> int:  # handle PauliType.I before
+        return min(self.paulis)
+
+    @property
+    def max_qubit(self) -> int:  # handle PauliType.I after
+        return max(self.paulis)
+
+    @property
+    def inverse(self) -> Gadget:
+        inverse = deepcopy(self)
+        inverse.phase *= -1
+        return inverse
 
     @classmethod
     def from_single(cls, gate: ZPhase) -> Gadget:
@@ -189,8 +221,8 @@ class ZPhase(SingleQubitGate):
         return Gadget.from_single(self)
 
 
-class X(XPhase, PauliGate):
-    def __init__(self, qubit: Optional[int] = None, as_gadget=None):
+class X(PauliGate, XPhase):
+    def __init__(self, qubit: Optional[int] = None, as_gadget: Optional[bool] = None):
         super().__init__(qubit=qubit, phase=1, as_gadget=as_gadget)
         self.type = GateType.X
 
@@ -205,7 +237,7 @@ class X(XPhase, PauliGate):
             return super().__add__(other)
 
 
-class Z(ZPhase, PauliGate):
+class Z(PauliGate, ZPhase):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
         super().__init__(qubit=qubit, phase=1, as_gadget=as_gadget)
         self.type = GateType.Z
@@ -236,6 +268,10 @@ class XPlus(XPhase, CliffordGate):
         else:
             return super().__add__(other)
 
+    @property
+    def inverse(self) -> XMinus:
+        return XMinus(qubit=self.qubit)
+
 
 class XMinus(XPhase, CliffordGate):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
@@ -251,6 +287,10 @@ class XMinus(XPhase, CliffordGate):
             return XPlus(qubit=self.qubit)
         else:
             return super().__add__(other)
+
+    @property
+    def inverse(self) -> XPlus:
+        return XPlus(qubit=self.qubit)
 
 
 class ZPlus(ZPhase, CliffordGate):
@@ -268,6 +308,10 @@ class ZPlus(ZPhase, CliffordGate):
         else:
             return super().__add__(other)
 
+    @property
+    def inverse(self) -> ZMinus:
+        return ZMinus(qubit=self.qubit)
+
 
 class ZMinus(ZPhase, CliffordGate):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
@@ -284,8 +328,12 @@ class ZMinus(ZPhase, CliffordGate):
         else:
             return super().__add__(other)
 
+    @property
+    def inverse(self) -> ZPlus:
+        return ZPlus(qubit=self.qubit)
 
-class H(SingleQubitGate, CliffordGate):
+
+class H(SelfInverse, SingleQubitGate, CliffordGate):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None):
         super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.H

@@ -24,6 +24,8 @@ from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZP
 
 # update Gadget tests to assert Gadget('XI') == Gadget('X')
 
+# test inverse properties
+
 def test_inheritance():
     assert all(isinstance(gate, PauliGate) for gate in [X(), Z()])
     assert all(isinstance(gate, CliffordGate) for gate in [CX(), CZ()])

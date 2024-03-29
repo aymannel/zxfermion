@@ -1,40 +1,29 @@
 from copy import deepcopy
-import cirq
 
+import stim
 from zxfermion.gadgets import Gadget
 from zxfermion.types import PauliType, GateType
-from zxfermion.clifford_tableau import CliffordTableau
 
 
 class Tableau:
     def __init__(self, gate):
         self.gate = gate
-        self.line_qubits = cirq.LineQubit.range(max(gate.qubits) + 1)
-        self.tableau = self.build_tableau()
-
-    def build_tableau(self):
-        cirq_gate = {GateType.CX: cirq.CNOT, GateType.CZ: cirq.CZ, GateType.H: cirq.H}[self.gate.type]
-        circuit = cirq.Circuit(cirq_gate(*[self.line_qubits[qubit] for qubit in self.gate.qubits]))
-        return CliffordTableau(circuit)
+        self.tableau = stim.Tableau.from_named_gate({
+            GateType.X: 'X',
+            GateType.Z: 'Z',
+            GateType.CX: 'CNOT',
+            GateType.CZ: 'CZ',
+            GateType.H: 'H',
+            GateType.X_PLUS: 'SQRT_X_DAG',
+            GateType.Z_PLUS: 'SQRT_Z_DAG',
+            GateType.X_MINUS: 'SQRT_X',
+            GateType.Z_MINUS: 'SQRT_Z',
+        }.get(gate.type))
 
     def __call__(self, gadget: Gadget) -> Gadget:
-        pauli_map = {PauliType.I: cirq.I, PauliType.X: cirq.X, PauliType.Y: cirq.Y, PauliType.Z: cirq.Z}
-        inverse_pauli_map = {v: k for k, v in pauli_map.items()}
-
-        paulis = {qubit: pauli_map[gadget.paulis.get(qubit.x, PauliType.I)] for qubit in self.line_qubits}
-        pauli_string = self.tableau(cirq.PauliString(gadget.phase, paulis))
-        cirq_dict = {qubit: pauli_string.get(self.line_qubits[qubit]) for qubit in self.gate.qubits}
-
-        new_gadget = deepcopy(gadget)
-        new_gadget.phase = pauli_string.coefficient.real
-        new_gadget.paulis.update({
-            qubit: inverse_pauli_map.get(pauli)
-            if pauli else PauliType.I
-            for qubit, pauli in cirq_dict.items()})
-        return new_gadget
-
-        # return Gadget.from_paulis({
-        #     qubit: inverse_pauli_map.get(pauli)
-        #     if pauli else PauliType.I
-        #     for qubit, pauli in cirq_dict.items()
-        # }, pauli_string.coefficient.real)
+        gadget = deepcopy(gadget)
+        qubits = self.gate.qubits
+        stim_result = self.tableau(stim.PauliString([gadget.paulis.get(qubit, 'I') for qubit in qubits]))
+        pauli_string = str(stim_result)[1:].replace('_', 'I')
+        gadget.paulis.update({qubit: PauliType(pauli) for qubit, pauli in zip(qubits, pauli_string)})
+        return Gadget(gadget.pauli_string, stim_result.sign.real * gadget.phase)

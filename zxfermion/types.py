@@ -7,6 +7,9 @@ class PauliType(str, Enum):
     X = 'X'
     Y = 'Y'
     Z = 'Z'
+    X_DAG = 'X_DAG'
+    Y_DAG = 'Y_DAG'
+    Z_DAG = 'Z_DAG'
 
 
 class GateType(str, Enum):
