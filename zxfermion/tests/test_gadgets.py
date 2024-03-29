@@ -22,15 +22,14 @@ from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZP
 # test Gadget.from_gate()
 # assert XPhase.gadget() method returns Gadget.from_single_gate(self)
 
+# update Gadget tests to assert Gadget('XI') == Gadget('X')
 
 def test_inheritance():
     assert all(isinstance(gate, PauliGate) for gate in [X(), Z()])
     assert all(isinstance(gate, CliffordGate) for gate in [CX(), CZ()])
     assert all(isinstance(gate, CliffordGate) for gate in [XPlus(), ZPlus(), XMinus(), ZMinus()])
     assert all(isinstance(gate, FixedPhaseGate) for gate in [XPlus(), ZPlus(), XMinus(), ZMinus()])
-
     assert all(isinstance(gate, ControlledGate) for gate in [CX(), CZ()])
-
     with pytest.raises(IncompatibleGatesException):
         XPhase() + ZPhase()
     with pytest.raises(IncompatibleGatesException):

@@ -30,7 +30,7 @@ class GadgetCircuit:
         tableau = Tableau(gate)
         self.gadgets[start:end] = [
             copy(gate), *[
-                tableau.apply(gadget)
+                tableau.apply_to(gadget)
                 for gadget in self.gadgets[start:end]
                 if gadget.type == GateType.GADGET],
             copy(gate)]

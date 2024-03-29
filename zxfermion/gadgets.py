@@ -3,10 +3,12 @@ from __future__ import annotations
 import math
 from typing import Optional
 
+import cirq
 import pyzx as zx
 from pyzx import VertexType
 
 from zxfermion import config
+from zxfermion.clifford_tableau import CliffordTableau
 from zxfermion.exceptions import IncompatibleGatesException
 from zxfermion.types import GateType, LegType
 
@@ -310,6 +312,11 @@ class CX(ControlledGate, CliffordGate):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         super().__init__(control=control, target=target, as_gadget=as_gadget)
         self.type = GateType.CX
+
+    def tableau(self, qubits: list[int]) -> CliffordTableau:
+        cirq.LineQubit.range(len(gate.qubits))
+        cirq_gate = cirq.CNOT(*self.line_qubits)
+        return CliffordTableau(cirq.Circuit())
 
 
 class CZ(ControlledGate, CliffordGate):
