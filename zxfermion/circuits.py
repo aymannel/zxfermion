@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from copy import deepcopy, copy
+from itertools import groupby
 from typing import Optional
 
 import pyzx as zx
 from IPython.display import display, Markdown
 
 from zxfermion import config
-from zxfermion.gadgets import Gadget, SingleQubitGate, CX
+from zxfermion.gadgets import Gadget, SingleQubitGate
 from zxfermion.graph import GadgetGraph
 from zxfermion.tableaus import Tableau
 from zxfermion.types import GateType
@@ -25,15 +26,13 @@ class GadgetCircuit:
         return GadgetCircuit(gadgets=self.cancel_gadgets(self.gadgets + other.gadgets))
 
     def apply(self, gate, start: int = 0, end: int = None):
-        print(self.gadgets)
         end = len(self.gadgets) if end is None else end
         tableau = Tableau(gate)
-        self.gadgets[start:end] = [
-            copy(gate), *[
-                tableau.apply_to(gadget)
-                for gadget in self.gadgets[start:end]
-                if gadget.type == GateType.GADGET],
-            copy(gate)]
+        self.gadgets[start:end] = [copy(gate), *[
+            tableau(gadget)
+            if gadget.type == GateType.GADGET else gadget
+            for gadget in self.gadgets[start:end]
+        ], copy(gate)]
 
     def graph(self, gadgets_only=None, stack_gadgets=None, expand_gadgets=None) -> GadgetGraph:
         stack_gadgets = stack_gadgets if stack_gadgets is not None else config.stack_gadgets

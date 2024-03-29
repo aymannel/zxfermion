@@ -9,7 +9,7 @@ import pyzx as zx
 from pyzx import VertexType, EdgeType
 from pyzx.graph.graph_s import GraphS
 
-from zxfermion.types import LegType, GateType
+from zxfermion.types import PauliType, GateType
 from zxfermion.utilities import tex_parse_tikz
 from zxfermion.gadgets import Gadget, XPhase, ZPhase, XPlus, XMinus, CZ, CX, H
 
@@ -79,26 +79,26 @@ class GadgetGraph(BaseGraph):
         if gadget_depth > self.depth():
             self.update_num_rows(gadget_depth)
 
-        if not all(leg == LegType.I for leg in gadget.legs.values()):
+        if not all(pauli == PauliType.I for pauli in gadget.paulis.values()):
             hub_row = 2 if gadget.phase_gadget else 3
             hub_ref = self.add_vertex(ty=VertexType.X, row=hub_row, qubit=self.num_qubits + 1)
             phase_ref = self.add_vertex(ty=VertexType.Z, row=hub_row, qubit=self.num_qubits + 2, phase=gadget.phase)
-            for qubit, leg in gadget.legs.items():
-                if leg == LegType.X:
+            for qubit, pauli in gadget.paulis.items():
+                if pauli == PauliType.X:
                     left_ref = self.add_vertex(ty=VertexType.H_BOX, row=1, qubit=qubit)
                     middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
                     right_ref = self.add_vertex(ty=VertexType.H_BOX, row=3, qubit=qubit)
                     self.connect_nodes(qubit=qubit, node_refs=[left_ref, middle_ref, right_ref])
                     self.add_edge((middle_ref, hub_ref))
                     self.remove_wire(qubit=qubit)
-                elif leg == LegType.Y:
+                elif pauli == PauliType.Y:
                     left_ref = self.add_vertex(ty=VertexType.X, row=1, qubit=qubit, phase=1/2,)
                     middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
                     right_ref = self.add_vertex(ty=VertexType.X, row=3, qubit=qubit, phase=-1/2)
                     self.connect_nodes(qubit=qubit, node_refs=[left_ref, middle_ref, right_ref])
                     self.add_edge((middle_ref, hub_ref))
                     self.remove_wire(qubit=qubit)
-                elif leg == LegType.Z:
+                elif pauli == PauliType.Z:
                     middle_ref = self.add_vertex(ty=VertexType.Z, row=1 if gadget.phase_gadget else 2, qubit=qubit)
                     self.connect_nodes(qubit=qubit, node_refs=[middle_ref])
                     self.add_edge((middle_ref, hub_ref))
@@ -106,7 +106,7 @@ class GadgetGraph(BaseGraph):
             self.add_edge((hub_ref, phase_ref))
 
     def add_expanded_gadget(self, gadget: Gadget):
-        qubits = [qubit for qubit, leg in gadget.legs.items() if leg != LegType.I]
+        qubits = [qubit for qubit, pauli in gadget.paulis.items() if pauli != PauliType.I]
         ladder_left = GadgetGraph(num_qubits=self.num_qubits)
         ladder_right = GadgetGraph(num_qubits=self.num_qubits)
         for left, right in zip(range(len(qubits) - 1), reversed(range(len(qubits) - 1))):
@@ -120,11 +120,11 @@ class GadgetGraph(BaseGraph):
 
         clifford_left = GadgetGraph(num_qubits=self.num_qubits)
         clifford_right = GadgetGraph(num_qubits=self.num_qubits)
-        for qubit, leg in gadget.legs.items():
-            if leg == LegType.X:
+        for qubit, pauli in gadget.paulis.items():
+            if pauli == PauliType.X:
                 clifford_left.add_single_gate(H(qubit=qubit))
                 clifford_right.add_single_gate(H(qubit=qubit))
-            elif leg == LegType.Y:
+            elif pauli == PauliType.Y:
                 clifford_left.add_single_gate(XPlus(qubit=qubit))
                 clifford_right.add_single_gate(XMinus(qubit=qubit))
 

@@ -3,14 +3,12 @@ from __future__ import annotations
 import math
 from typing import Optional
 
-import cirq
 import pyzx as zx
 from pyzx import VertexType
 
 from zxfermion import config
-from zxfermion.clifford_tableau import CliffordTableau
+from zxfermion.types import GateType, PauliType
 from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.types import GateType, LegType
 
 
 class FixedPhaseGate:
@@ -108,13 +106,13 @@ class ControlledGate(BaseGadget):
 class Gadget(BaseGadget):
     def __init__(self, pauli_string: str, phase: Optional[int | float] = None, expand_gadget=None):
         self.type = GateType.GADGET
-        self.pauli_string = pauli_string.rstrip('I')
         self.phase = 0 if phase is None else round(phase % 2, 15)
-        self.legs = {q: LegType(p) for q, p in enumerate(pauli_string.rstrip('I'))}
-        self.min_qubit = min([qubit for qubit in self.legs])
-        self.max_qubit = max([qubit for qubit in self.legs])
+        self.pauli_string = pauli_string.rstrip('I')
+        self.paulis = {q: PauliType(p) for q, p in enumerate(pauli_string.rstrip('I'))}
+        self.min_qubit = min([qubit for qubit in self.paulis])
+        self.max_qubit = max([qubit for qubit in self.paulis])
         self.expand_gadget = expand_gadget if expand_gadget is not None else config.expand_gadgets
-        self.phase_gadget = all(leg == LegType.Z or leg == LegType.I for leg in self.legs.values())
+        self.phase_gadget = all(pauli == PauliType.Z or pauli == PauliType.I for pauli in self.paulis.values())
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
 
     def __repr__(self):
@@ -124,24 +122,24 @@ class Gadget(BaseGadget):
         if self.identity and other.type == GateType.IDENTITY:
             return True
         elif other.type == GateType.GADGET:
-            return self.legs == other.legs and math.isclose(self.phase, other.phase)
+            return self.paulis == other.paulis and math.isclose(self.phase, other.phase)
         else:
             return False
 
     def __add__(self, other):
         if other.type == GateType.IDENTITY:
             return self
-        elif other.type == GateType.GADGET and self.legs == other.legs:
+        elif other.type == GateType.GADGET and self.paulis == other.paulis:
             return Gadget(self.pauli_string, self.phase + other.phase)
         else:
             raise IncompatibleGatesException
 
-    def to_dict(self) -> dict:
-        return {'Gadget': {'pauli_string': self.pauli_string, 'phase': self.phase}}
-
     @classmethod
     def from_single(cls, gate: ZPhase) -> Gadget:
         return cls(pauli_string='I' * gate.qubit + 'Z', phase=gate.phase)
+
+    def to_dict(self) -> dict:
+        return {'Gadget': {'pauli_string': self.pauli_string, 'phase': self.phase}}
 
 
 class XPhase(SingleQubitGate):
@@ -312,11 +310,6 @@ class CX(ControlledGate, CliffordGate):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         super().__init__(control=control, target=target, as_gadget=as_gadget)
         self.type = GateType.CX
-
-    def tableau(self, qubits: list[int]) -> CliffordTableau:
-        cirq.LineQubit.range(len(gate.qubits))
-        cirq_gate = cirq.CNOT(*self.line_qubits)
-        return CliffordTableau(cirq.Circuit())
 
 
 class CZ(ControlledGate, CliffordGate):

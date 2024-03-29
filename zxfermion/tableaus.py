@@ -2,7 +2,7 @@ from copy import deepcopy
 import cirq
 
 from zxfermion.gadgets import Gadget
-from zxfermion.types import LegType, GateType
+from zxfermion.types import PauliType, GateType
 from zxfermion.clifford_tableau import CliffordTableau
 
 
@@ -13,35 +13,28 @@ class Tableau:
         self.tableau = self.build_tableau()
 
     def build_tableau(self):
-        cirq_gate = {
-            GateType.CX: cirq.CNOT,
-            GateType.CZ: cirq.CZ,
-        }[self.gate.type]
+        cirq_gate = {GateType.CX: cirq.CNOT, GateType.CZ: cirq.CZ, GateType.H: cirq.H}[self.gate.type]
         circuit = cirq.Circuit(cirq_gate(*[self.line_qubits[qubit] for qubit in self.gate.qubits]))
         return CliffordTableau(circuit)
 
-    def apply_tableau(self, gadget: Gadget) -> Gadget:
-        cirq_map = {
-                LegType.I: cirq.I,
-                LegType.X: cirq.X,
-                LegType.Y: cirq.Y,
-                LegType.Z: cirq.Z,
-            }
+    def __call__(self, gadget: Gadget) -> Gadget:
+        pauli_map = {PauliType.I: cirq.I, PauliType.X: cirq.X, PauliType.Y: cirq.Y, PauliType.Z: cirq.Z}
+        inverse_pauli_map = {v: k for k, v in pauli_map.items()}
 
-        pauli_string = cirq.PauliString(gadget.phase, {
-            qubit: cirq_map[gadget.legs.get(qubit.x, LegType.I)]
-            for qubit in self.line_qubits
-        })
-
-        pauli_string = self.tableau(pauli_string)
-        cirq_map_inverse = {v: k for k, v in cirq_map.items()}
+        paulis = {qubit: pauli_map[gadget.paulis.get(qubit.x, PauliType.I)] for qubit in self.line_qubits}
+        pauli_string = self.tableau(cirq.PauliString(gadget.phase, paulis))
         cirq_dict = {qubit: pauli_string.get(self.line_qubits[qubit]) for qubit in self.gate.qubits}
 
         new_gadget = deepcopy(gadget)
         new_gadget.phase = pauli_string.coefficient.real
-        new_gadget.legs.update({
-            qubit: cirq_map_inverse.get(pauli)
-            if pauli else LegType.I
-            for qubit, pauli in cirq_dict.items()
-        })
+        new_gadget.paulis.update({
+            qubit: inverse_pauli_map.get(pauli)
+            if pauli else PauliType.I
+            for qubit, pauli in cirq_dict.items()})
         return new_gadget
+
+        # return Gadget.from_paulis({
+        #     qubit: inverse_pauli_map.get(pauli)
+        #     if pauli else PauliType.I
+        #     for qubit, pauli in cirq_dict.items()
+        # }, pauli_string.coefficient.real)

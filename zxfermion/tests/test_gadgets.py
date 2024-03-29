@@ -3,7 +3,7 @@ import math
 import pytest
 from pyzx import VertexType
 
-from zxfermion.types import GateType, LegType
+from zxfermion.types import GateType, PauliType
 from zxfermion.exceptions import IncompatibleGatesException
 from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H, \
     PauliGate, CliffordGate, ControlledGate, FixedPhaseGate
@@ -14,7 +14,7 @@ from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZP
 # kwargs for tikz
 
 # test stack_gadgets gadget feature (multiple test cases, think of clever ones?)
-# test expand_gadget feature (multiple test cases! pauli vs phase gadget, gadgets skipping legs, etc)
+# test expand_gadget feature (multiple test cases! pauli vs phase gadget, gadgets skipping paulis, etc)
 # some weird behaviour with stack_gadgets gadgets where XPlus is commuting through CZ
 
 # test graphing in all different modes
@@ -49,10 +49,10 @@ def test_gadget():
     assert not gadget.phase
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
-    assert len(gadget.legs) == 3
+    assert len(gadget.paulis) == 3
     assert repr(gadget) == "Gadget(pauli_string='XYZ', phase=0)"
-    assert all(isinstance(leg, LegType) for leg in gadget.legs.values())
-    assert all((gadget.legs[0] == LegType.X, gadget.legs[1] == LegType.Y, gadget.legs[2] == LegType.Z))
+    assert all(isinstance(pauli, PauliType) for pauli in gadget.paulis.values())
+    assert all((gadget.paulis[0] == PauliType.X, gadget.paulis[1] == PauliType.Y, gadget.paulis[2] == PauliType.Z))
     assert gadget.to_dict() == {'Gadget': {'pauli_string': 'XYZ', 'phase': 0}}
 
 
@@ -61,25 +61,25 @@ def test_phase_gadget():
     assert gadget.type == GateType.GADGET
     assert gadget.phase_gadget
     assert not gadget.phase
-    assert len(gadget.legs) == 3
+    assert len(gadget.paulis) == 3
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
     assert repr(gadget) == "Gadget(pauli_string='ZZZ', phase=0)"
-    assert all(leg == LegType.Z for leg in gadget.legs.values())
+    assert all(pauli == PauliType.Z for pauli in gadget.paulis.values())
     assert gadget.to_dict() == {'Gadget': {'pauli_string': 'ZZZ', 'phase': 0}}
 
 
 # @formatter:off
-@pytest.mark.parametrize(['pauli_string', 'legs'],
-[['ZZZ',   {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
- ['YZX',   {0: LegType.Y, 1: LegType.Z, 2: LegType.X}],
- ['ZIZ',   {0: LegType.Z, 1: LegType.I, 2: LegType.Z}],
- ['IIZ',   {0: LegType.I, 1: LegType.I, 2: LegType.Z}],
- ['ZZZII', {0: LegType.Z, 1: LegType.Z, 2: LegType.Z}],
- ['ZIZII', {0: LegType.Z, 1: LegType.I, 2: LegType.Z}]])  # @formatter:on
-def test_gadget_pauli_string(pauli_string, legs):
+@pytest.mark.parametrize(['pauli_string', 'paulis'],
+                         [['ZZZ',   {0: PauliType.Z, 1: PauliType.Z, 2: PauliType.Z}],
+                          ['YZX',   {0: PauliType.Y, 1: PauliType.Z, 2: PauliType.X}],
+                          ['ZIZ',   {0: PauliType.Z, 1: PauliType.I, 2: PauliType.Z}],
+                          ['IIZ',   {0: PauliType.I, 1: PauliType.I, 2: PauliType.Z}],
+                          ['ZZZII', {0: PauliType.Z, 1: PauliType.Z, 2: PauliType.Z}],
+                          ['ZIZII', {0: PauliType.Z, 1: PauliType.I, 2: PauliType.Z}]])  # @formatter:on
+def test_gadget_pauli_string(pauli_string, paulis):
     gadget = Gadget(pauli_string)
-    assert gadget.legs == legs
+    assert gadget.paulis == paulis
     assert gadget.min_qubit == 0
     assert gadget.max_qubit == 2
 

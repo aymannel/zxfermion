@@ -1,9 +1,8 @@
 from __future__ import annotations
 from enum import Enum
-import cirq
 
 
-class LegType(str, Enum):
+class PauliType(str, Enum):
     I = 'I'
     X = 'X'
     Y = 'Y'
