@@ -1,5 +1,5 @@
-from zxfermion.gadgets import CX, Gadget
-from zxfermion.tableaus import Tableau
+from zxfermion.gates import CX, Gadget
+from zxfermion.tableau import Tableau
 
 
 def test_tableau_cx():
@@ -11,3 +11,5 @@ def test_tableau_cx():
 
 
 # assert correct phases are being applied!
+
+# something dodgy going on with Y conjugated by XMinus/XPlus

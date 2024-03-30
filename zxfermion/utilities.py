@@ -14,6 +14,10 @@ tikz_styles = {
 }
 
 
+def pair_list(items: list[int]) -> list[tuple[int, int]]:
+    return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
+
+
 def matrix_to_latex(array: np.array) -> str:
     latex_str = r'\begin{pmatrix}'
     for row in array:

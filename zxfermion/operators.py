@@ -3,7 +3,7 @@ from zxfermion.circuits import GadgetCircuit
 operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "IIIIYZX", "phase": 0.5}},
             {"Gadget": {"pauli_string": "IIIIXZY", "phase": 1.5}},
             {"Gadget": {"pauli_string": "IIIIIYZX", "phase": 0.5}},
@@ -12,7 +12,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "IIYZZZX", "phase": 0.5}},
             {"Gadget": {"pauli_string": "IIXZZZY", "phase": 1.5}},
             {"Gadget": {"pauli_string": "IIIYZZZX", "phase": 0.5}},
@@ -21,7 +21,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "IIYZX", "phase": 0.5}},
             {"Gadget": {"pauli_string": "IIXZY", "phase": 1.5}},
             {"Gadget": {"pauli_string": "IIIYZX", "phase": 0.5}},
@@ -30,7 +30,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "YZZZZZX", "phase": 0.5}},
             {"Gadget": {"pauli_string": "XZZZZZY", "phase": 1.5}},
             {"Gadget": {"pauli_string": "IYZZZZZX", "phase": 0.5}},
@@ -39,7 +39,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "YZZZX", "phase": 0.5}},
             {"Gadget": {"pauli_string": "XZZZY", "phase": 1.5}},
             {"Gadget": {"pauli_string": "IYZZZX", "phase": 0.5}},
@@ -48,7 +48,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "YZX", "phase": 0.5}},
             {"Gadget": {"pauli_string": "XZY", "phase": 1.5}},
             {"Gadget": {"pauli_string": "IYZX", "phase": 0.5}},
@@ -57,7 +57,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "IIIIYXXX", "phase": 0.125}},
             {"Gadget": {"pauli_string": "IIIIYXYY", "phase": 1.875}},
             {"Gadget": {"pauli_string": "IIIIXXYX", "phase": 1.875}},
@@ -70,7 +70,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "IIYXIIXX", "phase": 0.125}},
             {"Gadget": {"pauli_string": "IIYXIIYY", "phase": 1.875}},
             {"Gadget": {"pauli_string": "IIXXIIYX", "phase": 1.875}},
@@ -83,7 +83,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "IIYXXX", "phase": 0.125}},
             {"Gadget": {"pauli_string": "IIYXYY", "phase": 1.875}},
             {"Gadget": {"pauli_string": "IIXXYX", "phase": 1.875}},
@@ -96,7 +96,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "YXIIIIXX", "phase": 0.125}},
             {"Gadget": {"pauli_string": "YXIIIIYY", "phase": 1.875}},
             {"Gadget": {"pauli_string": "XXIIIIYX", "phase": 1.875}},
@@ -109,7 +109,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "YXIIXX", "phase": 0.125}},
             {"Gadget": {"pauli_string": "YXIIYY", "phase": 1.875}},
             {"Gadget": {"pauli_string": "XXIIYX", "phase": 1.875}},
@@ -122,7 +122,7 @@ operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     },
     {
         "num_qubits": 8,
-        "gadgets": [
+        "gates": [
             {"Gadget": {"pauli_string": "YXXX", "phase": 0.125}},
             {"Gadget": {"pauli_string": "YXYY", "phase": 1.875}},
             {"Gadget": {"pauli_string": "XXYX", "phase": 1.875}},

@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import stim
-from zxfermion.gadgets import Gadget
+from zxfermion.gates import Gadget
 from zxfermion.types import PauliType, GateType
 
 
@@ -14,10 +14,10 @@ class Tableau:
             GateType.CX: 'CNOT',
             GateType.CZ: 'CZ',
             GateType.H: 'H',
-            GateType.X_PLUS: 'SQRT_X_DAG',
-            GateType.Z_PLUS: 'SQRT_Z_DAG',
-            GateType.X_MINUS: 'SQRT_X',
-            GateType.Z_MINUS: 'SQRT_Z',
+            GateType.X_PLUS: 'SQRT_X',
+            GateType.Z_PLUS: 'SQRT_Z',
+            GateType.X_MINUS: 'SQRT_X_DAG',
+            GateType.Z_MINUS: 'SQRT_Z_DAG',
         }.get(gate.type))
 
     def __call__(self, gadget: Gadget) -> Gadget:

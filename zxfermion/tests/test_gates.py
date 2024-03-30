@@ -5,7 +5,7 @@ from pyzx import VertexType
 
 from zxfermion.types import GateType, PauliType
 from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H, \
+from zxfermion.gates import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H, \
     PauliGate, CliffordGate, ControlledGate, FixedPhaseGate
 
 
@@ -13,9 +13,9 @@ from zxfermion.gadgets import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZP
 # kwargs for graphs
 # kwargs for tikz
 
-# test stack_gadgets gadget feature (multiple test cases, think of clever ones?)
-# test expand_gadget feature (multiple test cases! pauli vs phase gadget, gadgets skipping paulis, etc)
-# some weird behaviour with stack_gadgets gadgets where XPlus is commuting through CZ
+# test stack_gates gadget feature (multiple test cases, think of clever ones?)
+# test expand_gadget feature (multiple test cases! pauli vs phase gadget, gates skipping paulis, etc)
+# some weird behaviour with stack_gates gates where XPlus is commuting through CZ
 
 # test graphing in all different modes
 # test expanded CX and CZ

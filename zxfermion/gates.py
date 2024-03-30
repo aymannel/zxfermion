@@ -45,7 +45,7 @@ class PauliGate(SelfInverse, FixedPhaseGate):
     pass
 
 
-class BaseGadget:
+class BaseGate:
     def matrix(self, return_latex=False):
         from zxfermion.circuits import GadgetCircuit
         return GadgetCircuit([self]).matrix(return_latex=return_latex)
@@ -61,7 +61,7 @@ class BaseGadget:
         zx.draw(self.graph(expand_gadget=expand_gadget, as_gadget=as_gadget), labels=labels)
 
 
-class SingleQubitGate(BaseGadget):
+class SingleQubitGate(BaseGate):
     def __init__(self, qubit: Optional[int] = None, as_gadget=None, phase: Optional[int | float] = None):
         self.type = GateType.SINGLE_QUBIT_GATE
         self.qubit = 0 if qubit is None else qubit
@@ -92,7 +92,7 @@ class SingleQubitGate(BaseGadget):
         return inverse
 
 
-class ControlledGate(BaseGadget, SelfInverse):
+class ControlledGate(BaseGate, SelfInverse):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
         control = 0 if control is None else control
         target = 1 if target is None else target
@@ -120,7 +120,7 @@ class ControlledGate(BaseGadget, SelfInverse):
             raise IncompatibleGatesException
 
 
-class Gadget(BaseGadget):
+class Gadget(BaseGate):
     def __init__(self, pauli_string: str, phase: Optional[int | float] = None, expand_gadget=None):
         self.type = GateType.GADGET
         self.phase = 0 if phase is None else round(phase % 2, 15)
