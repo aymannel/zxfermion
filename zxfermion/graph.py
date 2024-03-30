@@ -13,6 +13,10 @@ from zxfermion.types import PauliType
 from zxfermion.gates import Gadget, XPhase, ZPhase, XPlus, XMinus, CZ, CX, H
 from zxfermion.utilities import tex_parse_tikz, pair_list
 
+# update add_gadget(), add_cx_gadget() and add_cz_gadget()
+# phase out remove_wire() and remove_wires() method
+# implement overlapping_vertical_line() method
+
 
 class BaseGraph(GraphS):
     def __init__(self, num_qubits: Optional[int] = 1, num_rows: Optional[int] = 1):
@@ -84,11 +88,9 @@ class BaseGraph(GraphS):
     def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
         Path('output/').mkdir(parents=True, exist_ok=True)
         tex_output = tex_parse_tikz(content=self.to_tikz(), phase_row=self.num_qubits + 2, symbol=symbol, scale=scale)
-        if name:
-            with open(f'output/{name}.tex', 'w') as file:
-                file.write(tex_output)
-        else:
-            return tex_output
+        if name is not None:
+            with open(f'output/{name}.tex', 'w') as file: file.write(tex_output)
+        return None if name is None else tex_output
 
     def pdf(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
         self.tikz(name=f'{name}_temp', symbol=symbol, scale=scale)

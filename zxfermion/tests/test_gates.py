@@ -12,11 +12,6 @@ from zxfermion.gates import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlu
 # kwargs for drawing
 # kwargs for graphs
 # kwargs for tikz
-
-# test stack_gates gadget feature (multiple test cases, think of clever ones?)
-# test expand_gadget feature (multiple test cases! pauli vs phase gadget, gates skipping paulis, etc)
-# some weird behaviour with stack_gates gates where XPlus is commuting through CZ
-
 # test graphing in all different modes
 # test expanded CX and CZ
 # test Gadget.from_gate()
@@ -25,6 +20,8 @@ from zxfermion.gates import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlu
 # update Gadget tests to assert Gadget('XI') == Gadget('X')
 
 # test inverse properties
+
+# test pauli strings with trailing I
 
 def test_inheritance():
     assert all(isinstance(gate, PauliGate) for gate in [X(), Z()])
@@ -72,13 +69,14 @@ def test_phase_gadget():
 
 
 # @formatter:off
-@pytest.mark.parametrize(['pauli_string', 'paulis'],
-                         [['ZZZ',   {0: PauliType.Z, 1: PauliType.Z, 2: PauliType.Z}],
-                          ['YZX',   {0: PauliType.Y, 1: PauliType.Z, 2: PauliType.X}],
-                          ['ZIZ',   {0: PauliType.Z, 1: PauliType.I, 2: PauliType.Z}],
-                          ['IIZ',   {0: PauliType.I, 1: PauliType.I, 2: PauliType.Z}],
-                          ['ZZZII', {0: PauliType.Z, 1: PauliType.Z, 2: PauliType.Z}],
-                          ['ZIZII', {0: PauliType.Z, 1: PauliType.I, 2: PauliType.Z}]])  # @formatter:on
+@pytest.mark.parametrize(
+    ['pauli_string',                                   'paulis'],
+    [['ZZZ',   {0: PauliType.Z, 1: PauliType.Z, 2: PauliType.Z}],
+     ['YZX',   {0: PauliType.Y, 1: PauliType.Z, 2: PauliType.X}],
+     ['ZIZ',   {0: PauliType.Z, 1: PauliType.I, 2: PauliType.Z}],
+     ['ZZZII', {0: PauliType.Z, 1: PauliType.Z, 2: PauliType.Z}],
+     ['ZIZII', {0: PauliType.Z, 1: PauliType.I, 2: PauliType.Z}]]
+)  # @formatter:on
 def test_gadget_pauli_string(pauli_string, paulis):
     gadget = Gadget(pauli_string)
     assert gadget.paulis == paulis

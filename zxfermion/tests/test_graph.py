@@ -1,19 +1,24 @@
-import pytest
-from pyzx import VertexType, EdgeType
 from typing import Union
 
+import pytest
+from pyzx import VertexType, EdgeType
+
 from zxfermion.graph import GadgetGraph, BaseGraph
-from zxfermion.gates import Gadget, XPhase, ZPhase, X, Z, ZPlus, XMinus, XPlus, ZMinus, H, CX, CZ
 from zxfermion.tests.fixtures_graph import zzz_base_graph, yzx_base_graph
+from zxfermion.gates import Gadget, XPhase, ZPhase, X, Z, ZPlus, XMinus, XPlus, ZMinus, CX, CZ
 
 
 # assert graph depth doesn't change when graph is larger than gadget size
-# test increasingly large expanded gates. test expanded gadget that skips qubits
-
-# tikz / pdf
+# test pdf()
+# test tikz()
 # assert tex file is deleted after pdf generation
-
 # test qubit_vertices()
+
+# test cases
+# various gadgets / missing legs / different paulis etc
+# expanded analogues of above
+# circuit consisting of various single qubit and controlled gates to check stacking
+# single qubit excitation operators + two qubit excitation operators
 
 # BaseGraph tests
 def test_default_empty_base_graph_dimensions():
@@ -130,30 +135,16 @@ def test_base_graph_set_output_row(row):
 def test_graph_add_phase_gate(qubit, gate: Union[type[XPhase], type[ZPhase]], phase):
     graph = GadgetGraph(num_qubits=4)
     gate = gate(qubit=qubit, phase=phase)
-    ref = graph.add_single_qubit_gate(gate=gate)
+    graph.add_single_qubit_gate(gate=gate)
     assert graph.graph_depth == 1
     assert graph.num_qubits == 4
     assert list(graph.inputs()) == [0, 1, 2, 3]
     assert list(graph.outputs()) == [4, 5, 6, 7]
     assert all(graph.connected(graph.inputs()[q], graph.outputs()[q]) for q in range(4) if qubit != qubit)
-    assert graph.connected(graph.inputs()[qubit], ref)
-    assert graph.connected(ref, graph.outputs()[qubit])
-    assert graph.type(ref) == gate.vertex_type
-    assert graph.phase(ref) == 0 if phase is None else phase
-
-
-@pytest.mark.parametrize('qubit', [0, 1, 2, 3])
-@pytest.mark.parametrize('gate', [X, XPlus, XMinus, Z, ZPlus, ZMinus, H])
-def test_graph_add_single_qubit_gates(qubit, gate):
-    graph = GadgetGraph(num_qubits=4)
-    ref = graph.add_single_qubit_gate(gate=gate(qubit=qubit))
-    assert graph.graph_depth == 1
-    assert graph.num_qubits == 4
-    assert list(graph.inputs()) == [0, 1, 2, 3]
-    assert list(graph.outputs()) == [4, 5, 6, 7]
-    assert all(graph.connected(graph.inputs()[q], graph.outputs()[q]) for q in range(4) if qubit != qubit)
-    assert graph.connected(graph.inputs()[qubit], ref)
-    assert graph.connected(ref, graph.outputs()[qubit])
+    assert graph.connected(graph.inputs()[qubit], 8)
+    assert graph.connected(8, graph.outputs()[qubit])
+    assert graph.type(8) == gate.vertex_type
+    assert graph.phase(8) == 0 if phase is None else phase
 
 
 def test_graph_add_gadget():
@@ -339,11 +330,11 @@ def test_graph_add_cx_gadget():
     assert graph.phase(7) == 1/2
     assert graph.connected(4, 6)
     assert graph.connected(4, 7)
-    assert graph.connected(7, 8)
-    assert graph.connected(7, 9)
-    assert graph.connected(graph.inputs()[0], 6)
+    assert graph.connected(6, 8)
+    assert graph.connected(6, 9)
+    assert graph.connected(graph.inputs()[0], 7)
     assert graph.connected(graph.inputs()[1], 8)
-    assert graph.connected(6, graph.outputs()[0])
+    assert graph.connected(7, graph.outputs()[0])
     assert graph.connected(9, graph.outputs()[1])
 
 
@@ -369,10 +360,10 @@ def test_graph_add_cz_gadget():
     assert graph.phase(7) == 1/2
     assert graph.connected(4, 6)
     assert graph.connected(4, 7)
-    assert graph.connected(graph.inputs()[0], 6)
-    assert graph.connected(graph.inputs()[1], 7)
-    assert graph.connected(6, graph.outputs()[0])
-    assert graph.connected(7, graph.outputs()[1])
+    assert graph.connected(graph.inputs()[1], 6)
+    assert graph.connected(graph.inputs()[0], 7)
+    assert graph.connected(6, graph.outputs()[1])
+    assert graph.connected(7, graph.outputs()[0])
 
 
 def test_graph_add_x_phase():

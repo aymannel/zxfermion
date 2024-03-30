@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from copy import deepcopy, copy
-from itertools import groupby
-from typing import Optional
-
 import pyzx as zx
+from typing import Optional
+from copy import deepcopy, copy
 from IPython.display import display, Markdown
 
-from zxfermion import config
-from zxfermion.gates import Gadget, SingleQubitGate, FixedPhaseGate
 from zxfermion.graph import GadgetGraph
-from zxfermion.tableau import Tableau
-from zxfermion.types import GateType, PauliType
+from zxfermion.gates import Gadget, SingleQubitGate
 from zxfermion.utilities import matrix_to_latex
+from zxfermion.tableau import Tableau
+from zxfermion.types import GateType
+from zxfermion import config
+
+
+# phase out stack gadget / layer stuff
 
 
 class GadgetCircuit:
@@ -28,14 +29,11 @@ class GadgetCircuit:
     def apply(self, gate, start: int = 0, end: int = None):
         assert gate.max_qubit < self.num_qubits
         end = len(self.gates) if end is None else end
-
         tableau = Tableau(gate)
         new_gadgets = [
             tableau(gadget)
             if gadget.type == GateType.GADGET else gadget
-            for gadget in self.gates[start:end]
-        ]
-
+            for gadget in self.gates[start:end]]
         self.gates[start:end] = [copy(gate), *new_gadgets, copy(gate.inverse)]
 
     def graph(self, gadgets_only=None, stack_gates=None, expand_gadgets=None) -> GadgetGraph:
@@ -63,12 +61,9 @@ class GadgetCircuit:
         return circuit
 
     def cancel_gates(self, gates: Optional[list] = None) -> list:
-        """Needs work. Use __add__() to do this"""
+        """Needs work. Use __add__ methods to do this"""
         # return [key for key, group in groupby(gates if gates else self.gates) if len(list(group)) % 2]
         return gates if gates else self.gates
-
-    def cancel_cnots(self):
-        pass
 
     def stack_gates(self, gates: Optional[list] = None) -> list[list]:
         layers = []
