@@ -67,7 +67,7 @@ class BaseGraph(GraphS):
         for output in self.outputs():
             self.set_row(output, row)
 
-    def update_output_row(self, row: int):
+    def update_output_row(self, row: int):  # change impl to move outputs to match right plugs
         if row > self.output_row:
             self.set_output_row(row)
 
@@ -84,6 +84,9 @@ class BaseGraph(GraphS):
 
     def connect_inout(self, qubit: int, vertex_refs: list[int]):
         self.connect_vertices([self.inputs()[qubit], *vertex_refs, self.outputs()[qubit]])
+
+    def compose2(self, other: BaseGraph) -> BaseGraph:  # also update __add__() method
+        pass
 
     def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
         Path('output/').mkdir(parents=True, exist_ok=True)
@@ -121,7 +124,7 @@ class GadgetGraph(BaseGraph):
     def add_cx(self, cx: CX):
         control_in, control_out = self.right_plug(cx.control), self.outputs()[cx.control]
         target_in, target_out = self.right_plug(cx.target), self.outputs()[cx.target]
-        row = max(self.row(v) for q, v in self.right_plugs.items() if cx.control <= q <= cx.target) + 1
+        row = max(self.row(self.right_plug(q)) for q in range(cx.min_qubit, cx.max_qubit + 1)) + 1
         control_ref = self.add_vertex(ty=VertexType.Z, row=row, qubit=cx.control)
         target_ref = self.add_vertex(ty=VertexType.X, row=row, qubit=cx.target)
         self.remove_edges(((control_in, control_out), (target_in, target_out)))
@@ -133,7 +136,7 @@ class GadgetGraph(BaseGraph):
     def add_cz(self, cz: CZ):
         control_in, control_out = self.right_plug(cz.control), self.outputs()[cz.control]
         target_in, target_out = self.right_plug(cz.target), self.outputs()[cz.target]
-        row = max(self.row(v) for q, v in self.right_plugs.items() if cz.control <= q <= cz.target) + 1
+        row = max(self.row(self.right_plug(q)) for q in range(cz.min_qubit, cz.max_qubit + 1)) + 1
         control_ref = self.add_vertex(ty=VertexType.Z, row=row, qubit=cz.control)
         target_ref = self.add_vertex(ty=VertexType.Z, row=row, qubit=cz.target)
         self.remove_edges(((control_in, control_out), (target_in, target_out)))
@@ -142,32 +145,34 @@ class GadgetGraph(BaseGraph):
         self.connect_vertices([target_in, target_ref, target_out])
         self.update_output_row(row + 1)
 
-    def add_gadget(self, gadget: Gadget):
-        hub_row = 2 if gadget.phase_gadget else 3
+    def add_gadget(self, gadget: Gadget):  # replace with add_single_qubit_gate()? / also test edge cases!
+        row = max(self.row(self.right_plug(q)) for q in range(gadget.min_qubit, gadget.max_qubit + 1)) + 1
+        hub_row = row + 1 if gadget.phase_gadget else row + 2
         hub_ref = self.add_vertex(ty=VertexType.X, row=hub_row, qubit=self.num_qubits + 1)
         phase_ref = self.add_vertex(ty=VertexType.Z, row=hub_row, qubit=self.num_qubits + 2, phase=gadget.phase)
-        for qubit, pauli in gadget.paulis.items():
-            if pauli == PauliType.X:
-                left_ref = self.add_vertex(ty=VertexType.H_BOX, row=1, qubit=qubit)
-                middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
-                right_ref = self.add_vertex(ty=VertexType.H_BOX, row=3, qubit=qubit)
-                self.connect_inout(qubit=qubit, vertex_refs=[left_ref, middle_ref, right_ref])
-                self.add_edge((middle_ref, hub_ref))
-                self.remove_wire(qubit=qubit)
-            elif pauli == PauliType.Y:
-                left_ref = self.add_vertex(ty=VertexType.X, row=1, qubit=qubit, phase=1 / 2, )
-                middle_ref = self.add_vertex(ty=VertexType.Z, row=2, qubit=qubit)
-                right_ref = self.add_vertex(ty=VertexType.X, row=3, qubit=qubit, phase=-1 / 2)
-                self.connect_inout(qubit=qubit, vertex_refs=[left_ref, middle_ref, right_ref])
-                self.add_edge((middle_ref, hub_ref))
-                self.remove_wire(qubit=qubit)
-            elif pauli == PauliType.Z:
-                middle_ref = self.add_vertex(ty=VertexType.Z, row=1 if gadget.phase_gadget else 2, qubit=qubit)
-                self.connect_inout(qubit=qubit, vertex_refs=[middle_ref])
-                self.add_edge((middle_ref, hub_ref))
-                self.remove_wire(qubit=qubit)
         self.add_edge((hub_ref, phase_ref))
-        self.set_output_row(self.graph_depth + 1 if gadget.phase_gadget else self.graph_depth + 3)
+        for qubit, pauli in gadget.paulis.items():
+            in_ref, out_ref = self.left_plug(qubit), self.outputs()[qubit]
+            if pauli == PauliType.X:
+                left_ref = self.add_vertex(ty=VertexType.H_BOX, row=row, qubit=qubit)
+                middle_ref = self.add_vertex(ty=VertexType.Z, row=row + 1, qubit=qubit)
+                right_ref = self.add_vertex(ty=VertexType.H_BOX, row=row + 2, qubit=qubit)
+                self.connect_vertices([in_ref, left_ref, middle_ref, right_ref, out_ref])
+                self.add_edge((middle_ref, hub_ref))
+                self.remove_edge((in_ref, left_ref))
+            if pauli == PauliType.Y:
+                left_ref = self.add_vertex(ty=VertexType.X, row=row, qubit=qubit, phase=1/2)
+                middle_ref = self.add_vertex(ty=VertexType.Z, row=row + 1, qubit=qubit)
+                right_ref = self.add_vertex(ty=VertexType.X, row=row + 2, qubit=qubit, phase=3/2)
+                self.connect_vertices([in_ref, left_ref, middle_ref, right_ref, out_ref])
+                self.add_edge((middle_ref, hub_ref))
+                self.remove_edge((in_ref, left_ref))
+            if pauli == PauliType.Z:
+                middle_ref = self.add_vertex(ty=VertexType.Z, row=row if gadget.phase_gadget else row + 1, qubit=qubit)
+                self.connect_vertices([in_ref, middle_ref, out_ref])
+                self.add_edge((middle_ref, hub_ref))
+                self.remove_edge((in_ref, middle_ref))
+        self.update_output_row(row + 1 if gadget.phase_gadget else row + 3)
 
     def add_expanded_gadget(self, gadget: Gadget):
         row = max(self.row(self.right_plug(q)) for q in range(gadget.min_qubit, gadget.max_qubit + 1)) + 1

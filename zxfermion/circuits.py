@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-import pyzx as zx
-from typing import Optional
 from copy import deepcopy, copy
+from typing import Optional
+
+import pyzx as zx
 from IPython.display import display, Markdown
 
-from zxfermion.graph import GadgetGraph
 from zxfermion.gates import Gadget, SingleQubitGate
-from zxfermion.utilities import matrix_to_latex
+from zxfermion.graph import GadgetGraph
 from zxfermion.tableau import Tableau
 from zxfermion.types import GateType
-from zxfermion import config
+from zxfermion.utilities import matrix_to_latex
 
 
 # phase out stack gadget / layer stuff
+# impl add() method that takes gate as input and adds to gadgets. maybe. isn't GadgetCircuit supposed to be immutable?
 
 
 class GadgetCircuit:
@@ -24,7 +25,7 @@ class GadgetCircuit:
 
     def __add__(self, other: GadgetCircuit) -> GadgetCircuit:
         assert self.num_qubits == other.num_qubits
-        return GadgetCircuit(gates=self.cancel_gates(self.gates + other.gates))
+        return GadgetCircuit(gates=self.simplify(self.gates + other.gates))
 
     def apply(self, gate, start: int = 0, end: int = None):
         assert gate.max_qubit < self.num_qubits
@@ -36,51 +37,33 @@ class GadgetCircuit:
             for gadget in self.gates[start:end]]
         self.gates[start:end] = [copy(gate), *new_gadgets, copy(gate.inverse)]
 
-    def graph(self, gadgets_only=None, stack_gates=None, expand_gadgets=None) -> GadgetGraph:
-        stack_gates = stack_gates if stack_gates is not None else config.stack_gadgets
-        gate_layers = self.stack_gates() if stack_gates else [[gadget] for gadget in self.gates]
+    def graph(self, gadgets_only=None, expand_gadgets=None) -> GadgetGraph:
         circuit = GadgetGraph(num_qubits=self.num_qubits)
-        for gate_layer in gate_layers:
-            layer = GadgetGraph(num_qubits=self.num_qubits)
-            for gadget in gate_layer:
-                if gadget.type == GateType.GADGET:
-                    gadget.expand_gadget = gadget.expand_gadget if expand_gadgets is None else expand_gadgets
-                else:
-                    gadget.as_gadget = gadget.as_gadget if gadgets_only is None else gadgets_only
-                if gadget.type == GateType.GADGET:
-                    layer.add_expanded_gadget(gadget) if gadget.expand_gadget else layer.add_gadget(gadget)
-                elif gadget.type == GateType.CX:
-                    layer.add_cx_gadget(gadget) if gadget.as_gadget else layer.add_cx(gadget)
-                elif gadget.type == GateType.CZ:
-                    layer.add_cz_gadget(gadget) if gadget.as_gadget else layer.add_cz(gadget)
-                elif gadget.type == GateType.H:
-                    layer.add_single_qubit_gate(gadget)
-                elif isinstance(gadget, SingleQubitGate):
-                    layer.add_gadget(Gadget.from_single(gadget)) if gadget.as_gadget else layer.add_single_qubit_gate(gadget)
-            circuit.compose(layer)
+        for gate in self.gates:
+            if gate.type == GateType.GADGET:
+                gate.expand_gadget = gate.expand_gadget if expand_gadgets is None else expand_gadgets
+            else:
+                gate.as_gadget = gate.as_gadget if gadgets_only is None else gadgets_only
+            if gate.type == GateType.GADGET:
+                circuit.add_expanded_gadget(gate) if gate.expand_gadget else circuit.add_gadget(gate)
+            elif gate.type == GateType.CX:
+                circuit.add_cx_gadget(gate) if gate.as_gadget else circuit.add_cx(gate)
+            elif gate.type == GateType.CZ:
+                circuit.add_cz_gadget(gate) if gate.as_gadget else circuit.add_cz(gate)
+            elif gate.type == GateType.H:
+                circuit.add_single_qubit_gate(gate)
+            elif isinstance(gate, SingleQubitGate):
+                circuit.add_gadget(Gadget.from_single(gate)) if gate.as_gadget else circuit.add_single_qubit_gate(gate)
         return circuit
 
-    def cancel_gates(self, gates: Optional[list] = None) -> list:
+    def simplify(self, gates: Optional[list] = None) -> list:
         """Needs work. Use __add__ methods to do this"""
         # return [key for key, group in groupby(gates if gates else self.gates) if len(list(group)) % 2]
         return gates if gates else self.gates
 
-    def stack_gates(self, gates: Optional[list] = None) -> list[list]:
-        layers = []
-        for gadget in gates if gates else self.cancel_gates():
-            placed = False
-            for layer in layers:
-                if all(gadget.max_qubit < other.min_qubit or gadget.min_qubit > other.max_qubit for other in layer):
-                    layer.append(gadget)
-                    placed = True
-                    break
-            if not placed:
-                layers.append([gadget])
-        return layers
-
-    def matrix(self, return_latex=False, override_max=False):
+    def matrix(self, return_latex=False, override_max=False):  # use pyzx matrix_to_latex() method here
         if self.num_qubits <= 5 or override_max:
-            matrix = self.graph(expand_gadgets=False, gadgets_only=False, stack_gates=False).to_matrix()
+            matrix = self.graph(expand_gadgets=False, gadgets_only=False).to_matrix()
             latex_string = matrix_to_latex(matrix)
             display(Markdown(latex_string))
             return latex_string if return_latex else None
