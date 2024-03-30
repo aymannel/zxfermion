@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional, Union, TypeVar
+from typing import Optional
+from pdflatex import PDFLaTeX
 
 import pyzx as zx
-from pdflatex import PDFLaTeX
 from pyzx import VertexType, EdgeType
 from pyzx.graph.graph_s import GraphS
 
-from zxfermion.gates import Gadget, XPhase, ZPhase, XPlus, XMinus, CZ, CX, H, ZMinus, ZPlus, SingleQubitGate
-from zxfermion.types import PauliType, GateType
+from zxfermion.types import PauliType
+from zxfermion.gates import Gadget, XPhase, ZPhase, XPlus, XMinus, CZ, CX, H
 from zxfermion.utilities import tex_parse_tikz, pair_list
 
 
@@ -23,11 +23,11 @@ class BaseGraph(GraphS):
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
 
     @property
-    def graph_qubits(self) -> list[int]:
+    def list_qubits(self) -> list[int]:
         return [self.qubit(v) for v in self.inputs()]
 
     @property
-    def graph_rows(self) -> list[int]:
+    def list_rows(self) -> list[int]:
         return list(range(self.input_row + 1, self.output_row))
 
     @property
@@ -39,56 +39,25 @@ class BaseGraph(GraphS):
         return self.row(self.outputs()[0])
 
     @property
-    def first_qubit(self) -> int:
-        return self.qubit(self.inputs()[0])
-
-    @property
-    def last_qubit(self) -> int:
-        return self.qubit(self.inputs()[-1])
-
-    @property
     def graph_depth(self) -> int:
         return self.output_row - self.input_row - 1
 
     @property
     def left_plugs(self) -> dict[int, int]:
-        return {qubit: left for qubit in self.graph_qubits if (left := self.left_plug(qubit)) is not None}
+        return {qubit: left for qubit in self.list_qubits if (left := self.left_plug(qubit)) is not None}
 
     @property
     def right_plugs(self) -> dict[int, int]:
-        return {qubit: right for qubit in self.graph_qubits if (right := self.right_plug(qubit)) is not None}
+        return {qubit: right for qubit in self.list_qubits if (right := self.right_plug(qubit)) is not None}
 
-    @property
-    def leftmost_row(self) -> int:
-        return min((
-            self.row(v)
-            for v in self.vertices()
-            if self.type(v) != VertexType.BOUNDARY
-            and self.qubit(v) <= self.last_qubit
-        ), default=None)
-
-    @property
-    def rightmost_row(self) -> int:
-        return max((
-            self.row(v)
-            for v in self.vertices()
-            if self.type(v) != VertexType.BOUNDARY
-            and self.qubit(v) <= self.last_qubit
-        ), default=None)
+    def qubit_vertices(self, qubit: int) -> list[int]:
+        return [v for v in self.vertices() if self.type(v) != VertexType.BOUNDARY and self.qubit(v) == qubit]
 
     def left_plug(self, qubit: int) -> int:
-        return min((
-            v for v in self.vertices()
-            if self.type(v) != VertexType.BOUNDARY
-            and self.qubit(v) == qubit
-        ), default=self.outputs()[qubit])
+        return min(self.qubit_vertices(qubit), default=self.outputs()[qubit])
 
     def right_plug(self, qubit: int) -> int:
-        return max((
-            v for v in self.vertices()
-            if self.type(v) != VertexType.BOUNDARY
-            and self.qubit(v) == qubit
-        ), default=self.inputs()[qubit])
+        return max(self.qubit_vertices(qubit), default=self.inputs()[qubit])
 
     def set_output_row(self, row: int):
         for output in self.outputs():
@@ -97,9 +66,6 @@ class BaseGraph(GraphS):
     def update_output_row(self, row: int):
         if row > self.output_row:
             self.set_output_row(row)
-
-    def identity_wire(self, qubit: int) -> bool:
-        return self.connected(self.inputs()[qubit], self.outputs()[qubit])
 
     def remove_wire(self, qubit: int):
         if self.connected(self.inputs()[qubit], self.outputs()[qubit]):
@@ -229,8 +195,8 @@ class GadgetGraph(BaseGraph):
 
         hub_ref = self.add_vertex(ty=VertexType.X, qubit=self.num_qubits + 1, row=3)
         phase_ref = self.add_vertex(ty=VertexType.Z, qubit=self.num_qubits + 2, row=3, phase=-1 / 2)
-        control_ref = self.add_vertex(ty=VertexType.Z, qubit=cx.control, row=2, phase=1 / 2)
         target_ref = self.add_vertex(ty=VertexType.Z, qubit=cx.target, row=2, phase=1 / 2)
+        control_ref = self.add_vertex(ty=VertexType.Z, qubit=cx.control, row=2, phase=1 / 2)
         left_had_ref = self.add_vertex(ty=VertexType.H_BOX, qubit=cx.target, row=1)
         right_had_ref = self.add_vertex(ty=VertexType.H_BOX, qubit=cx.target, row=3)
 
@@ -243,8 +209,8 @@ class GadgetGraph(BaseGraph):
     def add_cz_gadget(self, cz: CZ):
         hub_ref = self.add_vertex(ty=VertexType.X, qubit=self.num_qubits + 1, row=2)
         phase_ref = self.add_vertex(ty=VertexType.Z, qubit=self.num_qubits + 2, row=2, phase=-1 / 2)
-        control_ref = self.add_vertex(ty=VertexType.Z, qubit=cz.control, row=1, phase=1 / 2)
         target_ref = self.add_vertex(ty=VertexType.Z, qubit=cz.target, row=1, phase=1 / 2)
+        control_ref = self.add_vertex(ty=VertexType.Z, qubit=cz.control, row=1, phase=1 / 2)
 
         self.connect_inout(qubit=cz.control, vertex_refs=[control_ref])
         self.connect_inout(qubit=cz.target, vertex_refs=[target_ref])

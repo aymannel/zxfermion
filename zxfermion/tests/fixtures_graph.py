@@ -1,7 +1,8 @@
 import pytest
 from pyzx import VertexType
 
-from zxfermion.graph import BaseGraph
+from zxfermion.gates import Gadget
+from zxfermion.graph import BaseGraph, GadgetGraph
 
 
 @pytest.fixture

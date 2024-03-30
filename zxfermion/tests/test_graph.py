@@ -13,23 +13,21 @@ from zxfermion.tests.fixtures_graph import zzz_base_graph, yzx_base_graph
 # tikz / pdf
 # assert tex file is deleted after pdf generation
 
+# test qubit_vertices()
+
 # BaseGraph tests
 def test_default_empty_base_graph_dimensions():
     graph = BaseGraph()
     assert graph.input_row == 0
     assert graph.output_row == 2
     assert graph.graph_depth == 1
-    assert graph.graph_rows == [1]
-    assert graph.leftmost_row is None
-    assert graph.rightmost_row is None
+    assert graph.list_rows == [1]
     assert graph.left_plug(0) == 1
     assert graph.right_plug(0) == 0
     assert graph.left_plugs == {0: 1}
     assert graph.right_plugs == {0: 0}
     assert graph.num_qubits == 1
-    assert graph.first_qubit == 0
-    assert graph.last_qubit == 0
-    assert graph.graph_qubits == [0]
+    assert graph.list_qubits == [0]
     assert list(graph.inputs()) == [0]
     assert list(graph.outputs()) == [1]
     assert graph.connected(0, 1)
@@ -42,17 +40,13 @@ def test_empty_base_graph_dimensions(num_rows, num_qubits):
     assert graph.input_row == 0
     assert graph.output_row == num_rows + 1
     assert graph.graph_depth == num_rows
-    assert graph.graph_rows == list(range(1, num_rows + 1))
-    assert graph.leftmost_row is None
-    assert graph.rightmost_row is None
+    assert graph.list_rows == list(range(1, num_rows + 1))
     assert graph.left_plug(0) == num_qubits
     assert graph.right_plug(0) == 0
     assert graph.left_plugs == {qubit: graph.outputs()[qubit] for qubit in range(num_qubits)}
     assert graph.right_plugs == {qubit: graph.inputs()[qubit] for qubit in range(num_qubits)}
     assert graph.num_qubits == num_qubits
-    assert graph.first_qubit == 0
-    assert graph.last_qubit == num_qubits - 1
-    assert graph.graph_qubits == list(range(num_qubits))
+    assert graph.list_qubits == list(range(num_qubits))
     assert list(graph.inputs()) == list(range(num_qubits))
     assert list(graph.outputs()) == list(range(num_qubits, 2 * num_qubits))
     assert all(graph.connected(graph.inputs()[qubit], graph.outputs()[qubit]) for qubit in range(num_qubits))
@@ -63,13 +57,9 @@ def test_zzz_base_graph_dimensions(zzz_base_graph):
     assert zzz_base_graph.input_row == 0
     assert zzz_base_graph.output_row == 2
     assert zzz_base_graph.graph_depth == 1
-    assert zzz_base_graph.graph_rows == [1]
-    assert zzz_base_graph.leftmost_row == 1
-    assert zzz_base_graph.rightmost_row == 1
+    assert zzz_base_graph.list_rows == [1]
     assert zzz_base_graph.num_qubits == 3
-    assert zzz_base_graph.first_qubit == 0
-    assert zzz_base_graph.last_qubit == 2
-    assert zzz_base_graph.graph_qubits == [0, 1, 2]
+    assert zzz_base_graph.list_qubits == [0, 1, 2]
     assert zzz_base_graph.left_plugs == {0: 8, 1: 9, 2: 10}
     assert zzz_base_graph.right_plugs == {0: 8, 1: 9, 2: 10}
     assert list(zzz_base_graph.inputs()) == [0, 1, 2]
@@ -81,13 +71,9 @@ def test_yzx_base_graph_dimensions(yzx_base_graph):
     assert yzx_base_graph.input_row == 0
     assert yzx_base_graph.output_row == 4
     assert yzx_base_graph.graph_depth == 3
-    assert yzx_base_graph.graph_rows == [1, 2, 3]
-    assert yzx_base_graph.leftmost_row == 1
-    assert yzx_base_graph.rightmost_row == 3
+    assert yzx_base_graph.list_rows == [1, 2, 3]
     assert yzx_base_graph.num_qubits == 3
-    assert yzx_base_graph.first_qubit == 0
-    assert yzx_base_graph.last_qubit == 2
-    assert yzx_base_graph.graph_qubits == [0, 1, 2]
+    assert yzx_base_graph.list_qubits == [0, 1, 2]
     assert yzx_base_graph.left_plugs == {0: 8, 1: 11, 2: 12}
     assert yzx_base_graph.right_plugs == {0: 10, 1: 11, 2: 14}
     assert list(yzx_base_graph.inputs()) == [0, 1, 2]
@@ -204,32 +190,81 @@ def test_graph_add_gadget():
     assert graph.connected(6, 14)
 
 
-def test_graph_add_expanded_gadget():
+def test_graph_add_expanded_gadget_zzz():
+    gadget = Gadget('ZZZ', 1/2)
+    graph = GadgetGraph(num_qubits=3)
+    graph.add_expanded_gadget(gadget)
+    assert graph.num_qubits == 3
+    assert graph.graph_depth == 5
+    assert graph.num_edges() == 16
+    assert graph.num_vertices() == 15
+    assert list(graph.inputs()) == [0, 1, 2]
+    assert list(graph.outputs()) == [3, 4, 5]
+    assert graph.left_plugs == {0: 6, 1: 7, 2: 9}
+    assert graph.right_plugs == {0: 13, 1: 14, 2: 12}
+    assert graph.type(6) == VertexType.Z
+    assert graph.type(7) == VertexType.X
+    assert graph.type(8) == VertexType.Z
+    assert graph.type(9) == VertexType.X
+    assert graph.type(10) == VertexType.Z
+    assert graph.type(11) == VertexType.Z
+    assert graph.type(12) == VertexType.X
+    assert graph.type(13) == VertexType.Z
+    assert graph.type(14) == VertexType.X
+    assert graph.phase(10) == 1/2
+
+
+def test_graph_add_expanded_gadget_yzx():
     gadget = Gadget('YZX', 1/2)
     graph = GadgetGraph(num_qubits=3)
     graph.add_expanded_gadget(gadget)
+    assert graph.num_qubits == 3
     assert graph.graph_depth == 7
-    assert graph.num_qubits == gadget.max_qubit + 1
-    assert graph.num_vertices() == 19
     assert graph.num_edges() == 20
-    assert graph.num_inputs() == 3
-    assert graph.num_outputs() == 3
+    assert graph.num_vertices() == 19
     assert list(graph.inputs()) == [0, 1, 2]
-    assert list(graph.outputs()) == [26, 27, 28]
+    assert list(graph.outputs()) == [3, 4, 5]
+    assert graph.left_plugs == {0: 6, 1: 9, 2: 7}
+    assert graph.right_plugs == {0: 17, 1: 16, 2: 18}
     assert graph.type(6) == VertexType.X
     assert graph.type(7) == VertexType.H_BOX
     assert graph.type(8) == VertexType.Z
     assert graph.type(9) == VertexType.X
+    assert graph.type(10) == VertexType.Z
+    assert graph.type(11) == VertexType.X
+    assert graph.type(12) == VertexType.Z
     assert graph.type(13) == VertexType.Z
     assert graph.type(14) == VertexType.X
-    assert graph.type(18) == VertexType.Z
-    assert graph.type(19) == VertexType.Z
-    assert graph.type(20) == VertexType.X
-    assert graph.type(24) == VertexType.Z
-    assert graph.type(25) == VertexType.X
-    assert graph.type(29) == VertexType.X
-    assert graph.type(30) == VertexType.H_BOX
-    assert graph.phase(18) == 1/2
+    assert graph.type(15) == VertexType.Z
+    assert graph.type(16) == VertexType.X
+    assert graph.type(18) == VertexType.H_BOX
+    assert graph.phase(6) == 1/2
+    assert graph.phase(12) == 1/2
+    assert graph.phase(17) == 3/2
+
+
+def test_graph_add_expanded_gadget_z_z_z():
+    gadget = Gadget('ZIZIZ', 1/2)
+    graph = GadgetGraph(num_qubits=5)
+    graph.add_expanded_gadget(gadget)
+    assert graph.num_qubits == 5
+    assert graph.graph_depth == 5
+    assert graph.num_edges() == 18
+    assert graph.num_vertices() == 19
+    assert list(graph.inputs()) == [0, 1, 2, 3, 4]
+    assert list(graph.outputs()) == [5, 6, 7, 8, 9]
+    assert graph.left_plugs == {0: 10, 1: 6, 2: 11, 3: 8, 4: 13}
+    assert graph.right_plugs == {0: 17, 1: 1, 2: 18, 3: 3, 4: 16}
+    assert graph.type(10) == VertexType.Z
+    assert graph.type(11) == VertexType.X
+    assert graph.type(12) == VertexType.Z
+    assert graph.type(13) == VertexType.X
+    assert graph.type(14) == VertexType.Z
+    assert graph.type(15) == VertexType.Z
+    assert graph.type(16) == VertexType.X
+    assert graph.type(17) == VertexType.Z
+    assert graph.type(18) == VertexType.X
+    assert graph.phase(14) == 1/2
 
 
 def test_graph_add_cx():
@@ -237,13 +272,15 @@ def test_graph_add_cx():
     graph = GadgetGraph(num_qubits=2)
     graph.add_cx(cx)
     assert graph.graph_depth == 1
-    assert graph.num_qubits == cx.max_qubit + 1
+    assert graph.num_qubits == 2
     assert graph.num_vertices() == 6
     assert graph.num_edges() == 5
     assert graph.num_inputs() == 2
     assert graph.num_outputs() == 2
     assert list(graph.inputs()) == [0, 1]
     assert list(graph.outputs()) == [2, 3]
+    assert graph.left_plugs == {0: 4, 1: 5}
+    assert graph.right_plugs == {0: 4, 1: 5}
     assert graph.type(4) == VertexType.Z
     assert graph.type(5) == VertexType.X
     assert graph.connected(graph.inputs()[0], 4)
@@ -259,13 +296,15 @@ def test_graph_add_cz():
     graph.add_cz(cz)
     assert isinstance(graph, GadgetGraph)
     assert graph.graph_depth == 1
-    assert graph.num_qubits == cz.max_qubit + 1
+    assert graph.num_qubits == 2
     assert graph.num_vertices() == 6
     assert graph.num_edges() == 5
     assert graph.num_inputs() == 2
     assert graph.num_outputs() == 2
     assert list(graph.inputs()) == [0, 1]
     assert list(graph.outputs()) == [2, 3]
+    assert graph.left_plugs == {0: 4, 1: 5}
+    assert graph.right_plugs == {0: 4, 1: 5}
     assert graph.type(4) == VertexType.Z
     assert graph.type(5) == VertexType.Z
     assert graph.edge_type((4, 5)) == EdgeType.HADAMARD
