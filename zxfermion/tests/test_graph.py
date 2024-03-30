@@ -14,6 +14,27 @@ from zxfermion.tests.fixtures_graph import zzz_base_graph, yzx_base_graph
 # assert tex file is deleted after pdf generation
 
 # BaseGraph tests
+def test_default_empty_base_graph_dimensions():
+    graph = BaseGraph()
+    assert graph.input_row == 0
+    assert graph.output_row == 2
+    assert graph.graph_depth == 1
+    assert graph.graph_rows == [1]
+    assert graph.leftmost_row is None
+    assert graph.rightmost_row is None
+    assert graph.left_plug(0) == 1
+    assert graph.right_plug(0) == 0
+    assert graph.left_plugs == {0: 1}
+    assert graph.right_plugs == {0: 0}
+    assert graph.num_qubits == 1
+    assert graph.first_qubit == 0
+    assert graph.last_qubit == 0
+    assert graph.graph_qubits == [0]
+    assert list(graph.inputs()) == [0]
+    assert list(graph.outputs()) == [1]
+    assert graph.connected(0, 1)
+
+
 @pytest.mark.parametrize('num_rows', range(1, 11))
 @pytest.mark.parametrize('num_qubits', [1, 3, 5, 15, 50])
 def test_empty_base_graph_dimensions(num_rows, num_qubits):
@@ -22,12 +43,12 @@ def test_empty_base_graph_dimensions(num_rows, num_qubits):
     assert graph.output_row == num_rows + 1
     assert graph.graph_depth == num_rows
     assert graph.graph_rows == list(range(1, num_rows + 1))
-    assert graph.leftmost_row == -1
-    assert graph.rightmost_row == -1
-    assert graph.leftmost_vertex(0) == -1
-    assert graph.rightmost_vertex(0) == -1
-    assert graph.left_plugs == []
-    assert graph.right_plugs == []
+    assert graph.leftmost_row is None
+    assert graph.rightmost_row is None
+    assert graph.left_plug(0) == num_qubits
+    assert graph.right_plug(0) == 0
+    assert graph.left_plugs == {qubit: graph.outputs()[qubit] for qubit in range(num_qubits)}
+    assert graph.right_plugs == {qubit: graph.inputs()[qubit] for qubit in range(num_qubits)}
     assert graph.num_qubits == num_qubits
     assert graph.first_qubit == 0
     assert graph.last_qubit == num_qubits - 1
@@ -49,8 +70,8 @@ def test_zzz_base_graph_dimensions(zzz_base_graph):
     assert zzz_base_graph.first_qubit == 0
     assert zzz_base_graph.last_qubit == 2
     assert zzz_base_graph.graph_qubits == [0, 1, 2]
-    assert zzz_base_graph.left_plugs == [8, 9, 10]
-    assert zzz_base_graph.right_plugs == [8, 9, 10]
+    assert zzz_base_graph.left_plugs == {0: 8, 1: 9, 2: 10}
+    assert zzz_base_graph.right_plugs == {0: 8, 1: 9, 2: 10}
     assert list(zzz_base_graph.inputs()) == [0, 1, 2]
     assert list(zzz_base_graph.outputs()) == [3, 4, 5]
 
@@ -67,10 +88,15 @@ def test_yzx_base_graph_dimensions(yzx_base_graph):
     assert yzx_base_graph.first_qubit == 0
     assert yzx_base_graph.last_qubit == 2
     assert yzx_base_graph.graph_qubits == [0, 1, 2]
-    assert yzx_base_graph.left_plugs == [8, 11, 12]
-    assert yzx_base_graph.right_plugs == [10, 11, 14]
+    assert yzx_base_graph.left_plugs == {0: 8, 1: 11, 2: 12}
+    assert yzx_base_graph.right_plugs == {0: 10, 1: 11, 2: 14}
     assert list(yzx_base_graph.inputs()) == [0, 1, 2]
     assert list(yzx_base_graph.outputs()) == [3, 4, 5]
+
+
+def test_base_graph_plugs():
+    """Test left and right plugs using graph fixture with some empty wires."""
+    pass
 
 
 @pytest.mark.parametrize('qubit', [0, 1, 2, 3])
@@ -94,7 +120,7 @@ def test_base_graph_connect_vertices(qubit, num_vertices):
     graph = GadgetGraph(num_qubits=4, num_rows=num_vertices)
     graph.remove_wire(qubit=qubit)
     vertex_refs = [graph.add_vertex(qubit=qubit, row=num + 1) for num in range(num_vertices)]
-    graph.connect_vertices(qubit=qubit, vertex_refs=vertex_refs)
+    graph.connect_inout(qubit=qubit, vertex_refs=vertex_refs)
     assert graph.num_vertices() == num_vertices + 8
     assert graph.num_edges() == num_vertices + 4
 
@@ -118,7 +144,7 @@ def test_base_graph_set_output_row(row):
 def test_graph_add_phase_gate(qubit, gate: Union[type[XPhase], type[ZPhase]], phase):
     graph = GadgetGraph(num_qubits=4)
     gate = gate(qubit=qubit, phase=phase)
-    ref = graph.add_single_gate(gate=gate)
+    ref = graph.add_single_qubit_gate(gate=gate)
     assert graph.graph_depth == 1
     assert graph.num_qubits == 4
     assert list(graph.inputs()) == [0, 1, 2, 3]
@@ -134,7 +160,7 @@ def test_graph_add_phase_gate(qubit, gate: Union[type[XPhase], type[ZPhase]], ph
 @pytest.mark.parametrize('gate', [X, XPlus, XMinus, Z, ZPlus, ZMinus, H])
 def test_graph_add_single_qubit_gates(qubit, gate):
     graph = GadgetGraph(num_qubits=4)
-    ref = graph.add_single_gate(gate=gate(qubit=qubit))
+    ref = graph.add_single_qubit_gate(gate=gate(qubit=qubit))
     assert graph.graph_depth == 1
     assert graph.num_qubits == 4
     assert list(graph.inputs()) == [0, 1, 2, 3]
@@ -313,7 +339,7 @@ def test_graph_add_cz_gadget():
 def test_graph_add_x_phase():
     x_phase = XPhase(phase=3/4)
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(x_phase)
+    graph.add_single_qubit_gate(x_phase)
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
@@ -331,7 +357,7 @@ def test_graph_add_x_phase():
 def test_graph_add_z_phase():
     z_phase = ZPhase(phase=3/4)
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(z_phase)
+    graph.add_single_qubit_gate(z_phase)
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
@@ -348,7 +374,7 @@ def test_graph_add_z_phase():
 
 def test_x_graph():
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(X())
+    graph.add_single_qubit_gate(X())
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
@@ -365,7 +391,7 @@ def test_x_graph():
 
 def test_z_graph():
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(Z())
+    graph.add_single_qubit_gate(Z())
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
@@ -382,7 +408,7 @@ def test_z_graph():
 
 def test_x_plus_graph():
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(XPlus())
+    graph.add_single_qubit_gate(XPlus())
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
@@ -399,7 +425,7 @@ def test_x_plus_graph():
 
 def test_z_plus_graph():
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(ZPlus())
+    graph.add_single_qubit_gate(ZPlus())
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
@@ -416,7 +442,7 @@ def test_z_plus_graph():
 
 def test_x_minus_graph():
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(XMinus())
+    graph.add_single_qubit_gate(XMinus())
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3
@@ -433,7 +459,7 @@ def test_x_minus_graph():
 
 def test_z_minus_graph():
     graph = GadgetGraph(num_qubits=1)
-    graph.add_single_gate(ZMinus())
+    graph.add_single_qubit_gate(ZMinus())
     assert graph.graph_depth == 1
     assert graph.num_qubits == 1
     assert graph.num_vertices() == 3

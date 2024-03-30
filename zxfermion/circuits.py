@@ -56,9 +56,9 @@ class GadgetCircuit:
                 elif gadget.type == GateType.CZ:
                     layer.add_cz_gadget(gadget) if gadget.as_gadget else layer.add_cz(gadget)
                 elif gadget.type == GateType.H:
-                    layer.add_single_gate(gadget)
+                    layer.add_single_qubit_gate(gadget)
                 elif isinstance(gadget, SingleQubitGate):
-                    layer.add_gadget(Gadget.from_single(gadget)) if gadget.as_gadget else layer.add_single_gate(gadget)
+                    layer.add_gadget(Gadget.from_single(gadget)) if gadget.as_gadget else layer.add_single_qubit_gate(gadget)
             circuit.compose(layer)
         return circuit
 

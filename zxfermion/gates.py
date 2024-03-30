@@ -154,11 +154,11 @@ class Gadget(BaseGate):
 
     @property
     def min_qubit(self) -> int:  # handle PauliType.I before
-        return min(self.paulis)
+        return min(qubit for qubit, pauli in self.paulis.items() if pauli != PauliType.I)
 
     @property
     def max_qubit(self) -> int:  # handle PauliType.I after
-        return max(self.paulis)
+        return max(qubit for qubit, pauli in self.paulis.items() if pauli != PauliType.I)
 
     @property
     def inverse(self) -> Gadget:
@@ -338,6 +338,7 @@ class H(SelfInverse, SingleQubitGate, CliffordGate):
         super().__init__(qubit=qubit, as_gadget=as_gadget)
         self.type = GateType.H
         self.vertex_type = VertexType.H_BOX
+        self.phase = None
 
     def __repr__(self):
         return f'H(qubit={self.qubit})'
