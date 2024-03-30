@@ -77,6 +77,9 @@ class SingleQubitGate(BaseGate):
         else:
             return f'{self.__class__.__name__}(qubit={self.qubit}, phase={self.phase})'
 
+    def __eq__(self, other):
+        return self.qubit == other.qubit if self.type == other.type else False
+
     def to_dict(self) -> dict:
         return {self.__class__.__name__: {
             'qubit': self.qubit
@@ -342,9 +345,6 @@ class H(SelfInverse, SingleQubitGate, CliffordGate):
 
     def __repr__(self):
         return f'H(qubit={self.qubit})'
-
-    def __eq__(self, other):
-        return self.qubit == other.qubit if other.type == GateType.H else False
 
     def __add__(self, other):
         if other.type == GateType.IDENTITY:
