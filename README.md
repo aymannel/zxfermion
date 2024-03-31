@@ -19,6 +19,7 @@ gadget.pdf('expanded_yzx_gadget')
 <img src="figures/double.png" alt="expanded gadget" style="width: 100%; display: block">
 <img src="figures/ex.png" alt="expanded gadget" style="width: 100%; display: block">
 <img src="figures/ss.png" alt="expanded gadget" style="width: 100%; display: block">
+<img src="figures/gg.png" alt="expanded gadget" style="width: 100%; display: block">
 
 By default gadgets are represented in the following more compact form.
 ```python
