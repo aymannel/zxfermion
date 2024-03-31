@@ -24,4 +24,4 @@ gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
 gadget.pdf('yzx_gadget')
 ```
-<img src="figures/gadget.png" alt="expanded gadget" style="height: 170px; display: block">
+<img src="figures/gadget.png" alt="expanded gadget" style="height: 220px; display: block">
