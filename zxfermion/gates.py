@@ -19,6 +19,8 @@ class Identity:
     def __add__(self, other):
         return other
 
+    # think about __radd__()
+
     def __mul__(self, other):
         return other
 
