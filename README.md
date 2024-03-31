@@ -15,4 +15,5 @@ from zxfermion.gates import Gadget
 gadget = Gadget('ZZZ', phase=1/2)
 gadget.draw()
 ```
-<img src="figures/expanded_gadget.png" alt="expanded gadget" style="width: 100%; display: block; border-radius: 50%">
+<img src="figures/expanded_gadget.png" alt="expanded gadget" style="width: 100%; display: block>
+<img src="figures/expanded_gadget2.png" alt="expanded gadget" style="width: 40%; display: block>
