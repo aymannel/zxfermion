@@ -14,10 +14,12 @@ from zxfermion.gates import Gadget
 
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
+gadget.pdf('yzx_gadget')
 ```
 
 ```python
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw(expand_gadget=True)
+gadget.pdf('expanded_yzx_gadget')
 ```
-<img src="figures/expanded_gadget2.png" alt="expanded gadget" style="width: 40%; display: block">
+<img src="figures/expanded_gadget.png" alt="expanded gadget" style="width: 40%; display: block">
