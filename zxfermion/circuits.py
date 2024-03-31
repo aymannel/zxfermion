@@ -38,23 +38,30 @@ class GadgetCircuit:
         self.gates[start:end] = [copy(gate), *new_gadgets, copy(gate.inverse)]
 
     def graph(self, gadgets_only=None, expand_gadgets=None) -> GadgetGraph:
-        circuit = GadgetGraph(num_qubits=self.num_qubits)
+        graph = GadgetGraph(num_qubits=self.num_qubits)
         for gate in self.gates:
             if gate.type == GateType.GADGET:
                 gate.expand_gadget = gate.expand_gadget if expand_gadgets is None else expand_gadgets
             else:
-                gate.as_gadget = gate.as_gadget if gadgets_only is None else gadgets_only
-            if gate.type == GateType.GADGET:
-                circuit.add_expanded_gadget(gate) if gate.expand_gadget else circuit.add_gadget(gate)
-            elif gate.type == GateType.CX:
-                circuit.add_cx_gadget(gate) if gate.as_gadget else circuit.add_cx(gate)
-            elif gate.type == GateType.CZ:
-                circuit.add_cz_gadget(gate) if gate.as_gadget else circuit.add_cz(gate)
-            elif gate.type == GateType.H:
-                circuit.add(gate)
-            elif isinstance(gate, SingleQubitGate):
-                circuit.add_gadget(Gadget.from_single(gate)) if gate.as_gadget else circuit.add(gate)
-        return circuit
+                gate.as_gadget = gadgets_only if gate.as_gadget is None else gate.as_gadget
+            graph_method = {
+                GateType.GADGET: graph.add_gadget,
+                GateType.CX: graph.add_cx,
+                GateType.CZ: graph.add_cz,
+                GateType.X: graph.add,
+                GateType.Z: graph.add,
+                GateType.X_PLUS: graph.add,
+                GateType.X_MINUS: graph.add,
+                GateType.Z_PLUS: graph.add,
+                GateType.Z_MINUS: graph.add,
+                GateType.H: graph.add,
+            }.get(gate.type)
+            graph_method(gate)
+            graph.update_boundaries()
+        return graph
+
+    def some(self):
+        pass
 
     def simplify(self, gates: Optional[list] = None) -> list:
         """Needs work. Use __add__ methods to do this"""

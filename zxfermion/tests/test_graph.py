@@ -87,19 +87,13 @@ def test_base_graph_remove_wire(qubit):
     assert list(graph.edges()) == edges
 
 
-def test_base_graph_remove_wires():
-    graph = GadgetGraph(num_qubits=4)
-    graph.remove_wires([0, 1, 3])
-    assert list(graph.edges()) == [(2, 6)]
-
-
 @pytest.mark.parametrize('qubit', [0, 1, 2, 3])
 @pytest.mark.parametrize('num_vertices', range(10))
 def test_base_graph_connect_vertices(qubit, num_vertices):
     graph = GadgetGraph(num_qubits=4, num_rows=num_vertices)
     graph.remove_wire(qubit=qubit)
     vertex_refs = [graph.add_vertex(qubit=qubit, row=num + 1) for num in range(num_vertices)]
-    graph.connect_inout(qubit=qubit, vertex_refs=vertex_refs)
+    graph.connect_vertices([graph.inputs()[qubit], *vertex_refs, graph.outputs()[qubit]])
     assert graph.num_vertices() == num_vertices + 8
     assert graph.num_edges() == num_vertices + 4
 
@@ -134,9 +128,9 @@ def test_graph_add_gadget():
     assert graph.num_outputs() == 3
     assert list(graph.inputs()) == [0, 1, 2]
     assert list(graph.outputs()) == [3, 4, 5]
-    assert graph.phase(7) == 1/2
-    assert graph.type(6) == VertexType.X
-    assert graph.type(7) == VertexType.Z
+    assert graph.phase(6) == 1/2
+    assert graph.type(6) == VertexType.Z
+    assert graph.type(7) == VertexType.X
     assert graph.type(8) == VertexType.H_BOX
     assert graph.type(9) == VertexType.Z
     assert graph.type(10) == VertexType.H_BOX
@@ -151,9 +145,9 @@ def test_graph_add_gadget():
     assert graph.connected(13, graph.outputs()[1])
     assert graph.connected(14, graph.outputs()[2])
     assert graph.connected(6, 7)
-    assert graph.connected(6, 9)
-    assert graph.connected(6, 12)
-    assert graph.connected(6, 14)
+    assert graph.connected(7, 9)
+    assert graph.connected(7, 12)
+    assert graph.connected(7, 14)
 
 
 def test_graph_add_expanded_gadget_zzz():
@@ -255,20 +249,20 @@ def test_graph_add_cz():
     assert isinstance(graph, GadgetGraph)
     assert graph.graph_depth == 1
     assert graph.num_qubits == 2
-    assert graph.num_vertices() == 6
-    assert graph.num_edges() == 5
+    assert graph.num_vertices() == 7
+    assert graph.num_edges() == 6
     assert graph.num_inputs() == 2
     assert graph.num_outputs() == 2
     assert list(graph.inputs()) == [0, 1]
     assert list(graph.outputs()) == [2, 3]
     assert graph.type(4) == VertexType.Z
     assert graph.type(5) == VertexType.Z
-    assert graph.edge_type((4, 5)) == EdgeType.HADAMARD
     assert graph.connected(graph.inputs()[0], 4)
     assert graph.connected(graph.inputs()[1], 5)
     assert graph.connected(4, graph.outputs()[0])
     assert graph.connected(5, graph.outputs()[1])
-    assert graph.connected(4, 5)
+    assert graph.connected(4, 6)
+    assert graph.connected(5, 6)
 
 
 def test_graph_add_cx_gadget():
@@ -284,23 +278,24 @@ def test_graph_add_cx_gadget():
     assert graph.num_outputs() == 2
     assert list(graph.inputs()) == [0, 1]
     assert list(graph.outputs()) == [2, 3]
-    assert graph.type(4) == VertexType.X
+    assert graph.type(4) == VertexType.Z
     assert graph.type(5) == VertexType.Z
-    assert graph.type(6) == VertexType.Z
-    assert graph.type(7) == VertexType.Z
-    assert graph.type(8) == VertexType.H_BOX
-    assert graph.type(9) == VertexType.H_BOX
-    assert graph.phase(5) == 3/2
-    assert graph.phase(6) == 1/2
-    assert graph.phase(7) == 1/2
-    assert graph.connected(4, 6)
-    assert graph.connected(4, 7)
-    assert graph.connected(6, 8)
-    assert graph.connected(6, 9)
-    assert graph.connected(graph.inputs()[0], 7)
-    assert graph.connected(graph.inputs()[1], 8)
-    assert graph.connected(7, graph.outputs()[0])
-    assert graph.connected(9, graph.outputs()[1])
+    assert graph.type(6) == VertexType.H_BOX
+    assert graph.type(7) == VertexType.H_BOX
+    assert graph.type(8) == VertexType.Z
+    assert graph.type(9) == VertexType.X
+    assert graph.phase(8) == 3/2
+    assert graph.phase(4) == 1/2
+    assert graph.phase(5) == 1/2
+    assert graph.connected(4, 9)
+    assert graph.connected(5, 9)
+    assert graph.connected(5, 6)
+    assert graph.connected(5, 7)
+    assert graph.connected(8, 9)
+    assert graph.connected(graph.inputs()[0], 4)
+    assert graph.connected(graph.inputs()[1], 6)
+    assert graph.connected(4, graph.outputs()[0])
+    assert graph.connected(7, graph.outputs()[1])
 
 
 def test_graph_add_cz_gadget():
@@ -316,19 +311,20 @@ def test_graph_add_cz_gadget():
     assert graph.num_outputs() == 2
     assert list(graph.inputs()) == [0, 1]
     assert list(graph.outputs()) == [2, 3]
-    assert graph.type(4) == VertexType.X
+    assert graph.type(4) == VertexType.Z
     assert graph.type(5) == VertexType.Z
     assert graph.type(6) == VertexType.Z
-    assert graph.type(7) == VertexType.Z
-    assert graph.phase(5) == 3/2
-    assert graph.phase(6) == 1/2
-    assert graph.phase(7) == 1/2
-    assert graph.connected(4, 6)
+    assert graph.type(7) == VertexType.X
+    assert graph.phase(6) == 3/2
+    assert graph.phase(4) == 1/2
+    assert graph.phase(5) == 1/2
     assert graph.connected(4, 7)
-    assert graph.connected(graph.inputs()[1], 6)
-    assert graph.connected(graph.inputs()[0], 7)
-    assert graph.connected(6, graph.outputs()[1])
-    assert graph.connected(7, graph.outputs()[0])
+    assert graph.connected(5, 7)
+    assert graph.connected(6, 7)
+    assert graph.connected(graph.inputs()[0], 4)
+    assert graph.connected(graph.inputs()[1], 5)
+    assert graph.connected(4, graph.outputs()[0])
+    assert graph.connected(5, graph.outputs()[1])
 
 
 def test_graph_add_x_phase():
