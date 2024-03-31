@@ -19,6 +19,9 @@ class Identity:
     def __add__(self, other):
         return other
 
+    def __mul__(self, other):
+        return other
+
     def __eq__(self, other):
         return True if other.type == GateType.IDENTITY else other.identity if hasattr(other, 'identity') else False
 
@@ -32,6 +35,17 @@ class FixedPhaseGate:
 
 
 class SelfInverse:
+    qubits: list[int]
+    type: GateType
+
+    def __add__(self, other):
+        if other.type == GateType.IDENTITY:
+            return self
+        elif self.type == other.type and self.qubits == other.qubits:
+            return Identity()
+        else:
+            raise IncompatibleGatesException
+
     @property
     def inverse(self) -> X:
         return deepcopy(self)
@@ -113,14 +127,6 @@ class ControlledGate(BaseGate, SelfInverse):
 
     def __eq__(self, other):
         return (self.control, self.target) == (other.control, other.target) if self.type == other.type else False
-
-    def __add__(self, other):
-        if other.type == GateType.IDENTITY:
-            return self
-        elif self.type == other.type:
-            return Identity()
-        else:
-            raise IncompatibleGatesException
 
 
 class Gadget(BaseGate):
