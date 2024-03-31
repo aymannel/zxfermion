@@ -51,9 +51,9 @@ class GadgetCircuit:
             elif gate.type == GateType.CZ:
                 circuit.add_cz_gadget(gate) if gate.as_gadget else circuit.add_cz(gate)
             elif gate.type == GateType.H:
-                circuit.add_single_qubit_gate(gate)
+                circuit.add(gate)
             elif isinstance(gate, SingleQubitGate):
-                circuit.add_gadget(Gadget.from_single(gate)) if gate.as_gadget else circuit.add_single_qubit_gate(gate)
+                circuit.add_gadget(Gadget.from_single(gate)) if gate.as_gadget else circuit.add(gate)
         return circuit
 
     def simplify(self, gates: Optional[list] = None) -> list:
