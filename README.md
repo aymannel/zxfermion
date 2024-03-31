@@ -1,39 +1,17 @@
-# ZxFermion
+## Introduction
+ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io/en/latest/) designed for the manipulation and visualisation of circuits of Pauli gadgets. With built-in Clifford tableau logic using [Stim](https://github.com/quantumlib/Stim), ZxFermion allows users to quickly implement proofs and test ideas.
 
-## Motivation
-ZxFermion is a Python package for manipulating Pauli gadgets. It's intended purpose is to facilitate derivations and proofs relating to circuits of Pauli gadgets.
+VQE algorithms used in quantum chemistry often utilise the [UCC](https://doi.org/10.48550/arXiv.2109.15176) framework in which excitation operators have a natural representation as Pauli gadgets. ZxFermion provides a comprehensive toolset designed to be using in a Jupyter notebook environment. Export functionality can be used to generated research paper quality diagrams.
 
-Within the Unitary Coupled Cluster (UCC) and Variational Quantum Eigensolver (VQE) frameworks, molecules are simulated by constructing ansätze consisting of a sequence of fermionic excitation operators to account for electronic correlation. Generally, fermionic excitation operators are cast to quantum circuits as Pauli gadgets following exponentiation and the Jordan-Wigner transformation. Hence, ZxFermion serves as a tool to researchers for reasoning about the ansätze of molecules.
+All of the following diagrams were made using ZxFermion.
 
-The `Gadget` and `GadgetCircuit` classes represent single Pauli gadgets and circuits of Pauli gadgets respectively. Each class comes equipped with methods describing the action of the members of the Pauli and Clifford groups on Pauli gadgets.
+## Getting Started
 
-## Usage
-
-### Decomposition of Double Fermionic Excitation to Triply Controlled Rotations
-
+### Creating Pauli gadgets
+To begin...
 ```python
-circuit = GadgetCircuit(num_qubits=4, gadgets=[
-  Gadget('YXXX', phase=1 / 4),
-  Gadget('XYXX', phase=1 / 4),
-  Gadget('XXYX', phase=-1 / 4),
-  Gadget('YYYX', phase=-1 / 4),
-  Gadget('YYXY', phase=1 / 4),
-  Gadget('XXXY', phase=1 / 4),
-  Gadget('XYYY', phase=-1 / 4),
-  Gadget('YXYY', phase=-1 / 4),
-])
+from zxfermion.gates import Gadget
 
-circuit.graph()
-circuit.surround_cx(control=3, target=0)
-circuit.surround_cx(control=3, target=1)
-circuit.surround_cx(control=3, target=2)
+gadget = Gadget('ZZZ', phase=1/2)
+gadget.draw()
 ```
-
-<img src="figures/first.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
-<img src="figures/second.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
-<img src="figures/third.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
-<img src="figures/fourth.png" alt="first" style="width: 80%; display: block; border-radius: 50%">
-
-
-### Other Examples
-See [Jupyter Notebook](notebook.ipynb)
