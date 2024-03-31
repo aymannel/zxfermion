@@ -1,8 +1,9 @@
 # ZxFermion
 
 ## Motivation
-ZxFermion is a Python package for manipulating Pauli gadgets. It's intended purpose is to facilitate derivations and proofs relating to circuits of Pauli gadgets.
-ZxFermion is a Python package for manipulating and visualising circuits of Pauli gadgets. It has built in Clifford tableau logic allowing
+ZxFermion is a Python package for manipulating and visualising circuits of Pauli gadgets. It has built in Clifford tableau logic using [stim](https://github.com/quantumlib/Stim), allowing users to quickly implement proofs.
+I built this package in response to a lack of a similar package whilst writing my thesis on the applications of the ZX calculus to quantum chemistry.
+VQE algorithms for quantum chemistry make use of the unitary coupled cluster framework and are naturally expressed as circuits of phase gadgets.
 
 Within the Unitary Coupled Cluster (UCC) and Variational Quantum Eigensolver (VQE) frameworks, molecules are simulated by constructing ansätze consisting of a sequence of fermionic excitation operators to account for electronic correlation. Generally, fermionic excitation operators are cast to quantum circuits as Pauli gadgets following exponentiation and the Jordan-Wigner transformation. Hence, ZxFermion serves as a tool to researchers for reasoning about the ansätze of molecules.
 
