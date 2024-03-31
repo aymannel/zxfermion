@@ -45,8 +45,8 @@ def tex_parse_tikz(content: str, phase_row: int, symbol: Optional[str] = None, s
     content = content.replace(r'\begin{tikzpicture}', rf'\begin{{tikzpicture}}[scale={scale}]')
     content = [line.replace(r'\pi', symbol) if re.search(pattern, line) else line for line in content.splitlines()]
     content = '\n'.join(content)
-    for key in cliffords:
-        content = content.replace(f'{key}', f'{cliffords[key]}')
+    # for key in cliffords:
+    #     content = content.replace(f'{key}', f'{cliffords[key]}')
     for key in tikz_styles:
         content = content.replace(f'style={key}', f'style={tikz_styles[key]}')
     with open('tikz/template.tex', 'r') as file:

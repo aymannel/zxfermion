@@ -12,7 +12,12 @@ To begin...
 ```python
 from zxfermion.gates import Gadget
 
-gadget = Gadget('ZZZ', phase=1/2)
+gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
+```
+
+```python
+gadget = Gadget('YZX', phase=1/2)
+gadget.draw(expand_gadget=True)
 ```
 <img src="figures/expanded_gadget2.png" alt="expanded gadget" style="width: 40%; display: block">
