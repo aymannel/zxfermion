@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from copy import deepcopy, copy
 from pathlib import Path
 from typing import Optional
 from pdflatex import PDFLaTeX
@@ -21,6 +22,14 @@ class BaseGraph(GraphS):
         self.set_inputs([self.add_vertex(qubit=qubit, row=0) for qubit in range(self.num_qubits)])
         self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 1) for qubit in range(self.num_qubits)])
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
+
+    @property
+    def min_qubit(self) -> int:
+        return min((self.qubit(vertex) for vertex in self.bounded_vertices), default=0)
+
+    @property
+    def max_qubit(self) -> int:
+        return max((self.qubit(vertex) for vertex in self.bounded_vertices), default=self.num_qubits - 1)
 
     @property
     def input_row(self) -> int:
@@ -51,6 +60,14 @@ class BaseGraph(GraphS):
 
     def right_vertex(self, qubit: int) -> int:
         return self.vertices_along_qubit(qubit)[-1] if self.vertices_along_qubit(qubit) else self.inputs()[qubit]
+
+    @property
+    def left_vertices(self) -> list[int]:
+        return [self.left_vertex(qubit) for qubit in range(self.num_qubits)]
+
+    @property
+    def right_vertices(self) -> list[int]:
+        return [self.right_vertex(qubit) for qubit in range(self.num_qubits)]
 
     def left_vertex_row(self, qubit: int) -> int:
         return self.row(self.left_vertex(qubit))
@@ -102,8 +119,44 @@ class BaseGraph(GraphS):
     def remove_wire(self, qubit: int):
         self.remove_edge((self.inputs()[qubit], self.outputs()[qubit]))
 
-    def compose2(self):
-        pass
+    def compose2(self, other: GadgetGraph, stack: Optional[bool] = None) -> GadgetGraph:
+        """create emtpy graph whose min/max qubits correspond to minmax of self and other
+        this way inputs  and outputs remain first 2n refs of graph and you can add different size gadgets"""
+        other = deepcopy(other)
+        other_boundaries = other.inputs() + other.outputs()
+        in_refs = [self.right_vertex(qubit) for qubit in range(other.num_qubits)]
+        row = self.rightmost_between(other.min_qubit, other.max_qubit) if stack else self.right_row
+
+        other_vertices = {
+            vertex: self.add_vertex(
+                other.type(vertex),
+                phase=other.phase(vertex),
+                qubit=other.qubit(vertex),
+                row=row + other.row(vertex))
+            for vertex in other.vertices()
+            if vertex not in other_boundaries
+        }
+
+        for edge in other.edges():
+            source, target = other.edge_st(edge)
+            if source not in other_boundaries and target not in other_boundaries:
+                self.add_edge(self.edge(
+                    other_vertices[source],
+                    other_vertices[target]
+                ), edgetype=other.edge_type(edge))
+
+        out_refs = [other_vertices[vertex] for vertex in other.left_vertices]
+        for qubit, (in_ref, out_ref) in enumerate(zip(in_refs, out_refs)):
+            self.add_edge((in_ref, out_ref))
+            self.remove_edge((in_ref, self.outputs()[qubit]))
+            self.add_edge((self.right_vertex(qubit), self.outputs()[qubit]))
+
+        self.update_boundaries()
+
+        # assert self.num_qubits == other.num_qubits
+        # for qubit in range(self.num_qubits):
+        #     self.add_edge(self.right_vertex(qubit), other.left_vertex(qubit))
+
 
     def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
         Path('output/').mkdir(parents=True, exist_ok=True)

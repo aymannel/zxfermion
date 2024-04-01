@@ -18,10 +18,9 @@ from zxfermion.gates import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlu
 # assert XPhase.gadget() method returns Gadget.from_single_gate(self)
 
 # update Gadget tests to assert Gadget('XI') == Gadget('X')
-
 # test inverse properties
-
 # test pauli strings with trailing I
+# test subgraph stuff
 
 def test_inheritance():
     assert all(isinstance(gate, PauliGate) for gate in [X(), Z()])

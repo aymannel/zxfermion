@@ -110,6 +110,13 @@ class SingleQubitGate(BaseGate):
         inverse.phase *= -1
         return inverse
 
+    @property
+    def subgraph(self):
+        from zxfermion.graph import GadgetGraph
+        subgraph = GadgetGraph(num_qubits=self.qubit + 1)
+        subgraph.add_gadget(self.gadget) if self.as_gadget else subgraph.add(self)
+        return subgraph
+
 
 class ControlledGate(BaseGate, SelfInverse):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
@@ -177,8 +184,14 @@ class Gadget(BaseGate):
         inverse.phase *= -1
         return inverse
 
+    def subgraph(self):
+        from zxfermion.graph import GadgetGraph
+        subgraph = GadgetGraph(self.max_qubit + 1)
+        subgraph.add_expanded_gadget(self) if self.expand_gadget else subgraph.add_gadget(self)
+        return subgraph
+
     @classmethod
-    def from_single(cls, gate: ZPhase) -> Gadget:
+    def from_gate(cls, gate: ZPhase) -> Gadget:
         return cls(pauli_string='I' * gate.qubit + 'Z', phase=gate.phase)
 
     def to_dict(self) -> dict:
@@ -228,8 +241,9 @@ class ZPhase(SingleQubitGate):
         else:
             raise IncompatibleGatesException(f'Cannot add {self.type} and {other.type}')
 
+    @property
     def gadget(self) -> Gadget:
-        return Gadget.from_single(self)
+        return Gadget.from_gate(self)
 
 
 class X(PauliGate, XPhase):
@@ -368,6 +382,13 @@ class CX(ControlledGate, CliffordGate):
         super().__init__(control=control, target=target, as_gadget=as_gadget)
         self.type = GateType.CX
 
+    @property
+    def subgraph(self):
+        from zxfermion.graph import GadgetGraph
+        subgraph = GadgetGraph(num_qubits=self.max_qubit + 1)
+        subgraph.add_cx_gadget(self) if self.as_gadget else subgraph.add_cx(self)
+        return subgraph
+
 
 class CZ(ControlledGate, CliffordGate):
     def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None):
@@ -375,3 +396,10 @@ class CZ(ControlledGate, CliffordGate):
         self.type = GateType.CZ
         if self.control > self.target:
             self.control, self.target = self.target, self.control
+
+    @property
+    def subgraph(self):
+        from zxfermion.graph import GadgetGraph
+        subgraph = GadgetGraph(num_qubits=self.max_qubit + 1)
+        subgraph.add_cz_gadget(self) if self.as_gadget else subgraph.add_cz(self)
+        return subgraph

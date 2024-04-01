@@ -16,10 +16,7 @@ gadget = Gadget('YZX', phase=1/2)
 gadget.draw(expand_gadget=True)
 gadget.pdf('expanded_yzx_gadget')
 ```
-<img src="figures/double.png" alt="expanded gadget" style="width: 100%; display: block">
-<img src="figures/ex.png" alt="expanded gadget" style="width: 100%; display: block">
-<img src="figures/ss.png" alt="expanded gadget" style="width: 100%; display: block">
-<img src="figures/gg.png" alt="expanded gadget" style="width: 100%; display: block">
+![expanded_yzx_gadget](figures/gg.png)
 
 By default gadgets are represented in the following more compact form.
 ```python
@@ -27,4 +24,3 @@ gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
 gadget.pdf('yzx_gadget')
 ```
-<img src="figures/nnew.png" alt="expanded gadget" style="width: 100%; display: block">
