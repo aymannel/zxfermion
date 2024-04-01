@@ -8,13 +8,12 @@ All of the following diagrams were made using ZxFermion.
 ## Getting Started
 
 ### Creating Pauli gadgets
-To begin...
+To begin... Then to export to pdf, run `gadget.pdf('file_name')`.
 ```python
 from zxfermion.gates import Gadget
 
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw(expand_gadget=True)
-gadget.pdf('expanded_yzzx_gadget')
 ```
 ![expanded_yzzx_gadget](figures/expanded_yzzx_gadget.png)
 
