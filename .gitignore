@@ -5,7 +5,6 @@ DISCO_data/
 zxfermion/__pycache__/
 zxfermion/tests/__pycache__/
 
-output/
-analysis.ipynb
-notebook.ipynb
 TODO.md
+output/
+notebooks/

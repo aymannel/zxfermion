@@ -6,9 +6,9 @@ from typing import Optional
 import pyzx as zx
 from IPython.display import display, Markdown
 
-from zxfermion.gates import Gadget, SingleQubitGate
-from zxfermion.graph import GadgetGraph
-from zxfermion.tableau import Tableau
+from zxfermion.gates.gates import Gadget
+from zxfermion.graphs.gadget_graph import GadgetGraph
+from zxfermion.tableaus.tableau import Tableau
 from zxfermion.types import GateType
 from zxfermion.utilities import matrix_to_latex
 
@@ -21,14 +21,14 @@ class GadgetCircuit:
     def __init__(self, gates: list[Gadget], num_qubits: Optional[int] = 0):
         self.type = GateType.GADGET_CIRCUIT
         self.gates = deepcopy(gates)
-        self.num_qubits = max(num_qubits, max([gadget.max_qubit for gadget in self.gates]) + 1)
+        self.num_qubits = max(num_qubits, max([max(gadget.paulis) for gadget in self.gates]) + 1)
 
     def __add__(self, other: GadgetCircuit) -> GadgetCircuit:
         assert self.num_qubits == other.num_qubits
         return GadgetCircuit(gates=self.simplify(self.gates + other.gates))
 
     def apply(self, gate, start: int = 0, end: int = None):
-        assert gate.max_qubit < self.num_qubits
+        assert max(gate.qubits) < self.num_qubits
         end = len(self.gates) if end is None else end
         tableau = Tableau(gate)
         new_gadgets = [
@@ -37,31 +37,13 @@ class GadgetCircuit:
             for gadget in self.gates[start:end]]
         self.gates[start:end] = [copy(gate), *new_gadgets, copy(gate.inverse)]
 
-    def graph(self, gadgets_only=None, expand_gadgets=None) -> GadgetGraph:
+    def graph(self, as_gadgets=None, stack=None) -> GadgetGraph:
         graph = GadgetGraph(num_qubits=self.num_qubits)
         for gate in self.gates:
-            if gate.type == GateType.GADGET:
-                gate.expand_gadget = gate.expand_gadget if expand_gadgets is None else expand_gadgets
-            else:
-                gate.as_gadget = gadgets_only if gate.as_gadget is None else gate.as_gadget
-            graph_method = {
-                GateType.GADGET: graph.add_gadget,
-                GateType.CX: graph.add_cx,
-                GateType.CZ: graph.add_cz,
-                GateType.X: graph.add,
-                GateType.Z: graph.add,
-                GateType.X_PLUS: graph.add,
-                GateType.X_MINUS: graph.add,
-                GateType.Z_PLUS: graph.add,
-                GateType.Z_MINUS: graph.add,
-                GateType.H: graph.add,
-            }.get(gate.type)
-            graph_method(gate)
-            graph.update_boundaries()
+            gate.as_gadget = as_gadgets if as_gadgets else gate.as_gadget
+            gate.stack = stack if stack else gate.stack
+            graph.compose(gate.graph, stack=gate.stack)
         return graph
-
-    def some(self):
-        pass
 
     def simplify(self, gates: Optional[list] = None) -> list:
         """Needs work. Use __add__ methods to do this"""
@@ -70,7 +52,7 @@ class GadgetCircuit:
 
     def matrix(self, return_latex=False, override_max=False):  # use pyzx matrix_to_latex() method here
         if self.num_qubits <= 5 or override_max:
-            matrix = self.graph(expand_gadgets=False, gadgets_only=False).to_matrix()
+            matrix = self.graph(as_gadgets=False).to_matrix()
             latex_string = matrix_to_latex(matrix)
             display(Markdown(latex_string))
             return latex_string if return_latex else None

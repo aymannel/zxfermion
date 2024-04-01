@@ -5,8 +5,8 @@ from pyzx import VertexType
 
 from zxfermion.types import GateType, PauliType
 from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.gates import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H, \
-    PauliGate, CliffordGate, ControlledGate, FixedPhaseGate
+from zxfermion.gates.gates import Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H
+from zxfermion.gates.gate_types import Identity, FixedPhaseGate, CliffordGate, PauliGate, ControlledGate
 
 
 # kwargs for drawing
@@ -21,6 +21,10 @@ from zxfermion.gates import Identity, Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlu
 # test inverse properties
 # test pauli strings with trailing I
 # test subgraph stuff
+
+# test subgraph
+# test inverse
+# test min/max of gadgets
 
 def test_inheritance():
     assert all(isinstance(gate, PauliGate) for gate in [X(), Z()])
@@ -45,8 +49,8 @@ def test_gadget():
     assert gadget.type == GateType.GADGET
     assert not gadget.phase_gadget
     assert not gadget.phase
-    assert gadget.min_qubit == 0
-    assert gadget.max_qubit == 2
+    assert min(gadget.paulis) == 0
+    assert max(gadget.paulis) == 2
     assert len(gadget.paulis) == 3
     assert repr(gadget) == "Gadget(pauli_string='XYZ', phase=0)"
     assert all(isinstance(pauli, PauliType) for pauli in gadget.paulis.values())
@@ -60,8 +64,8 @@ def test_phase_gadget():
     assert gadget.phase_gadget
     assert not gadget.phase
     assert len(gadget.paulis) == 3
-    assert gadget.min_qubit == 0
-    assert gadget.max_qubit == 2
+    assert min(gadget.paulis) == 0
+    assert max(gadget.paulis) == 2
     assert repr(gadget) == "Gadget(pauli_string='ZZZ', phase=0)"
     assert all(pauli == PauliType.Z for pauli in gadget.paulis.values())
     assert gadget.to_dict() == {'Gadget': {'pauli_string': 'ZZZ', 'phase': 0}}
@@ -79,8 +83,8 @@ def test_phase_gadget():
 def test_gadget_pauli_string(pauli_string, paulis):
     gadget = Gadget(pauli_string)
     assert gadget.paulis == paulis
-    assert gadget.min_qubit == 0
-    assert gadget.max_qubit == 2
+    assert min(gadget.paulis) == 0
+    assert max(gadget.paulis) == 2
 
 
 # @formatter:off
@@ -127,8 +131,8 @@ def test_cx_min_max(control, target, min_qubit, max_qubit):
     assert cx.type == GateType.CX
     assert cx.control == control
     assert cx.target == target
-    assert cx.min_qubit == min_qubit
-    assert cx.max_qubit == max_qubit
+    assert min(cx.qubits) == min_qubit
+    assert max(cx.qubits) == max_qubit
 
 
 @pytest.mark.parametrize(['control', 'target'], [[None, None], [0, 1]])
@@ -137,8 +141,8 @@ def test_cz(control, target):
     assert cz.type == GateType.CZ
     assert cz.control == 0
     assert cz.target == 1
-    assert cz.min_qubit == 0
-    assert cz.max_qubit == 1
+    assert min(cz.qubits) == 0
+    assert max(cz.qubits) == 1
     assert repr(cz) == f'CZ(control={0 if control is None else control}, target={1 if target is None else target})'
     with pytest.raises(AssertionError):
         CZ(control=1, target=1)
@@ -152,8 +156,8 @@ def test_cz_min_max(control, target, min_qubit, max_qubit):
     assert cz.type == GateType.CZ
     assert cz.control == min_qubit
     assert cz.target == max_qubit
-    assert cz.min_qubit == min_qubit
-    assert cz.max_qubit == max_qubit
+    assert min(cz.qubits) == min_qubit
+    assert max(cz.qubits) == max_qubit
 
 
 # @formatter:off
@@ -164,8 +168,7 @@ def test_x_phase(phase, expected):
     assert x_phase.type == GateType.X_PHASE
     assert x_phase.vertex_type == VertexType.X
     assert x_phase.qubit == 0
-    assert x_phase.min_qubit == 0
-    assert x_phase.max_qubit == 0
+    assert x_phase.qubits == [0]
     assert math.isclose(x_phase.phase, expected)
 
     x_phase_dict = x_phase.to_dict()
@@ -182,8 +185,7 @@ def test_z_phase(phase, expected):
     assert z_phase.type == GateType.Z_PHASE
     assert z_phase.vertex_type == VertexType.Z
     assert z_phase.qubit == 0
-    assert z_phase.min_qubit == 0
-    assert z_phase.max_qubit == 0
+    assert z_phase.qubits == [0]
     assert math.isclose(z_phase.phase, expected)
 
     z_phase_dict = z_phase.to_dict()
@@ -206,8 +208,7 @@ def test_x():
     assert x.vertex_type == VertexType.X
     assert x.phase == 1
     assert x.qubit == 0
-    assert x.min_qubit == 0
-    assert x.max_qubit == 0
+    assert x.qubits == [0]
     assert repr(x) == 'X(qubit=0)'
     assert x.to_dict() == {'X': {'qubit': 0}}
 
@@ -218,8 +219,7 @@ def test_z():
     assert z.vertex_type == VertexType.Z
     assert z.phase == 1
     assert z.qubit == 0
-    assert z.min_qubit == 0
-    assert z.max_qubit == 0
+    assert z.qubits == [0]
     assert repr(z) == 'Z(qubit=0)'
     assert z.to_dict() == {'Z': {'qubit': 0}}
 
@@ -230,8 +230,7 @@ def test_x_plus():
     assert x_plus.vertex_type == VertexType.X
     assert x_plus.phase == 1/2
     assert x_plus.qubit == 0
-    assert x_plus.min_qubit == 0
-    assert x_plus.max_qubit == 0
+    assert x_plus.qubits == [0]
     assert repr(x_plus) == 'XPlus(qubit=0)'
     assert x_plus.to_dict() == {'XPlus': {'qubit': 0}}
 
@@ -242,8 +241,7 @@ def test_z_plus():
     assert z_plus.vertex_type == VertexType.Z
     assert z_plus.phase == 1/2
     assert z_plus.qubit == 0
-    assert z_plus.min_qubit == 0
-    assert z_plus.max_qubit == 0
+    assert z_plus.qubits == [0]
     assert repr(z_plus) == 'ZPlus(qubit=0)'
     assert z_plus.to_dict() == {'ZPlus': {'qubit': 0}}
 
@@ -254,8 +252,7 @@ def test_x_minus():
     assert x_minus.vertex_type == VertexType.X
     assert x_minus.phase == 3/2
     assert x_minus.qubit == 0
-    assert x_minus.min_qubit == 0
-    assert x_minus.max_qubit == 0
+    assert x_minus.qubits == [0]
     assert repr(x_minus) == 'XMinus(qubit=0)'
     assert x_minus.to_dict() == {'XMinus': {'qubit': 0}}
 
@@ -266,8 +263,7 @@ def test_z_minus():
     assert z_minus.vertex_type == VertexType.Z
     assert z_minus.phase == 3/2
     assert z_minus.qubit == 0
-    assert z_minus.min_qubit == 0
-    assert z_minus.max_qubit == 0
+    assert z_minus.qubits == [0]
     assert repr(z_minus) == 'ZMinus(qubit=0)'
     assert z_minus.to_dict() == {'ZMinus': {'qubit': 0}}
 
@@ -279,8 +275,8 @@ def test_hadamard():
     assert hadamard1.vertex_type == VertexType.H_BOX
     assert hadamard1.qubit == 0
     assert hadamard2.qubit == 1
-    assert hadamard1.min_qubit == 0
-    assert hadamard1.max_qubit == 0
+    assert hadamard1.qubits == [0]
+    assert hadamard2.qubits == [1]
     assert repr(hadamard1) == 'H(qubit=0)'
     assert repr(hadamard2) == 'H(qubit=1)'
     assert hadamard1.to_dict() == {'H': {'qubit': 0}}
@@ -588,21 +584,41 @@ def test_hadamard_addition():
 
 
 # Config tests
-@pytest.mark.parametrize('value', [True, False])
-def test_expand_gadget(value, monkeypatch):
-    monkeypatch.setattr('zxfermion.config.expand_gadgets', value)
+def test_gadget_as_gadget():
     gadget1 = Gadget('ZZZ')
-    gadget2 = Gadget('ZZZ', expand_gadget=value)
-    assert gadget1.expand_gadget is value
-    assert gadget2.expand_gadget is value
+    gadget2 = Gadget('ZZZ', as_gadget=True)
+    gadget3 = Gadget('ZZZ', as_gadget=False)
+    assert gadget1.as_gadget is True
+    assert gadget2.as_gadget is True
+    assert gadget3.as_gadget is False
 
 
-@pytest.mark.parametrize('value', [True, False])
-def test_as_gadget(value, monkeypatch):
-    monkeypatch.setattr('zxfermion.config.gadgets_only', value)
+def test_gate_as_gadget():
     gates = [CX, CZ, XPhase, ZPhase, XMinus, ZMinus, XPlus, ZPlus, X, Z]
-    for gate_object in gates:
-        gate1 = gate_object()
-        gate2 = gate_object(as_gadget=value)
-        assert gate1.as_gadget is value
-        assert gate2.as_gadget is value
+    for gate_class in gates:
+        gate1 = gate_class()
+        gate2 = gate_class(as_gadget=True)
+        gate3 = gate_class(as_gadget=False)
+        assert gate1.as_gadget is False
+        assert gate2.as_gadget is True
+        assert gate3.as_gadget is False
+
+
+def test_gadget_stack():
+    gadget1 = Gadget('ZZZ')
+    gadget2 = Gadget('ZZZ', stack=True)
+    gadget3 = Gadget('ZZZ', stack=False)
+    assert gadget1.stack is False
+    assert gadget2.stack is True
+    assert gadget3.stack is False
+
+
+def test_gate_stack():
+    gates = [CX, CZ, XPhase, ZPhase, XMinus, ZMinus, XPlus, ZPlus, X, Z]
+    for gate_class in gates:
+        gate1 = gate_class()
+        gate2 = gate_class(stack=True)
+        gate3 = gate_class(stack=False)
+        assert gate1.stack is False
+        assert gate2.stack is True
+        assert gate3.stack is False

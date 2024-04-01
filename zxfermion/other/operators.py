@@ -1,4 +1,4 @@
-from zxfermion.circuits import GadgetCircuit
+from zxfermion.circuits.gadget_circuit import GadgetCircuit
 
 operators = [GadgetCircuit.from_dict(operator_dict) for operator_dict in [
     {

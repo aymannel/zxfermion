@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import stim
-from zxfermion.gates import Gadget
+from zxfermion.gates.gates import Gadget
 from zxfermion.types import PauliType, GateType
 
 
