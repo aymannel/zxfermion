@@ -5,8 +5,7 @@
 - [What is ZxFermion?](#what-is-zxfermion?)
 - [Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
-  - [Creating Pauli Gadgets](##creating-pauli-gadgets)
-  - [Creating Pauli Gadgets](###creating-pauli-gadgets)
+  - [Creating Circuits of Gadgets](#creating-circuits-of-gadgets)
   - [Working with Cliffords](#working-with-cliffords)
 
 ## What is ZxFermion?
