@@ -1,3 +1,12 @@
+# ZxFermion
+<img src="figures/logo.png" width="150">
+
+- item 1
+- item 2
+- item 3
+- item 4
+- item 5
+
 ## Introduction
 ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io/en/latest/) designed for the manipulation and visualisation of circuits of Pauli gadgets. With built-in Clifford tableau logic using [Stim](https://github.com/quantumlib/Stim), ZxFermion allows users to quickly implement proofs and test ideas.
 
