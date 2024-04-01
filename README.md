@@ -2,8 +2,8 @@
 <img src="figures/logo.png" width="150">
 
 ## Contents
-- [What is ZxFermion?](#what-is-zxfermion?)
-- [Getting Started](#getting-started)
+- [1) What is ZxFermion?](#what-is-zxfermion?)
+- [2) Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
   - [Creating Circuits of Gadgets](#creating-circuits-of-gadgets)
   - [Working with Cliffords](#working-with-cliffords)
