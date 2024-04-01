@@ -14,7 +14,7 @@ from zxfermion.gates import Gadget
 
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw(expand_gadget=True)
-gadget.pdf('expanded_yzx_gadget')
+gadget.pdf('expanded_yzzx_gadget')
 ```
 ![expanded_yzx_gadget](figures/gg.png)
 
