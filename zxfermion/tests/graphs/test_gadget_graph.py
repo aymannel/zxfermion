@@ -4,7 +4,9 @@ import pytest
 from pyzx import VertexType
 
 from zxfermion.graphs.gadget_graph import GadgetGraph
-from zxfermion.gates.gates import Gadget, XPhase, ZPhase, X, Z, ZPlus, XMinus, XPlus, ZMinus, CX, CZ
+from zxfermion import Gadget
+from zxfermion.gates.gates import XPlus, XMinus, ZPlus, ZMinus, CX, CZ
+from zxfermion.gates import X, Z, XPhase, ZPhase
 
 
 # assert graph depth doesn't change when graph is larger than gadget size

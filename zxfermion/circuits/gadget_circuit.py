@@ -6,15 +6,11 @@ from typing import Optional
 import pyzx as zx
 from IPython.display import display, Markdown
 
-from zxfermion.gates.gates import Gadget
+from zxfermion import Gadget
 from zxfermion.graphs.gadget_graph import GadgetGraph
 from zxfermion.tableaus.tableau import Tableau
 from zxfermion.types import GateType
 from zxfermion.utilities import matrix_to_latex
-
-
-# phase out stack gadget / layer stuff
-# impl add() method that takes gate as input and adds to gadgets. maybe. isn't GadgetCircuit supposed to be immutable?
 
 
 class GadgetCircuit:
@@ -40,8 +36,8 @@ class GadgetCircuit:
     def graph(self, as_gadgets=None, stack=None) -> GadgetGraph:
         graph = GadgetGraph(num_qubits=self.num_qubits)
         for gate in self.gates:
-            gate.as_gadget = as_gadgets if as_gadgets else gate.as_gadget
-            gate.stack = stack if stack else gate.stack
+            gate.as_gadget = gate.as_gadget if as_gadgets is None else as_gadgets
+            gate.stack = gate.stack if stack is None else stack
             graph.compose(gate.graph, stack=gate.stack)
         return graph
 

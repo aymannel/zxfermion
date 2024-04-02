@@ -1,6 +1,6 @@
 import pytest
 from zxfermion.types import GateType
-from zxfermion.gates.gates import Gadget
+from zxfermion import Gadget
 from zxfermion.circuits.gadget_circuit import GadgetCircuit
 
 

@@ -21,18 +21,16 @@ All of the following diagrams were made using ZxFermion.
 To begin... Then to export to pdf, run `gadget.pdf('file_name')`.
 
 ```python
-from zxfermion.gates.gates import Gadget
-
-gadget = Gadget('YZX', phase=1 / 2)
-gadget.draw(as_gadget=False)
+from zxfermion import Gadget
+gadget = Gadget('YZX', as_gadget=False)
+gadget.graph.draw()
 ```
 ![expanded_yzzx_gadget](figures/expanded_yzzx_gadget.png)
 
 By default gadgets are represented in the following more compact form.
 ```python
-gadget = Gadget('YZX', phase=1/2)
+gadget = Gadget('YZX', phase=1/2, as_gadget=True)
 gadget.draw()
-gadget.pdf('yzx_gadget')
 ```
 
 ### Creating circuits of gadgets

@@ -63,8 +63,8 @@ def test_default_empty_base_graph_dimensions():
     graph = BaseGraph()
     assert graph.input_row == 0
     assert graph.output_row == 2
-    assert graph.graph_depth == 1
-    assert graph.graph_rows == [1]
+    assert graph.graph_depth == 0
+    assert graph.graph_rows == []
     assert graph.left_end(0) == 1
     assert graph.right_end(0) == 0
     assert graph.num_qubits == 1
@@ -79,8 +79,8 @@ def test_empty_base_graph_dimensions(num_rows, num_qubits):
     graph = BaseGraph(num_qubits=num_qubits, num_rows=num_rows)
     assert graph.input_row == 0
     assert graph.output_row == num_rows + 1
-    assert graph.graph_depth == num_rows
-    assert graph.graph_rows == list(range(1, num_rows + 1))
+    assert graph.graph_depth == 0
+    assert graph.graph_rows == []
     assert graph.left_end(0) == num_qubits
     assert graph.right_end(0) == 0
     assert graph.num_qubits == num_qubits

@@ -21,6 +21,11 @@ class BaseGraph(GraphS):
         self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 1) for qubit in range(self.num_qubits)])
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
 
+    def __add__(self, other):
+        new = deepcopy(self)
+        new.compose(other, stack=False)
+        return new
+
     @property
     def min_qubit(self) -> int:
         return min((self.qubit(vertex) for vertex in self.bounded_vertices), default=0)
@@ -28,10 +33,6 @@ class BaseGraph(GraphS):
     @property
     def max_qubit(self) -> int:
         return max((self.qubit(vertex) for vertex in self.bounded_vertices), default=self.num_qubits - 1)
-
-    @property
-    def boundaries(self) -> list[int]:
-        return self.inputs() + self.outputs()
 
     @property
     def input_row(self) -> int:
@@ -42,20 +43,32 @@ class BaseGraph(GraphS):
         return self.row(self.outputs()[0])
 
     @property
-    def graph_rows(self) -> list[int]:
-        return [row for row in range(self.input_row + 1, self.output_row)]
-
-    @property
-    def graph_depth(self) -> int:
-        return self.output_row - self.input_row - 1
-
-    @property
     def left_row(self) -> int:
         return min((self.row(vertex) for vertex in self.bounded_vertices), default=self.output_row)
 
     @property
     def right_row(self) -> int:
         return max((self.row(vertex) for vertex in self.bounded_vertices), default=self.input_row)
+
+    @property
+    def left_padding(self) -> int:
+        return self.left_row - self.input_row
+
+    @property
+    def right_padding(self) -> int:
+        return self.output_row - self.right_row
+
+    @property
+    def boundaries(self) -> list[int]:
+        return self.inputs() + self.outputs()
+
+    @property
+    def graph_rows(self) -> list[int]:
+        return [row for row in range(self.left_row, self.right_row + 1)]
+
+    @property
+    def graph_depth(self) -> int:
+        return len(self.graph_rows)
 
     def left_end(self, qubit: int) -> int:
         default = self.outputs()[qubit] if qubit < self.num_qubits else None
@@ -65,18 +78,10 @@ class BaseGraph(GraphS):
         default = self.inputs()[qubit] if qubit < self.num_qubits else None
         return self.vertices_on_qubit(qubit)[-1] if self.vertices_on_qubit(qubit) else default
 
-    @property
-    def left_ends(self) -> list[int]:
-        return [self.left_end(qubit) for qubit in range(self.num_qubits)]
-
-    @property
-    def right_ends(self) -> list[int]:
-        return [self.right_end(qubit) for qubit in range(self.num_qubits)]
-
-    def left_row_between(self, left: int, right: int) -> int:
+    def left_row_within(self, left: int, right: int) -> int:
         return min(self.row(self.left_end(q)) for q in range(left, right + 1))
 
-    def right_row_between(self, left: int, right: int) -> int:
+    def right_row_within(self, left: int, right: int) -> int:
         return max(self.row(self.right_end(q)) for q in range(left, right + 1))
 
     @property
@@ -85,8 +90,8 @@ class BaseGraph(GraphS):
             vertex
             for vertex
             in self.vertices()
-            if self.type(vertex) != VertexType.BOUNDARY
-            and self.qubit(vertex) in range(self.num_qubits)
+            if vertex not in self.boundaries
+            and 0 <= self.qubit(vertex) <= self.num_qubits - 1
         ]
 
     @property
@@ -95,8 +100,8 @@ class BaseGraph(GraphS):
             vertex
             for vertex
             in self.vertices()
-            if vertex not in self.bounded_vertices
-            and self.type(vertex) != VertexType.BOUNDARY
+            if vertex not in self.boundaries
+            and vertex not in self.bounded_vertices
         ]
 
     def vertices_on_qubit(self, qubit: int) -> list[int]:
@@ -110,68 +115,45 @@ class BaseGraph(GraphS):
     def remove_wire(self, qubit: int):
         self.remove_edge((self.inputs()[qubit], self.outputs()[qubit]))
 
-    def connect_vertices(self, vertex_refs: list[int]):
-        self.add_edges(pair_list(vertex_refs))
-
-    def update_output_row(self):
-        if self.right_row + 1 > self.output_row:
-            for output in self.outputs():
-                self.set_row(output, self.right_row + 1)
-
-    def update_input_row(self):
-        if (offset := self.left_row - self.input_row) > 1:
-            for vertex in [vertex for vertex in self.vertices() if vertex not in self.inputs()]:
-                self.set_row(vertex, self.row(vertex) - offset + 1)
-
-    def update_boundaries(self):
-        self.update_output_row()
-        self.update_input_row()
+    def connect_vertices(self, vertices: list[int]):
+        self.add_edges(pair_list(vertices))
 
     def update_num_qubits(self, num_qubits):
         if num_qubits > self.num_qubits:
             self.set_num_qubits(num_qubits)
 
+    def set_output_row(self, row):
+        for vertex in self.outputs():
+            self.set_row(vertex, row)
+
+    def set_input_row(self, row):
+        for vertex in self.inputs():
+            self.set_row(vertex, row)
+
+    def set_left_row(self, row):
+        offset = row - self.left_row
+        for vertex in [vertex for vertex in self.vertices() if vertex not in self.inputs()]:
+            self.set_row(vertex, self.row(vertex) + offset)
+
+    def set_left_padding(self, padding: Optional[int] = 1):
+        self.set_left_row(self.input_row + padding)
+
+    def set_right_padding(self, padding: Optional[int] = 1):
+        self.set_output_row(self.right_row + padding)
+
     def set_num_qubits(self, num_qubits: int):
         assert num_qubits >= self.num_qubits
         graph = BaseGraph(num_qubits=num_qubits)
-
-        self_refs = {
-            vertex: graph.add_vertex(
-                self.type(vertex),
-                phase=self.phase(vertex),
-                qubit=self.qubit(vertex),
-                row=self.row(vertex))
-            for vertex in self.vertices()
-            if vertex not in self.boundaries
-        }
-
-        for edge in self.edges():
-            source, target = self.edge_st(edge)
-            if source not in self.boundaries and target not in self.boundaries:
-                graph.add_edge(graph.edge(
-                    self_refs[source],
-                    self_refs[target]
-                ), edgetype=self.edge_type(edge))
-
-        for qubit in [qubit for qubit in range(self.num_qubits) if self.vertices_on_qubit(qubit)]:
-            graph.remove_wire(qubit)
-            graph.add_edge((graph.inputs()[qubit], self_refs[self.left_end(qubit)]))
-            graph.add_edge((self_refs[self.right_end(qubit)], graph.outputs()[qubit]))
-
-        for vertex in self.unbounded_vertices:
-            vertical_offset = graph.num_qubits - self.num_qubits
-            graph.set_qubit(self_refs[vertex], self.qubit(vertex) + vertical_offset)
-
-        graph.update_boundaries()
+        graph.compose(self)
         self.__dict__.update(graph.__dict__)
 
     def compose(self, other: BaseGraph, stack: Optional[bool] = False):
-        self.update_num_qubits(max(self.num_qubits, other.num_qubits))
-        out_refs = self.right_ends
         other = deepcopy(other)
+        out_refs = [self.right_end(qubit) for qubit in range(self.num_qubits)]
+        self.update_num_qubits(max(self.num_qubits, other.num_qubits))
 
-        row = self.right_row_between(other.min_qubit, other.max_qubit) if stack else self.right_row
-        other_refs = {
+        row = self.right_row_within(other.min_qubit, other.max_qubit) if stack else self.right_row
+        vertex_dict = {
             vertex: self.add_vertex(
                 other.type(vertex),
                 phase=other.phase(vertex),
@@ -185,21 +167,25 @@ class BaseGraph(GraphS):
             source, target = other.edge_st(edge)
             if source not in other.boundaries and target not in other.boundaries:
                 self.add_edge(self.edge(
-                    other_refs[source],
-                    other_refs[target]
+                    vertex_dict[source],
+                    vertex_dict[target]
                 ), edgetype=other.edge_type(edge))
 
-        # should be iterating over left_ends
+        for vertex, new_vertex in vertex_dict.items():
+            for key in [key for key in other.vdata_keys(vertex) if key]:
+                self.set_vdata(new_vertex, key, other.vdata(vertex, key))
+
         for qubit in [qubit for qubit in range(other.num_qubits) if other.vertices_on_qubit(qubit)]:
             self.remove_edge((out_refs[qubit], self.outputs()[qubit]))
-            self.add_edge((out_refs[qubit], other_refs[other.left_end(qubit)]))
-            self.add_edge((other_refs[other.right_end(qubit)], self.outputs()[qubit]))
+            self.add_edge((out_refs[qubit], vertex_dict[other.left_end(qubit)]))
+            self.add_edge((vertex_dict[other.right_end(qubit)], self.outputs()[qubit]))
 
         for vertex in other.unbounded_vertices:
             vertical_offset = self.num_qubits - other.num_qubits
-            self.set_qubit(other_refs[vertex], other.qubit(vertex) + vertical_offset)
+            self.set_qubit(vertex_dict[vertex], other.qubit(vertex) + vertical_offset)
 
-        self.update_boundaries()
+        self.set_left_padding()
+        self.set_right_padding()
 
     def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
         Path('output/').mkdir(parents=True, exist_ok=True)

@@ -4,7 +4,9 @@ from typing import Optional
 
 from pyzx import VertexType
 
-from zxfermion.gates.gates import Gadget, XPhase, ZPhase, XPlus, XMinus, CZ, CX, H
+from zxfermion.gates import XPhase, ZPhase
+from zxfermion import Gadget
+from zxfermion.gates.gates import XPlus, XMinus, H, CX, CZ
 from zxfermion.graphs.base_graph import BaseGraph
 from zxfermion.types import PauliType
 
@@ -23,26 +25,29 @@ class GadgetGraph(BaseGraph):
             row=self.row(in_ref) + 1 if row is None else row)
         self.remove_edge((in_ref, out_ref))
         self.connect_vertices([in_ref, ref, out_ref])
-        self.update_boundaries()
+        self.set_left_padding()
+        self.set_right_padding()
+        return ref
 
     def add_cx(self, cx: CX, stack: Optional[bool] = None):
         self.update_num_qubits(max(cx.qubits) + 1)
         in_ref1, out_ref1 = self.right_end(cx.control), self.outputs()[cx.control]
         in_ref2, out_ref2 = self.right_end(cx.target), self.outputs()[cx.target]
-        row = self.right_row_between(min(cx.qubits), max(cx.qubits)) + 1 if stack else self.right_row + 1
+        row = self.right_row_within(min(cx.qubits), max(cx.qubits)) + 1 if stack else self.right_row + 1
         control = self.add_vertex(ty=VertexType.Z, row=row, qubit=cx.control)
         target = self.add_vertex(ty=VertexType.X, row=row, qubit=cx.target)
         self.remove_edges(((in_ref1, out_ref1), (in_ref2, out_ref2)))
         self.connect_vertices([in_ref1, control, out_ref1])
         self.connect_vertices([in_ref2, target, out_ref2])
         self.connect_vertices([control, target])
-        self.update_boundaries()
+        self.set_left_padding()
+        self.set_right_padding()
 
     def add_cz(self, cz: CZ, stack: Optional[bool] = None):
         self.update_num_qubits(max(cz.qubits) + 1)
         in_ref1, out_ref1 = self.right_end(cz.control), self.outputs()[cz.control]
         in_ref2, out_ref2 = self.right_end(cz.target), self.outputs()[cz.target]
-        row = self.right_row_between(min(cz.qubits), max(cz.qubits)) + 1 if stack else self.right_row + 1
+        row = self.right_row_within(min(cz.qubits), max(cz.qubits)) + 1 if stack else self.right_row + 1
         control = self.add_vertex(ty=VertexType.Z, row=row, qubit=cz.control)
         target = self.add_vertex(ty=VertexType.Z, row=row, qubit=cz.target)
         hadamard = self.add_vertex(ty=VertexType.H_BOX, row=row, qubit=(min(cz.qubits) + max(cz.qubits)) / 2)
@@ -50,13 +55,14 @@ class GadgetGraph(BaseGraph):
         self.connect_vertices([in_ref1, control, out_ref1])
         self.connect_vertices([in_ref2, target, out_ref2])
         self.connect_vertices((control, hadamard, target))
-        self.update_boundaries()
+        self.set_left_padding()
+        self.set_right_padding()
 
     def add_cx_gadget(self, cx: CX, stack: Optional[bool] = None):
         self.update_num_qubits(max(cx.qubits) + 1)
         in_ref1, out_ref1 = self.right_end(cx.control), self.outputs()[cx.control]
         in_ref2, out_ref2 = self.right_end(cx.target), self.outputs()[cx.target]
-        row = self.right_row_between(min(cx.qubits), max(cx.qubits)) + 1 if stack else self.right_row + 1
+        row = self.right_row_within(min(cx.qubits), max(cx.qubits)) + 1 if stack else self.right_row + 1
         control = self.add_vertex(ty=VertexType.Z, qubit=cx.control, row=row + 1, phase=1/2)
         target = self.add_vertex(ty=VertexType.Z, qubit=cx.target, row=row + 1, phase=1/2)
         hadamard1 = self.add_vertex(ty=VertexType.H_BOX, qubit=cx.target, row=row)
@@ -67,13 +73,14 @@ class GadgetGraph(BaseGraph):
         self.connect_vertices([in_ref2, hadamard1, target, hadamard2, out_ref2])
         self.add_edges(((hub, phase), (hub, control), (hub, target)))
         self.connect_vertices([in_ref1, control, out_ref1])
-        self.update_boundaries()
+        self.set_left_padding()
+        self.set_right_padding()
 
     def add_cz_gadget(self, cz: CZ, stack: Optional[bool] = None):
         self.update_num_qubits(max(cz.qubits) + 1)
         in_ref1, out_ref1 = self.right_end(cz.control), self.outputs()[cz.control]
         in_ref2, out_ref2 = self.right_end(cz.target), self.outputs()[cz.target]
-        row = self.right_row_between(min(cz.qubits), max(cz.qubits)) + 2 if stack else self.right_row + 2
+        row = self.right_row_within(min(cz.qubits), max(cz.qubits)) + 2 if stack else self.right_row + 2
         control = self.add_vertex(ty=VertexType.Z, qubit=cz.control, row=row, phase=1 / 2)
         target = self.add_vertex(ty=VertexType.Z, qubit=cz.target, row=row, phase=1 / 2)
         phase = self.add_vertex(ty=VertexType.Z, qubit=self.num_qubits + 2, row=row + 1, phase=-1/2)
@@ -82,15 +89,18 @@ class GadgetGraph(BaseGraph):
         self.add_edges(((hub, phase), (hub, control), (hub, target)))
         self.connect_vertices([in_ref1, control, out_ref1])
         self.connect_vertices([in_ref2, target, out_ref2])
-        self.update_boundaries()
+        self.set_left_padding()
+        self.set_right_padding()
 
-    def add_gadget(self, gadget: Gadget, stack: Optional[bool] = None):
+    def add_gadget(self, gadget: Gadget, name: Optional[str] = None, stack: Optional[bool] = None):
         self.update_num_qubits(max(gadget.paulis) + 1)
-        row = self.right_row_between(min(gadget.paulis), max(gadget.paulis)) + 1 if stack else self.right_row + 1
+        row = self.right_row_within(min(gadget.paulis), max(gadget.paulis)) + 1 if stack else self.right_row + 1
         offset = 0 if gadget.phase_gadget else 1
-        phase = self.add_vertex(ty=VertexType.Z, row=row + offset + 1, qubit=self.num_qubits + 2, phase=gadget.phase)
-        hub = self.add_vertex(ty=VertexType.X, row=row + offset + 1, qubit=self.num_qubits + 1)
+        phase = self.add_vertex(ty=VertexType.Z, row=row + offset + 1, qubit=self.num_qubits + 1, phase=gadget.phase)
+        hub = self.add_vertex(ty=VertexType.X, row=row + offset + 1, qubit=self.num_qubits)
+        self.set_vdata(vertex=hub, key='name', val=name)
         self.add_edge((hub, phase))
+
         for qubit, pauli in gadget.paulis.items():
             in_ref, out_ref = self.right_end(qubit), self.outputs()[qubit]
             if pauli == PauliType.X:
@@ -112,11 +122,12 @@ class GadgetGraph(BaseGraph):
                 self.remove_edge((in_ref, out_ref))
                 self.add_edge((middle, hub))
                 self.connect_vertices([in_ref, middle, out_ref])
-        self.update_boundaries()
+        self.set_left_padding()
+        self.set_right_padding()
 
-    def add_expanded_gadget(self, gadget: Gadget, stack: Optional[bool] = False):
+    def add_expanded_gadget(self, gadget: Gadget, name: Optional[str] = None, stack: Optional[bool] = False):
         self.update_num_qubits(max(gadget.paulis) + 1)
-        in_row = self.right_row_between(min(gadget.paulis), max(gadget.paulis)) + 1 if stack else self.right_row + 1
+        in_row = self.right_row_within(min(gadget.paulis), max(gadget.paulis)) + 1 if stack else self.right_row + 1
         gadget_qubits = [qubit for qubit, pauli in gadget.paulis.items() if pauli != PauliType.I]
         depth = 2 * len(gadget_qubits) - 1 if gadget.phase_gadget else 2 * len(gadget_qubits) + 1
 
@@ -133,6 +144,7 @@ class GadgetGraph(BaseGraph):
 
         add_cliffords(in_row, reverse=False)
         add_cnots(len(gadget_qubits) - 1, reverse=False)
-        self.add(ZPhase(max(gadget_qubits), gadget.phase))
+        phase_node = self.add(ZPhase(max(gadget_qubits), gadget.phase))
+        self.set_vdata(vertex=phase_node, key='name', val=name)
         add_cnots(len(gadget_qubits) - 1, reverse=True)
         add_cliffords(in_row + depth - 1, reverse=True)

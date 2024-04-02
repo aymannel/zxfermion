@@ -1,4 +1,5 @@
-from zxfermion.gates.gates import CX, Gadget
+from zxfermion import Gadget
+from zxfermion.gates.gates import CX
 from zxfermion.tableaus.tableau import Tableau
 
 # assert correct phases are being applied!

@@ -3,18 +3,46 @@ from __future__ import annotations
 import math
 import re
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, Union
 
 from pyzx import VertexType
 
-from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.gates.gate_types import Identity, SelfInverse, CliffordGate, PauliGate, BaseGate, SingleQubitGate, \
-    ControlledGate
 from zxfermion.types import GateType, PauliType
+from zxfermion.exceptions import IncompatibleGatesException
+
+
+Phase = Optional[Union[int, float]]
+
+
+class BaseGate:
+    name: Optional[str]
+    as_gadget: Optional[bool]
+    stack: Optional[bool] = False
+
+
+class SelfInverse:
+    qubits: list[int]
+    type: GateType
+
+    @property
+    def inverse(self) -> BaseGate:
+        return deepcopy(self)
+
+
+class FixedPhaseGate:
+    qubit: int
+
+
+class PauliGate(SelfInverse, FixedPhaseGate):
+    pass
+
+
+class CliffordGate(FixedPhaseGate):
+    pass
 
 
 class Gadget(BaseGate):
-    def __init__(self, pauli_string: str, phase: Optional[int | float] = None, as_gadget=True, stack=None):
+    def __init__(self, pauli_string: str, phase: Phase = None, name: Optional[str] = None, as_gadget=True, stack=None):
         pauli_string = re.sub(r'^I+|I+$', lambda match: '_' * len(match.group()), pauli_string)
         self.type = GateType.GADGET
         self.phase = 0 if phase is None else round(phase % 2, 15)
@@ -23,6 +51,7 @@ class Gadget(BaseGate):
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
         self.stack = stack if stack else self.stack
         self.as_gadget = as_gadget
+        self.name = name
 
     def __repr__(self):
         return f"Gadget(pauli_string='{self.pauli_string}', phase={self.phase})"
@@ -57,19 +86,78 @@ class Gadget(BaseGate):
     def graph(self):
         from zxfermion.graphs.gadget_graph import GadgetGraph
         graph = GadgetGraph(max(self.paulis) + 1)
-        graph.add_gadget(self) if self.as_gadget else graph.add_expanded_gadget(self)
+        graph.add_gadget(self, name=self.name) if self.as_gadget else graph.add_expanded_gadget(self, name=self.name)
         return graph
 
     @classmethod
-    def from_gate(cls, gate: ZPhase) -> Gadget:
+    def from_gate(cls, gate: SingleQubitGate) -> Gadget:
         return cls(pauli_string='I' * gate.qubit + 'Z', phase=gate.phase)
 
     def to_dict(self) -> dict:
         return {'Gadget': {'pauli_string': self.pauli_string, 'phase': self.phase}}
 
 
+class SingleQubitGate(BaseGate):
+    def __init__(self, qubit: Optional[int] = None, phase: Phase = None, as_gadget=None, stack=None):
+        self.type = GateType.SINGLE_QUBIT_GATE
+        self.qubit = 0 if qubit is None else qubit
+        self.phase = 0 if phase is None else round(phase % 2, 15)
+        self.qubits = [self.qubit]
+        self.stack = stack if stack else self.stack
+        self.as_gadget = as_gadget if as_gadget else False
+
+    def __repr__(self):
+        if isinstance(self, FixedPhaseGate):
+            return f'{self.__class__.__name__}(qubit={self.qubit})'
+        else:
+            return f'{self.__class__.__name__}(qubit={self.qubit}, phase={self.phase})'
+
+    def __eq__(self, other):
+        return self.qubit == other.qubit if self.type == other.type else False
+
+    @property
+    def inverse(self) -> SingleQubitGate:
+        inverse = deepcopy(self)
+        inverse.phase *= -1
+        return inverse
+
+    @property
+    def graph(self):
+        from zxfermion.graphs.gadget_graph import GadgetGraph
+        graph = GadgetGraph(num_qubits=self.qubit + 1)
+        graph.add(self) if not self.as_gadget else graph.add_gadget(Gadget.from_gate(self))
+        return graph
+
+    def to_dict(self) -> dict:
+        return {self.__class__.__name__: {
+            'qubit': self.qubit
+        } if isinstance(self, FixedPhaseGate) else {
+            'qubit': self.qubit,
+            'phase': self.phase
+        }}
+
+
+class ControlledGate(BaseGate, SelfInverse):
+    def __init__(self, control: Optional[int] = None, target: Optional[int] = None, as_gadget=None, stack=None):
+        control = 0 if control is None else control
+        target = 1 if target is None else target
+        assert control != target
+        self.type = GateType.CONTROLLED_GATE
+        self.control = control
+        self.target = target
+        self.qubits = control, target
+        self.stack = stack if stack else self.stack
+        self.as_gadget = as_gadget if as_gadget else False
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(control={self.control}, target={self.target})'
+
+    def __eq__(self, other):
+        return (self.control, self.target) == (other.control, other.target) if self.type == other.type else False
+
+
 class XPhase(SingleQubitGate):
-    def __init__(self, qubit: Optional[int] = None, phase: Optional[int | float] = None, **kwargs):
+    def __init__(self, qubit: Optional[int] = None, phase: Phase = None, **kwargs):
         super().__init__(qubit=qubit, phase=phase, **kwargs)
         self.type = GateType.X_PHASE
         self.vertex_type = VertexType.X
@@ -91,7 +179,7 @@ class XPhase(SingleQubitGate):
 
 
 class ZPhase(SingleQubitGate):
-    def __init__(self, qubit: Optional[int] = None, phase: Optional[int | float] = None, **kwargs):
+    def __init__(self, qubit: Optional[int] = None, phase: Phase = None, **kwargs):
         super().__init__(qubit=qubit, phase=phase, **kwargs)
         self.type = GateType.Z_PHASE
         self.vertex_type = VertexType.Z
@@ -150,7 +238,7 @@ class Z(ZPhase, PauliGate):
 
 class XPlus(XPhase, CliffordGate):
     def __init__(self, qubit: Optional[int] = None, **kwargs):
-        super().__init__(qubit=qubit, phase=1/2, **kwargs)
+        super().__init__(qubit=qubit, phase=1 / 2, **kwargs)
         self.type = GateType.X_PLUS
 
     def __add__(self, other):
@@ -168,29 +256,9 @@ class XPlus(XPhase, CliffordGate):
         return XMinus(qubit=self.qubit)
 
 
-class XMinus(XPhase, CliffordGate):
-    def __init__(self, qubit: Optional[int] = None, **kwargs):
-        super().__init__(qubit=qubit, phase=3/2, **kwargs)
-        self.type = GateType.X_MINUS
-
-    def __add__(self, other):
-        if other.type == GateType.X_MINUS and self.qubit == other.qubit:
-            return X(qubit=self.qubit)
-        elif other.type == GateType.X_PLUS and self.qubit == other.qubit:
-            return Identity()
-        elif other.type == GateType.X and self.qubit == other.qubit:
-            return XPlus(qubit=self.qubit)
-        else:
-            return super().__add__(other)
-
-    @property
-    def inverse(self) -> XPlus:
-        return XPlus(qubit=self.qubit)
-
-
 class ZPlus(ZPhase, CliffordGate):
     def __init__(self, qubit: Optional[int] = None, **kwargs):
-        super().__init__(qubit=qubit, phase=1/2, **kwargs)
+        super().__init__(qubit=qubit, phase=1 / 2, **kwargs)
         self.type = GateType.Z_PLUS
 
     def __add__(self, other):
@@ -208,9 +276,29 @@ class ZPlus(ZPhase, CliffordGate):
         return ZMinus(qubit=self.qubit)
 
 
+class XMinus(XPhase, CliffordGate):
+    def __init__(self, qubit: Optional[int] = None, **kwargs):
+        super().__init__(qubit=qubit, phase=3 / 2, **kwargs)
+        self.type = GateType.X_MINUS
+
+    def __add__(self, other):
+        if other.type == GateType.X_MINUS and self.qubit == other.qubit:
+            return X(qubit=self.qubit)
+        elif other.type == GateType.X_PLUS and self.qubit == other.qubit:
+            return Identity()
+        elif other.type == GateType.X and self.qubit == other.qubit:
+            return XPlus(qubit=self.qubit)
+        else:
+            return super().__add__(other)
+
+    @property
+    def inverse(self) -> XPlus:
+        return XPlus(qubit=self.qubit)
+
+
 class ZMinus(ZPhase, CliffordGate):
     def __init__(self, qubit: Optional[int] = None, **kwargs):
-        super().__init__(qubit=qubit, phase=3/2, **kwargs)
+        super().__init__(qubit=qubit, phase=3 / 2, **kwargs)
         self.type = GateType.Z_MINUS
 
     def __add__(self, other):
@@ -273,3 +361,21 @@ class CZ(ControlledGate, CliffordGate):
         graph = GadgetGraph(num_qubits=max(self.qubits) + 1)
         graph.add_cz_gadget(self) if self.as_gadget else graph.add_cz(self)
         return graph
+
+
+class Identity:
+    def __init__(self):
+        self.type = GateType.IDENTITY
+
+    def __add__(self, other):
+        return other
+
+    def __mul__(self, other):
+        return other
+
+    def __eq__(self, other):
+        return True if other.type == GateType.IDENTITY else other.identity if hasattr(other, 'identity') else False
+
+    @property
+    def inverse(self) -> Identity:
+        return Identity()

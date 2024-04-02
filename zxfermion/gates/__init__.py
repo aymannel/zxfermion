@@ -1,2 +1,2 @@
-from .gates import *
-from .gate_types import Identity, SingleQubitGate, ControlledGate, PauliGate, CliffordGate, FixedPhaseGate
+from .gates import CX, CZ, XPlus, ZPlus, XMinus, ZMinus, H, X, Z, XPhase, ZPhase, SingleQubitGate, ControlledGate, \
+    Gadget, BaseGate, Identity, SelfInverse, PauliGate, CliffordGate

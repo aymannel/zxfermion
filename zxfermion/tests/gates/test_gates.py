@@ -5,8 +5,9 @@ from pyzx import VertexType
 
 from zxfermion.types import GateType, PauliType
 from zxfermion.exceptions import IncompatibleGatesException
-from zxfermion.gates.gates import Gadget, CX, CZ, X, Z, XPhase, ZPhase, ZPlus, XPlus, XMinus, ZMinus, H
-from zxfermion.gates.gate_types import Identity, FixedPhaseGate, CliffordGate, PauliGate, ControlledGate
+from zxfermion import Gadget
+from zxfermion.gates.gates import XPlus, XMinus, ZPlus, ZMinus, H, CX, CZ, FixedPhaseGate
+from zxfermion.gates import X, Z, XPhase, ZPhase, Identity, CliffordGate, PauliGate, ControlledGate
 
 
 # kwargs for drawing
