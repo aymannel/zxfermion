@@ -361,43 +361,87 @@ def test12_base_graph_set_output_row(zzz, izzzi, zzz_expanded, izzzi_expanded, z
         assert {vertex: graph.qubit(vertex) for vertex in graph.bounded_vertices} == qubit_dict
 
 
-@pytest.mark.parametrize('row', [5, -1, 0, 1, 5])
-def test13_base_graph_set_graph_row(zzz, izzzi, zzz_expanded, izzzi_expanded, zzz_expanded_unstacked, row):
-    for graph in [zzz, izzzi, zzz_expanded, izzzi_expanded, zzz_expanded_unstacked]:
-        graph_depth = graph.graph_depth
-        qubit_dict = {vertex: graph.qubit(vertex) for vertex in graph.vertices()}
-        graph_rows = [r + row - 1 for r in copy(graph.graph_rows)]
-        graph.set_graph_row(row)
-        assert graph.left_row == row
-        assert graph.graph_depth == graph_depth
-        assert graph.right_row == row + graph_depth - 1
-        assert graph.graph_rows == graph_rows
-        assert {vertex: graph.qubit(vertex) for vertex in graph.vertices()} == qubit_dict
+@pytest.mark.parametrize('padding', [1, 2, 3, 4, 5, 10, 50])
+def test15_base_graph_set_left_padding(zzz_expanded, padding):
+    graph = zzz_expanded
+    graph.set_left_padding(padding)
+    assert graph.num_qubits == 3
+    assert graph.num_edges() == 16
+    assert graph.num_vertices() == 15
+    assert list(graph.inputs()) == [0, 1, 2]
+    assert list(graph.outputs()) == [3, 4, 5]
+    assert graph.boundaries == [0, 1, 2, 3, 4, 5]
+    assert graph.min_qubit == 0
+    assert graph.max_qubit == 2
+    assert graph.input_row == 0
+    assert graph.output_row == padding + 5
+    assert graph.left_row == padding
+    assert graph.right_row == padding + 4
+    assert graph.left_padding == padding
+    assert graph.right_padding == 1
+    assert graph.graph_rows == [padding + x for x in range(5)]
+    assert graph.graph_depth == 5
+    assert graph.left_end(0) == 6
+    assert graph.left_end(1) == 7
+    assert graph.left_end(2) == 9
+    assert graph.right_end(0) == 12
+    assert graph.right_end(1) == 13
+    assert graph.right_end(2) == 11
+    assert len(graph.bounded_vertices) == 9
+    assert len(graph.unbounded_vertices) == 0
+    assert graph.vertices_on_qubit(0) == [6, 12]
+    assert graph.vertices_on_qubit(1) == [7, 8, 10, 13]
+    assert graph.vertices_on_qubit(2) == [9, 14, 11]
 
 
-def test14_base_graph_set_left_padding():
+@pytest.mark.parametrize('padding', [1, 2, 3, 4, 5, 10, 50])
+def test16_base_graph_set_right_padding(zzz_expanded, padding):
+    graph = zzz_expanded
+    graph.set_right_padding(padding)
+    assert graph.num_qubits == 3
+    assert graph.num_edges() == 16
+    assert graph.num_vertices() == 15
+    assert list(graph.inputs()) == [0, 1, 2]
+    assert list(graph.outputs()) == [3, 4, 5]
+    assert graph.boundaries == [0, 1, 2, 3, 4, 5]
+    assert graph.min_qubit == 0
+    assert graph.max_qubit == 2
+    assert graph.input_row == 0
+    assert graph.output_row == padding + 5
+    assert graph.left_row == 1
+    assert graph.right_row == 5
+    assert graph.left_padding == 1
+    assert graph.right_padding == padding
+    assert graph.graph_rows == [1, 2, 3, 4, 5]
+    assert graph.graph_depth == 5
+    assert graph.left_end(0) == 6
+    assert graph.left_end(1) == 7
+    assert graph.left_end(2) == 9
+    assert graph.right_end(0) == 12
+    assert graph.right_end(1) == 13
+    assert graph.right_end(2) == 11
+    assert len(graph.bounded_vertices) == 9
+    assert len(graph.unbounded_vertices) == 0
+    assert graph.vertices_on_qubit(0) == [6, 12]
+    assert graph.vertices_on_qubit(1) == [7, 8, 10, 13]
+    assert graph.vertices_on_qubit(2) == [9, 14, 11]
+
+
+def test17_base_graph_set_num_qubits():
     pass
 
 
-def test15_base_graph_set_right_padding():
+def test18_base_graph_set_update_num_qubits():
     pass
 
 
-def test16_base_graph_set_num_qubits():
+def test19_base_graph_compose():
     pass
 
 
-def test17_base_graph_set_update_num_qubits():
+def test20_base_graph_tikz():
     pass
 
 
-def test18_base_graph_compose():
-    pass
-
-
-def test19_base_graph_tikz():
-    pass
-
-
-def test20_base_graph_pdf():
+def test21_base_graph_pdf():
     pass

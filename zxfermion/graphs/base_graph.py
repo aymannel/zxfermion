@@ -127,14 +127,11 @@ class BaseGraph(GraphS):
         for vertex in self.outputs():
             self.set_row(vertex, row)
 
-    def set_graph_row(self, row):
-        offset = row - self.left_row
-        for vertex in [vertex for vertex in self.vertices() if vertex not in self.inputs()]:
-            self.set_row(vertex, self.row(vertex) + offset)
-
     def set_left_padding(self, padding: Optional[int] = None):
         padding = self.boundary_padding if padding is None else padding
-        self.set_graph_row(self.input_row + padding)
+        offset = self.input_row - self.left_row + padding
+        for vertex in [vertex for vertex in self.vertices() if vertex not in self.inputs()]:
+            self.set_row(vertex, self.row(vertex) + offset)
 
     def set_right_padding(self, padding: Optional[int] = None):
         padding = self.boundary_padding if padding is None else padding
