@@ -14,9 +14,10 @@ from zxfermion.utilities import pair_list, tex_parse_tikz
 
 
 class BaseGraph(GraphS):
-    def __init__(self, num_qubits: Optional[int] = 1, num_rows: Optional[int] = 1):
+    def __init__(self, num_qubits: Optional[int] = 1, num_rows: Optional[int] = 1, boundary_padding: Optional[int] = 1):
         super().__init__()
         self.num_qubits = num_qubits
+        self.boundary_padding = boundary_padding
         self.set_inputs([self.add_vertex(qubit=qubit, row=0) for qubit in range(self.num_qubits)])
         self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 1) for qubit in range(self.num_qubits)])
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
@@ -118,27 +119,25 @@ class BaseGraph(GraphS):
     def connect_vertices(self, vertices: list[int]):
         self.add_edges(pair_list(vertices))
 
-    def update_num_qubits(self, num_qubits):
-        if num_qubits > self.num_qubits:
-            self.set_num_qubits(num_qubits)
+    def set_input_row(self, row):
+        for vertex in self.inputs():
+            self.set_row(vertex, row)
 
     def set_output_row(self, row):
         for vertex in self.outputs():
             self.set_row(vertex, row)
 
-    def set_input_row(self, row):
-        for vertex in self.inputs():
-            self.set_row(vertex, row)
-
-    def set_left_row(self, row):
+    def set_graph_row(self, row):
         offset = row - self.left_row
         for vertex in [vertex for vertex in self.vertices() if vertex not in self.inputs()]:
             self.set_row(vertex, self.row(vertex) + offset)
 
-    def set_left_padding(self, padding: Optional[int] = 1):
-        self.set_left_row(self.input_row + padding)
+    def set_left_padding(self, padding: Optional[int] = None):
+        padding = self.boundary_padding if padding is None else padding
+        self.set_graph_row(self.input_row + padding)
 
-    def set_right_padding(self, padding: Optional[int] = 1):
+    def set_right_padding(self, padding: Optional[int] = None):
+        padding = self.boundary_padding if padding is None else padding
         self.set_output_row(self.right_row + padding)
 
     def set_num_qubits(self, num_qubits: int):
@@ -146,6 +145,10 @@ class BaseGraph(GraphS):
         graph = BaseGraph(num_qubits=num_qubits)
         graph.compose(self)
         self.__dict__.update(graph.__dict__)
+
+    def update_num_qubits(self, num_qubits):
+        if num_qubits > self.num_qubits:
+            self.set_num_qubits(num_qubits)
 
     def compose(self, other: BaseGraph, stack: Optional[bool] = False):
         other = deepcopy(other)
@@ -173,7 +176,7 @@ class BaseGraph(GraphS):
 
         for vertex, new_vertex in vertex_dict.items():
             for key in [key for key in other.vdata_keys(vertex) if key]:
-                self.set_vdata(new_vertex, key, other.vdata(vertex, key))
+                self.set_vdata(new_vertex, key, other.vdata(vertex, key, None))
 
         for qubit in [qubit for qubit in range(other.num_qubits) if other.vertices_on_qubit(qubit)]:
             self.remove_edge((out_refs[qubit], self.outputs()[qubit]))
