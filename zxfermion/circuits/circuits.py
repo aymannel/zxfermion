@@ -6,25 +6,29 @@ from typing import Optional
 import pyzx as zx
 from IPython.display import display, Markdown
 
-from zxfermion import Gadget
+from zxfermion import Gadget, BaseGraph
 from zxfermion.graphs.gadget_graph import GadgetGraph
 from zxfermion.tableaus.tableau import Tableau
 from zxfermion.types import GateType
-from zxfermion.utilities import matrix_to_latex
+from zxfermion.utils import matrix_to_latex
 
 
 class GadgetCircuit:
     def __init__(self, gates: list[Gadget], num_qubits: Optional[int] = 0):
         self.type = GateType.GADGET_CIRCUIT
         self.gates = deepcopy(gates)
-        self.num_qubits = max(num_qubits, max([max(gadget.paulis) for gadget in self.gates]) + 1)
+        self.num_qubits = max(num_qubits, max([
+            max(gate.paulis) + 1
+            if gate.type == GateType.GADGET
+            else max(gate.qubits) + 1
+            for gate in self.gates]))
 
     def __add__(self, other: GadgetCircuit) -> GadgetCircuit:
         assert self.num_qubits == other.num_qubits
         return GadgetCircuit(gates=self.simplify(self.gates + other.gates))
 
     def apply(self, gate, start: int = 0, end: int = None):
-        assert max(gate.qubits) < self.num_qubits
+        assert max(gate.qubits) < self.num_qubits  # update num qubits instead / think about edge cases
         end = len(self.gates) if end is None else end
         tableau = Tableau(gate)
         new_gadgets = [
@@ -59,10 +63,10 @@ class GadgetCircuit:
         zx.draw(self.graph(**kwargs), labels=labels)
 
     def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None, **kwargs):
-        return self.graph(**kwargs).tikz(name=name, symbol=symbol, scale=scale)
+        return self.graph(**kwargs).tikz(name=name, scale=scale)
 
     def pdf(self, name: str, symbol: Optional[str] = None, scale: Optional[float] = 0.5, **kwargs):
-        return self.graph(**kwargs).pdf(name=name, symbol=symbol, scale=scale)
+        return self.graph(**kwargs).pdf(name=name, scale=scale)
 
     def to_dict(self) -> list[dict[str, str | int | float]]:
         return {
@@ -78,3 +82,37 @@ class GadgetCircuit:
             assert name in GateType.NAMES
             gates.append(eval(name)(**gate[name]))
         return cls(gates=gates, num_qubits=circuit_dict.get('num_qubits'))
+
+
+class CircuitCollection:
+    def __init__(self, circuit1: GadgetCircuit, circuit2: GadgetCircuit):
+        self.circuit1 = deepcopy(circuit1)
+        self.circuit2 = deepcopy(circuit2)
+
+    def graph(self, as_gadgets=None, stack=None, padding: Optional[int] = 2) -> BaseGraph:
+        graph = BaseGraph(num_qubits=max(self.circuit1.num_qubits, self.circuit2.num_qubits))
+        graph1 = self.circuit1.graph(as_gadgets=as_gadgets, stack=stack)
+        graph2 = self.circuit2.graph(as_gadgets=as_gadgets, stack=stack)
+        graph.compose(graph1)
+
+        vertex_dict = {
+            vertex: graph.add_vertex(
+                graph2.type(vertex),
+                phase=graph2.phase(vertex),
+                qubit=graph2.qubit(vertex),
+                row=graph2.row(vertex) + graph1.output_row + padding)
+            for vertex in graph2.vertices()
+        }
+
+        for edge in graph2.edges():
+            source, target = graph2.edge_st(edge)
+            graph.add_edge(graph2.edge(
+                vertex_dict[source],
+                vertex_dict[target]
+            ), edgetype=graph2.edge_type(edge))
+
+        return graph
+
+    def draw(self, as_gadgets=None, stack=None, padding: Optional[int] = 2, labels: Optional[bool] = True):
+        graph = self.graph(as_gadgets=as_gadgets, stack=stack, padding=padding)
+        zx.draw(graph, labels=labels)

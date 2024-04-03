@@ -6,9 +6,9 @@ from pyzx import VertexType
 
 from zxfermion.gates import XPhase, ZPhase
 from zxfermion import Gadget
-from zxfermion.gates.gates import XPlus, XMinus, H, CX, CZ
+from zxfermion.gates.gates import XPlus, XMinus, H, CX, CZ, PhaseVar
 from zxfermion.graphs.base_graph import BaseGraph
-from zxfermion.types import PauliType
+from zxfermion.types import PauliType, GateType
 
 
 class GadgetGraph(BaseGraph):
@@ -23,6 +23,8 @@ class GadgetGraph(BaseGraph):
             qubit=gate.qubit,
             phase=gate.phase,
             row=self.row(in_ref) + 1 if row is None else row)
+        if gate.type in [GateType.X_PHASE, GateType.Z_PHASE] and gate.var is not None:
+            self.set_vdata(ref, 'var', gate.var)
         self.remove_edge((in_ref, out_ref))
         self.connect_vertices([in_ref, ref, out_ref])
         self.set_left_padding()
@@ -92,14 +94,15 @@ class GadgetGraph(BaseGraph):
         self.set_left_padding()
         self.set_right_padding()
 
-    def add_gadget(self, gadget: Gadget, name: Optional[str] = None, stack: Optional[bool] = None):
+    def add_gadget(self, gadget: Gadget, stack: Optional[bool] = None):
         self.update_num_qubits(max(gadget.paulis) + 1)
         row = self.right_row_within(min(gadget.paulis), max(gadget.paulis)) + 1 if stack else self.right_row + 1
         offset = 0 if gadget.phase_gadget else 1
         phase = self.add_vertex(ty=VertexType.Z, row=row + offset + 1, qubit=self.num_qubits + 1, phase=gadget.phase)
         hub = self.add_vertex(ty=VertexType.X, row=row + offset + 1, qubit=self.num_qubits)
-        self.set_vdata(vertex=hub, key='name', val=name)
         self.add_edge((hub, phase))
+        if gadget.var is not None:
+            self.set_vdata(vertex=phase, key='var', val=gadget.var)
 
         for qubit, pauli in gadget.paulis.items():
             in_ref, out_ref = self.right_end(qubit), self.outputs()[qubit]
@@ -125,7 +128,7 @@ class GadgetGraph(BaseGraph):
         self.set_left_padding()
         self.set_right_padding()
 
-    def add_expanded_gadget(self, gadget: Gadget, name: Optional[str] = None, stack: Optional[bool] = False):
+    def add_expanded_gadget(self, gadget: Gadget, stack: Optional[bool] = False):
         self.update_num_qubits(max(gadget.paulis) + 1)
         in_row = self.right_row_within(min(gadget.paulis), max(gadget.paulis)) + 1 if stack else self.right_row + 1
         gadget_qubits = [qubit for qubit, pauli in gadget.paulis.items() if pauli != PauliType.I]
@@ -144,7 +147,10 @@ class GadgetGraph(BaseGraph):
 
         add_cliffords(in_row, reverse=False)
         add_cnots(len(gadget_qubits) - 1, reverse=False)
+
         phase_node = self.add(ZPhase(max(gadget_qubits), gadget.phase))
-        self.set_vdata(vertex=phase_node, key='name', val=name)
+        if gadget.var is not None:
+            self.set_vdata(vertex=phase_node, key='var', val=gadget.var)
+
         add_cnots(len(gadget_qubits) - 1, reverse=True)
         add_cliffords(in_row + depth - 1, reverse=True)

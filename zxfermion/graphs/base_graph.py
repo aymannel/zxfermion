@@ -7,10 +7,9 @@ from typing import Optional
 
 import pyzx as zx
 from pdflatex import PDFLaTeX
-from pyzx import VertexType
 from pyzx.graph.graph_s import GraphS
 
-from zxfermion.utilities import pair_list, tex_parse_tikz
+from zxfermion.utils import pair_list
 
 
 class BaseGraph(GraphS):
@@ -21,6 +20,12 @@ class BaseGraph(GraphS):
         self.set_inputs([self.add_vertex(qubit=qubit, row=0) for qubit in range(self.num_qubits)])
         self.set_outputs([self.add_vertex(qubit=qubit, row=num_rows + 1) for qubit in range(self.num_qubits)])
         self.add_edges([(self.inputs()[qubit], self.outputs()[qubit]) for qubit in range(self.num_qubits)])
+
+    def __eq__(self, other):
+        # ADD VDATA
+        other_data = other.rows(), other.qubits(), other.types()
+        self_data = self.rows(), self.qubits(), self.types()
+        return self_data == other_data
 
     def __add__(self, other):
         new = deepcopy(self)
@@ -158,7 +163,7 @@ class BaseGraph(GraphS):
                 other.type(vertex),
                 phase=other.phase(vertex),
                 qubit=other.qubit(vertex),
-                row=row + other.row(vertex))
+                row=other.row(vertex) + row)
             for vertex in other.vertices()
             if vertex not in other.boundaries
         }
@@ -187,17 +192,29 @@ class BaseGraph(GraphS):
         self.set_left_padding()
         self.set_right_padding()
 
-    def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
+    def tikz(self, name: Optional[str] = None, scale: Optional[float] = None):
+        from zxfermion.graphs import to_tikz
         Path('output/').mkdir(parents=True, exist_ok=True)
-        tex_output = tex_parse_tikz(content=self.to_tikz(), phase_row=self.num_qubits + 2, symbol=symbol, scale=scale)
+        tikz_content = to_tikz(self, scale=scale)
         if name is not None:
-            with open(f'output/{name}.tex', 'w') as file: file.write(tex_output)
-        return None if name is None else tex_output
+            with open(f'output/{name}.tikz', 'w') as file:
+                file.write(tikz_content)
+        else:
+            return tikz_content
 
-    def pdf(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None):
-        self.tikz(name=f'{name}_temp', symbol=symbol, scale=scale)
+    def tex(self, name: str, scale: Optional[float] = None):
+        Path('output/').mkdir(parents=True, exist_ok=True)
+        tikz_content = self.tikz(scale=scale)
+        with open('tikz/template.tex', 'r') as template_file:
+            tex_template = template_file.read()
+            tex_output = tex_template.replace('TIKZ_PICTURE', tikz_content.strip())
+        with open(f'output/{name}_temp.tex', 'w') as file:
+            file.write(tex_output)
+
+    def pdf(self, name: str, scale: Optional[float] = None):
+        self.tex(name=name, scale=scale)
         pdf = PDFLaTeX.from_texfile(f'output/{name}_temp.tex')
-        pdf.set_pdf_filename(f'{name}.pdf')
+        pdf.set_pdf_filename(f'{name}')
         pdf.set_output_directory('output/')
         pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
         if os.path.exists(f'output/{name}_temp.tex'):

@@ -12,10 +12,11 @@ from zxfermion.exceptions import IncompatibleGatesException
 
 
 Phase = Optional[Union[int, float]]
+PhaseVar = Optional[str]
 
 
 class BaseGate:
-    name: Optional[str]
+    var: Optional[str]
     as_gadget: Optional[bool]
     stack: Optional[bool] = False
 
@@ -42,7 +43,7 @@ class CliffordGate(FixedPhaseGate):
 
 
 class Gadget(BaseGate):
-    def __init__(self, pauli_string: str, phase: Phase = None, name: Optional[str] = None, as_gadget=True, stack=None):
+    def __init__(self, pauli_string: str, phase: Phase = None, var: PhaseVar = None, as_gadget=True, stack=None):
         pauli_string = re.sub(r'^I+|I+$', lambda match: '_' * len(match.group()), pauli_string)
         self.type = GateType.GADGET
         self.phase = 0 if phase is None else round(phase % 2, 15)
@@ -51,7 +52,7 @@ class Gadget(BaseGate):
         self.identity = self.phase_gadget and math.isclose(self.phase, 0)
         self.stack = stack if stack else self.stack
         self.as_gadget = as_gadget
-        self.name = name
+        self.var = rf'\{var}' if (var is not None and var != '') else None
 
     def __repr__(self):
         return f"Gadget(pauli_string='{self.pauli_string}', phase={self.phase})"
@@ -86,12 +87,14 @@ class Gadget(BaseGate):
     def graph(self):
         from zxfermion.graphs.gadget_graph import GadgetGraph
         graph = GadgetGraph(max(self.paulis) + 1)
-        graph.add_gadget(self, name=self.name) if self.as_gadget else graph.add_expanded_gadget(self, name=self.name)
+        graph.add_gadget(self, self.var) if self.as_gadget else graph.add_expanded_gadget(self, self.var)
+        graph.set_left_padding(1.5)
+        graph.set_right_padding(1.5)
         return graph
 
     @classmethod
     def from_gate(cls, gate: SingleQubitGate) -> Gadget:
-        return cls(pauli_string='I' * gate.qubit + 'Z', phase=gate.phase)
+        return cls(pauli_string='I' * gate.qubit + 'Z', phase=gate.phase, var=gate.var, stack=gate.stack)
 
     def to_dict(self) -> dict:
         return {'Gadget': {'pauli_string': self.pauli_string, 'phase': self.phase}}
@@ -157,11 +160,12 @@ class ControlledGate(BaseGate, SelfInverse):
 
 
 class XPhase(SingleQubitGate):
-    def __init__(self, qubit: Optional[int] = None, phase: Phase = None, **kwargs):
+    def __init__(self, qubit: Optional[int] = None, phase: Phase = None, var: PhaseVar = None, **kwargs):
         super().__init__(qubit=qubit, phase=phase, **kwargs)
         self.type = GateType.X_PHASE
         self.vertex_type = VertexType.X
         self.identity = math.isclose(self.phase, 0)
+        self.var = rf'\{var}' if (var is not None and var != '') else None
 
     def __eq__(self, other):
         if other.type == GateType.IDENTITY:
@@ -179,11 +183,12 @@ class XPhase(SingleQubitGate):
 
 
 class ZPhase(SingleQubitGate):
-    def __init__(self, qubit: Optional[int] = None, phase: Phase = None, **kwargs):
+    def __init__(self, qubit: Optional[int] = None, phase: Phase = None, var: PhaseVar = None, **kwargs):
         super().__init__(qubit=qubit, phase=phase, **kwargs)
         self.type = GateType.Z_PHASE
         self.vertex_type = VertexType.Z
         self.identity = math.isclose(self.phase, 0)
+        self.var = rf'\{var}' if (var is not None and var != '') else None
 
     def __eq__(self, other):
         if other.type == GateType.IDENTITY:

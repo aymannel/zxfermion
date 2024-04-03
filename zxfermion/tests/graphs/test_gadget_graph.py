@@ -20,6 +20,7 @@ from zxfermion.gates import X, Z, XPhase, ZPhase
 # expanded analogues of above
 # circuit consisting of various single qubit and controlled gates to check stacking
 # single qubit excitation operators + two qubit excitation operators
+# test vdata
 
 
 # GadgetGraph tests

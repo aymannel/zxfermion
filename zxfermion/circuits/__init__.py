@@ -1,1 +1,1 @@
-from .gadget_circuit import GadgetCircuit
+from .circuits import GadgetCircuit, CircuitCollection

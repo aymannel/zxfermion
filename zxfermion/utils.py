@@ -1,0 +1,42 @@
+import numpy as np
+
+
+def pair_list(items: list[int]) -> list[tuple[int, int]]:
+    return [(items[idx], items[idx + 1]) for idx in range(len(items) - 1)]
+
+
+def matrix_to_latex(array: np.array) -> str:
+    latex_str = r'\begin{pmatrix}'
+    for row in array:
+        for elem in row:
+            real_part = np.real(elem)
+            imag_part = np.imag(elem)
+            if np.isclose(imag_part, 0):
+                latex_str += f'{real_part:.0f}'
+            elif np.isclose(real_part, 0):
+                latex_str += f'{imag_part:.0f}i'
+            else:
+                latex_str += f'({real_part:.0f}{"+" if imag_part > 0 else ""}{imag_part:.0f}i)'
+            latex_str += ' & '
+        latex_str = latex_str[:-2] + r'\\'
+    latex_str = latex_str.replace('-0', '0')
+    latex_str = latex_str[:-2] + r'\end{pmatrix}'
+    return latex_str
+
+
+class Settings(object):
+    tikz_var = r'\pi'
+    tikz_scale: float = 0.5
+    tikz_classes: dict[str, str] = {
+        'boundary': 'black',
+        'x_node': 'x_node',
+        'z_node': 'z_node',
+        'x_phase': 'x_phase',
+        'z_phase': 'z_phase',
+        'hadamard': 'hadamard',
+        'hadamard_edge': 'blue_dashed',
+        'edge': '',
+    }
+
+
+settings = Settings()
