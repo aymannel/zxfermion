@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import Optional
 
 import pyzx as zx
+from IPython.core.display import Markdown
+from IPython.core.display_functions import display
 from pdflatex import PDFLaTeX
 from pyzx.graph.graph_s import GraphS
 
-from zxfermion.utils import pair_list
+from zxfermion.utils import pair_list, settings
 
 
 class BaseGraph(GraphS):
@@ -84,11 +86,11 @@ class BaseGraph(GraphS):
         default = self.inputs()[qubit] if qubit < self.num_qubits else None
         return self.vertices_on_qubit(qubit)[-1] if self.vertices_on_qubit(qubit) else default
 
-    def left_row_within(self, left: int, right: int) -> int:
-        return min(self.row(self.left_end(q)) for q in range(left, right + 1))
+    def left_row_within(self, top: int, bottom: int) -> int:
+        return min(self.row(self.left_end(q)) for q in range(top, bottom + 1))
 
-    def right_row_within(self, left: int, right: int) -> int:
-        return max(self.row(self.right_end(q)) for q in range(left, right + 1))
+    def right_row_within(self, top: int, bottom: int) -> int:
+        return max(self.row(self.right_end(q)) for q in range(top, bottom + 1))
 
     @property
     def bounded_vertices(self) -> list[int]:
@@ -152,7 +154,7 @@ class BaseGraph(GraphS):
         if num_qubits > self.num_qubits:
             self.set_num_qubits(num_qubits)
 
-    def compose(self, other: BaseGraph, stack: Optional[bool] = False):
+    def compose(self, other: BaseGraph, stack: bool = False):
         other = deepcopy(other)
         out_refs = [self.right_end(qubit) for qubit in range(self.num_qubits)]
         self.update_num_qubits(max(self.num_qubits, other.num_qubits))
@@ -192,7 +194,15 @@ class BaseGraph(GraphS):
         self.set_left_padding()
         self.set_right_padding()
 
-    def tikz(self, name: Optional[str] = None, scale: Optional[float] = None):
+    def matrix(self, return_latex=False, override_max=False):
+        if self.num_qubits < 5 or override_max:
+            latex_string = zx.matrix_to_latex(self.to_matrix())
+            display(Markdown(latex_string))
+            return latex_string if return_latex else None
+        else:
+            print(f'{2 ** self.num_qubits} x {2 ** self.num_qubits} matrix too large to compute.')
+
+    def tikz(self, name: Optional[str] = None, scale: float = settings.tikz_scale):
         from zxfermion.graphs import to_tikz
         Path('output/').mkdir(parents=True, exist_ok=True)
         tikz_content = to_tikz(self, scale=scale)
@@ -202,16 +212,15 @@ class BaseGraph(GraphS):
         else:
             return tikz_content
 
-    def tex(self, name: str, scale: Optional[float] = None):
+    def tex(self, name: str, scale: float = settings.tikz_scale):
         Path('output/').mkdir(parents=True, exist_ok=True)
         tikz_content = self.tikz(scale=scale)
         with open('tikz/template.tex', 'r') as template_file:
-            tex_template = template_file.read()
-            tex_output = tex_template.replace('TIKZ_PICTURE', tikz_content.strip())
+            tex_output = template_file.read().replace('TIKZ_PICTURE', tikz_content.strip())
         with open(f'output/{name}_temp.tex', 'w') as file:
             file.write(tex_output)
 
-    def pdf(self, name: str, scale: Optional[float] = None):
+    def pdf(self, name: str, scale: float = settings.tikz_scale):
         self.tex(name=name, scale=scale)
         pdf = PDFLaTeX.from_texfile(f'output/{name}_temp.tex')
         pdf.set_pdf_filename(f'{name}')
@@ -220,5 +229,5 @@ class BaseGraph(GraphS):
         if os.path.exists(f'output/{name}_temp.tex'):
             os.remove(f'output/{name}_temp.tex')
 
-    def draw(self, labels=False):
+    def draw(self, labels: bool = settings.labels):
         zx.draw(self, labels=labels)

@@ -16,12 +16,12 @@ tikz_template = r"""
 """
 
 
-def to_tikz(graph: BaseGraph, scale: Optional[float] = None) -> str:
+def to_tikz(graph: BaseGraph, scale: float) -> str:
     max_index = 0
     vertices = []
     for vertex in graph.vertices():
-        phase = graph.phase(vertex)
         type = graph.type(vertex)
+        phase = graph.phase(vertex)
         if type == VertexType.BOUNDARY:
             style = settings.tikz_classes['boundary']
         elif type == VertexType.H_BOX:
@@ -76,5 +76,4 @@ def to_tikz(graph: BaseGraph, scale: Optional[float] = None) -> str:
         s += "({:d}) to ({:d});".format(source, target)
         edges.append(s)
 
-    scale = settings.tikz_scale if scale is None else scale
     return tikz_template.format(scale=scale, vertices='\n'.join(vertices), edges='\n'.join(edges))

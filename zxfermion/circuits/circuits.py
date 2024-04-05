@@ -10,7 +10,7 @@ from zxfermion import Gadget, BaseGraph
 from zxfermion.graphs.gadget_graph import GadgetGraph
 from zxfermion.tableaus.tableau import Tableau
 from zxfermion.types import GateType
-from zxfermion.utils import matrix_to_latex
+from zxfermion.utils import settings
 
 
 class GadgetCircuit:
@@ -36,13 +36,13 @@ class GadgetCircuit:
             if gadget.type == GateType.GADGET else gadget
             for gadget in self.gates[start:end]]
         self.gates[start:end] = [copy(gate), *new_gadgets, copy(gate.inverse)]
+        # self.gates[start:end] = new_gadgets
 
-    def graph(self, as_gadgets=None, stack=None) -> GadgetGraph:
+    def graph(self, as_gadgets: bool = None, stack: bool = settings.stack) -> GadgetGraph:
         graph = GadgetGraph(num_qubits=self.num_qubits)
         for gate in self.gates:
             gate.as_gadget = gate.as_gadget if as_gadgets is None else as_gadgets
-            gate.stack = gate.stack if stack is None else stack
-            graph.compose(gate.graph, stack=gate.stack)
+            graph.compose(gate.graph, stack=gate.stack if stack is None else stack)
         return graph
 
     def simplify(self, gates: Optional[list] = None) -> list:
@@ -50,22 +50,16 @@ class GadgetCircuit:
         # return [key for key, group in groupby(gates if gates else self.gates) if len(list(group)) % 2]
         return gates if gates else self.gates
 
-    def matrix(self, return_latex=False, override_max=False):  # use pyzx matrix_to_latex() method here
-        if self.num_qubits <= 5 or override_max:
-            matrix = self.graph(as_gadgets=False).to_matrix()
-            latex_string = matrix_to_latex(matrix)
-            display(Markdown(latex_string))
-            return latex_string if return_latex else None
-        else:
-            print(f'{2 ** self.num_qubits} x {2 ** self.num_qubits} matrix too large to compute.')
+    def matrix(self, return_latex=False, override_max=False):
+        return self.graph().matrix(return_latex=return_latex, override_max=override_max)
 
-    def draw(self, labels=False, **kwargs):
-        zx.draw(self.graph(**kwargs), labels=labels)
+    def draw(self, as_gadgets: bool = None, stack: bool = settings.stack, labels: bool = False):
+        zx.draw(self.graph(as_gadgets=as_gadgets, stack=stack), labels=labels)
 
-    def tikz(self, name: Optional[str] = None, symbol: Optional[str] = None, scale: Optional[float] = None, **kwargs):
+    def tikz(self, name: Optional[str] = None, scale: float = settings.tikz_scale, **kwargs):
         return self.graph(**kwargs).tikz(name=name, scale=scale)
 
-    def pdf(self, name: str, symbol: Optional[str] = None, scale: Optional[float] = 0.5, **kwargs):
+    def pdf(self, name: str, scale: float = settings.tikz_scale, **kwargs):
         return self.graph(**kwargs).pdf(name=name, scale=scale)
 
     def to_dict(self) -> list[dict[str, str | int | float]]:
