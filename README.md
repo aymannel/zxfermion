@@ -8,6 +8,12 @@
 - [3) Documentation](#documentation)
   - [BaseGraph](#class-basegraph)
   - [GadgetGraph](#class-gadgetgraph)
+  - [Tableau](#class-tableau)
+  - [GadgetCircuit](#class-gadgetcircuit)
+  - [CX](#class-cxcontrol-int-target-int)
+  - [CZ](#class-czcontrol-int-target-int)
+  - [X](#class-xqubit-int)
+  - [Z](#class-zqubit-int)
 
 ## What is ZxFermion?
 ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io/en/latest/) designed for the manipulation and visualisation of circuits of Pauli gadgets. With built-in Clifford tableau logic using [Stim](https://github.com/quantumlib/Stim), ZxFermion allows users to quickly implement proofs and test ideas.
@@ -181,8 +187,21 @@ gadget.draw()
 - Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates.
 - Built on top of [Stim](https://github.com/quantumlib/Stim).
 
+#### _class_ `GadgetCircuit`
+- Class for representing circuits of Pauli gadgets and other quantum gates.
+
 #### _class_ `Gadget`
 - Class for representing Pauli gadgets.
 
-#### _class_ `GadgetCircuit`
-- Class for representing circuits of Pauli gadgets and other quantum gates.
+#### _class_ `CX(control: int, target: int)`
+- Class for representing the CX gate.
+
+#### _class_ `CZ(control: int, target: int)`
+- Class for representing the CZ gate.
+
+#### _class_ `X(qubit: int)`
+- Class for representing the X gate.
+
+#### _class_ `Z(qubit: int)`
+- Class for representing the Z gate.
+
