@@ -149,7 +149,7 @@ gadget.draw()
 - Return type: `None`
 
 ##### _method_ `compose(other: BaseGraph, stack: bool = False)`
-- Overrides the PyZX `GraphS` compose method to allow for the adding of graphs with different number of qubits.
+- Overrides the `pyzx.GraphS.compose()` to allow addition of graphs of different dimension.
 - Setting `stack` parameter as `True` will stack graphs acting on disjoint set of qubits. 
 - Return type: `None`
 
