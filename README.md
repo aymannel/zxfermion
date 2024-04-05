@@ -41,46 +41,6 @@ gadget.draw()
 
 ## Documentation
 
-#### `BaseGraph.qubits()` method
-
-#### `BaseGraph.rows()` method
-
-#### `BaseGraph.inputs()` method
-
-#### `BaseGraph.outputs()` method
-
-#### `BaseGraph.qubits()` method
-
-#### `BaseGraph.num_inputs()` method
-
-#### `BaseGraph.num_outsputs()` method
-
-#### `BaseGraph.num_vertices()` method
-
-#### `BaseGraph.num_edges()` method
-
-#### `BaseGraph.set_inputs()` method
-
-#### `BaseGraph.set_outputs()` method
-
-#### `BaseGraph.add_vertex()` method
-
-#### `BaseGraph.add_edge()` method
-
-#### `BaseGraph.row()` method
-
-#### `BaseGraph.qubit()` method
-
-#### `BaseGraph.type()` method
-
-#### `BaseGraph.phase()` method
-
-#### `BaseGraph.connected()` method
-
-#### `BaseGraph.remove_vertex()` method
-
-#### `BaseGraph.remove_edge()` method
-
 ### `BaseGraph` class
 The `BaseGraph` class extends the PyZX `GraphS` class. It implements a number of useful methods and properties handling ZX diagrams.
 
@@ -170,6 +130,65 @@ Return type: `int | float`
 
 #### `BaseGraph.draw(labels: bool = False)` method
 
+#### `BaseGraph.qubits()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.rows()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.inputs()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.outputs()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.qubits()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.num_inputs()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.num_outsputs()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.num_vertices()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.num_edges()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.set_inputs()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.set_outputs()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.add_vertex()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.add_edge()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.row()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.qubit()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.type()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.phase()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.connected()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.remove_vertex()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+
+#### `BaseGraph.remove_edge()` method
+Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ### GadgetGraph
 
