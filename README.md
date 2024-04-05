@@ -46,46 +46,57 @@ The `BaseGraph` class extends the PyZX `GraphS` class. It implements a number of
 
 #### `BaseGraph.min_qubit` property
 Returns the minimum qubit of the current graph.
+
 Return type: `int`
 
 #### `BaseGraph.max_qubit` property
 Returns the maximum qubit of the current graph.
+
 Return type: `int`
 
 #### `BaseGraph.input_row` property
 Returns the input row index of the current graph.
+
 Return type: `int`
 
 #### `BaseGraph.output_row` property
 Returns the output row index of the current graph.
+
 Return type: `int | float`
 
 #### `BaseGraph.left_row` property
 Returns the leftmost row index of the current graph
+
 Return type: `int | float`
 
 #### `BaseGraph.right_row` property
 Returns the rightmost row index of the current graph
+
 Return type: `int | float`
 
 #### `BaseGraph.left_padding` property
 Returns the left padding (separation between `BaseGraph.input_row` and `BaseGraph.left_row`) of the current graph.
+
 Return type: `int | float`
 
 #### `BaseGraph.right_padding` property
 Returns the right padding (separation between `BaseGraph.output_row` and `BaseGraph.right_row`) of the current graph.
+
 Return type: `int | float`
 
 #### `BaseGraph.boundaries` property
 Returns the combined vertex indices of the inputs and outputs of the current graph.
+
 Return type: `list[int]`
 
 #### `BaseGraph.graph_rows` property
 Returns the row indices of the current graph (from `BaseGraph.left_row` to `BaseGraph.right_row` inclusive).
+
 Return type: `list[int]`
 
 #### `BaseGraph.graph_depth` property
 Returns the depth of the current graph from `BaseGraph.input_row` to `BaseGraph.output_row` (excluding vertices outside of graph bounds).
+
 Return type: `int | float`
 
 #### `BaseGraph.left_end(qubit: int)` method
