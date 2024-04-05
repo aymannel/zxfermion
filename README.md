@@ -43,7 +43,8 @@ gadget.draw()
 ## Documentation
 
 #### _class_ `BaseGraph`
-- The `BaseGraph` class extends the PyZX `GraphS` class. It implements a number of useful methods for handling ZX diagrams.
+- Extends the `pyzx.GraphS` class, implementing a number of additional methods for handling ZX diagrams.
+- Please see the [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph) for other essential methods.
 
 ##### _property_ `min_qubit`
 - Returns the minimum qubit of the current graph.
@@ -163,83 +164,14 @@ gadget.draw()
 
 ##### _method_ `draw(labels: bool = False)`
 
-##### _method_ `qubits()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `list[int]`
-
-##### _method_ `rows()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `list[int]`
-
-##### _method_ `inputs()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `list[int]`
-
-##### _method_ `outputs()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `list[int]`
-
-##### _method_ `num_inputs()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int`
-
-##### _method_ `num_outsputs()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int`
-
-##### _method_ `num_vertices()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int`
-
-##### _method_ `num_edges()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int`
-
-##### _method_ `set_inputs()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `None`
-
-##### _method_ `set_outputs()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `None`
-
-##### _method_ `add_vertex()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int`
-
-##### _method_ `add_edge()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-
-##### _method_ `row()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int | float`
-
-##### _method_ `qubit()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int`
-
-##### _method_ `type()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int`
-
-##### _method_ `phase()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `int | float`
-
-##### _method_ `connected()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `bool`
-
-##### _method_ `remove_vertex()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `None`
-
-##### _method_ `remove_edge()`
-- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
-- Return type: `None`
-
 ### _class_ `GadgetGraph`
+- Inherits from the `zxfermion.BaseGraph` class (see above). It implements methods for handling the graphing of the `Gadget` class and other quantum gates.
+
+### _class_ `Tableau`
+- Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates. Built on top of [Stim](https://github.com/quantumlib/Stim).
 
 ### _class_ `Gadget`
+- Class for representing Pauli gadgets.
 
 ### _class_ `GadgetCircuit`
+- Class for representing circuits of Pauli gadgets and other quantum gates.
