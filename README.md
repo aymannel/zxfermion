@@ -49,54 +49,44 @@ gadget.draw()
 - Return type: `int`
 
 ##### _property_ `max_qubit`
-Returns the maximum qubit of the current graph.
-
-Return type: `int`
+- Returns the maximum qubit of the current graph.
+- Return type: `int`
 
 ##### _property_ `input_row`
-Returns the input row index of the current graph.
-
-Return type: `int`
+- Returns the input row index of the current graph.
+- Return type: `int`
 
 ##### _property_ `output_row`
-Returns the output row index of the current graph.
-
-Return type: `int | float`
+- Returns the output row index of the current graph.
+- Return type: `int | float`
 
 ##### _property_ `left_row`
-Returns the leftmost row index of the current graph
-
-Return type: `int | float`
+- Returns the leftmost row index of the current graph
+- Return type: `int | float`
 
 ##### _property_ `right_row`
-Returns the rightmost row index of the current graph
-
-Return type: `int | float`
+- Returns the rightmost row index of the current graph
+- Return type: `int | float`
 
 ##### _property_ `left_padding`
-Returns the left padding (separation between `BaseGraph.input_row` and `BaseGraph.left_row`) of the current graph.
-
-Return type: `int | float`
+- Returns the left padding (separation between `BaseGraph.input_row` and `BaseGraph.left_row`) of the current graph.
+- Return type: `int | float`
 
 ##### _property_ `right_padding`
-Returns the right padding (separation between `BaseGraph.output_row` and `BaseGraph.right_row`) of the current graph.
-
-Return type: `int | float`
+- Returns the right padding (separation between `BaseGraph.output_row` and `BaseGraph.right_row`) of the current graph.
+- Return type: `int | float`
 
 ##### _property_ `boundaries`
-Returns the combined vertex indices of the inputs and outputs of the current graph.
-
-Return type: `list[int]`
+- Returns the combined vertex indices of the inputs and outputs of the current graph.
+- Return type: `list[int]`
 
 ##### _property_ `graph_rows`
-Returns the row indices of the current graph (from `BaseGraph.left_row` to `BaseGraph.right_row` inclusive).
-
-Return type: `list[int]`
+- Returns the row indices of the current graph (from `BaseGraph.left_row` to `BaseGraph.right_row` inclusive).
+- Return type: `list[int]`
 
 ##### _property_ `graph_depth`
-Returns the depth of the current graph from `BaseGraph.input_row` to `BaseGraph.output_row` (excluding vertices outside of graph bounds).
-
-Return type: `int | float`
+- Returns the depth of the current graph from `BaseGraph.input_row` to `BaseGraph.output_row` (excluding vertices outside of graph bounds).
+- Return type: `int | float`
 
 ##### _method_ `left_end(qubit: int)`
 
@@ -141,64 +131,64 @@ Return type: `int | float`
 ##### _method_ `draw(labels: bool = False)`
 
 ##### _method_ `qubits()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `rows()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `inputs()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `outputs()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `qubits()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `num_inputs()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `num_outsputs()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `num_vertices()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `num_edges()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `set_inputs()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `set_outputs()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `add_vertex()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `add_edge()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `row()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `qubit()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `type()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `phase()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `connected()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `remove_vertex()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _method_ `remove_edge()`
-Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
+- Inherits from PyZX `GraphS` class. See [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ### GadgetGraph
 
