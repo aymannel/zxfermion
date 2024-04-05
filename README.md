@@ -154,14 +154,24 @@ gadget.draw()
 - Return type: `None`
 
 ##### _method_ `matrix(return_latex: bool = False, override_max: bool = False)`
+- Displays a latex matrix for the current gate, `Gadget` or `GadgetCircuit`.
+- Return type: `str | None`
 
 ##### _method_ `tikz(name: Optional[str] = None, scale: float = 0.5)`
+- Generates a tikz file for the current gate, `Gadget` or `GadgetCircuit`.
+- Return type: `str | None`
 
 ##### _method_ `tex(name: Optional[str] = None, scale: float = 0.5)`
+- Generates a tex file for the current gate, `Gadget` or `GadgetCircuit`.
+- Return type: `None`
 
 ##### _method_ `pdf(name: Optional[str] = None, scale: float = 0.5)`
+- Generates a pdf file for the current gate, `Gadget` or `GadgetCircuit`.
+- Return type: `None`
 
 ##### _method_ `draw(labels: bool = False)`
+- Draws the current gate, `Gadget` or `GadgetCircuit`.
+- Return type: `None`
 
 ### _class_ `GadgetGraph`
 - Inherits from the `zxfermion.BaseGraph` class (see above).
