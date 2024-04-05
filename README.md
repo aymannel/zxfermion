@@ -173,16 +173,16 @@ gadget.draw()
 - Draws the current gate, `Gadget` or `GadgetCircuit`.
 - Return type: `None`
 
-### _class_ `GadgetGraph`
+#### _class_ `GadgetGraph`
 - Inherits from the `zxfermion.BaseGraph` class (see above).
 - Implements methods for handling the graphing of the `Gadget` class and other quantum gates.
 
-### _class_ `Tableau`
+#### _class_ `Tableau`
 - Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates.
 - Built on top of [Stim](https://github.com/quantumlib/Stim).
 
-### _class_ `Gadget`
+#### _class_ `Gadget`
 - Class for representing Pauli gadgets.
 
-### _class_ `GadgetCircuit`
+#### _class_ `GadgetCircuit`
 - Class for representing circuits of Pauli gadgets and other quantum gates.
