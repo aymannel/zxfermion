@@ -81,7 +81,8 @@ gadget.draw()
 - Return type: `list[int | float]`
 
 ##### _property_ `graph_depth`
-- Returns the depth of the current graph from `input_row` to `output_row` (excluding vertices outside of graph bounds).
+- Returns the depth of the current graph from `input_row` to `output_row`.
+- Excludes vertices outside of graph bounds.
 - Return type: `int | float`
 
 ##### _method_ `left_end(qubit: int)`
@@ -101,11 +102,13 @@ gadget.draw()
 - Return type: `int | float`
 
 ##### _property_ `bounded_vertices`
-- Returns the vertex indices of the graph excluding the input and outputs vertices and excluding vertices positioned outside the graph bounds (greater/less than min/max qubits.)
+- Returns the vertex indices of the graph excluding vertices positioned outside the graph bounds.
+- Excludes input and outputs vertices.
 - Return type: `list[int]`
 
 ##### _property_ `unbounded_vertices`
-- Returns the vertex indices of the graph positioned outside the graph bounds (greater/less than min/max qubits) excluding the input and outputs vertices.
+- Returns the vertex indices of the graph positioned outside the graph bounds.
+- Excludes input and outputs vertices.
 - Return type: `list[int]`
 
 ##### _method_ `vertices_on_qubit(qubit: int)`
@@ -137,7 +140,8 @@ gadget.draw()
 - Return type: `None`
 
 ##### _method_ `set_num_qubits(num_qubits: int)`
-- Sets the number of qubits for the graph whilst maintaining the first `2 * num_qubits` vertex indices as the input and output indices.
+- Sets the number of qubits for the graph.
+- Maintains first `2 * num_qubits` vertex indices as the input and output indices.
 - Return type: `None`
 
 ##### _method_ `update_num_qubits(num_qubits: int)`
@@ -145,7 +149,8 @@ gadget.draw()
 - Return type: `None`
 
 ##### _method_ `compose(other: BaseGraph, stack: bool = False)`
-- Overrides the PyZX `GraphS` compose method to allow for the adding of graphs with different number of qubits. Setting the `stack` parameter as `True` will stack graphs acting on disjoint set of qubits. 
+- Overrides the PyZX `GraphS` compose method to allow for the adding of graphs with different number of qubits.
+- Setting `stack` parameter as `True` will stack graphs acting on disjoint set of qubits. 
 - Return type: `None`
 
 ##### _method_ `matrix(return_latex: bool = False, override_max: bool = False)`
@@ -159,10 +164,12 @@ gadget.draw()
 ##### _method_ `draw(labels: bool = False)`
 
 ### _class_ `GadgetGraph`
-- Inherits from the `zxfermion.BaseGraph` class (see above). It implements methods for handling the graphing of the `Gadget` class and other quantum gates.
+- Inherits from the `zxfermion.BaseGraph` class (see above).
+- Implements methods for handling the graphing of the `Gadget` class and other quantum gates.
 
 ### _class_ `Tableau`
-- Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates. Built on top of [Stim](https://github.com/quantumlib/Stim).
+- Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates.
+- Built on top of [Stim](https://github.com/quantumlib/Stim).
 
 ### _class_ `Gadget`
 - Class for representing Pauli gadgets.
