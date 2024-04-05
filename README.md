@@ -69,11 +69,11 @@ gadget.draw()
 - Return type: `int | float`
 
 ##### _property_ `left_padding`
-- Returns the left padding (separation between `BaseGraph.input_row` and `BaseGraph.left_row`) of the current graph.
+- Returns the left padding (separation between `input_row` and `left_row`) of the current graph.
 - Return type: `int | float`
 
 ##### _property_ `right_padding`
-- Returns the right padding (separation between `BaseGraph.output_row` and `BaseGraph.right_row`) of the current graph.
+- Returns the right padding (separation between `output_row` and `right_row`) of the current graph.
 - Return type: `int | float`
 
 ##### _property_ `boundaries`
@@ -81,11 +81,11 @@ gadget.draw()
 - Return type: `list[int]`
 
 ##### _property_ `graph_rows`
-- Returns the row indices of the current graph (from `BaseGraph.left_row` to `BaseGraph.right_row` inclusive).
+- Returns the row indices of the current graph (from `left_row` to `right_row` inclusive).
 - Return type: `list[int]`
 
 ##### _property_ `graph_depth`
-- Returns the depth of the current graph from `BaseGraph.input_row` to `BaseGraph.output_row` (excluding vertices outside of graph bounds).
+- Returns the depth of the current graph from `input_row` to `output_row` (excluding vertices outside of graph bounds).
 - Return type: `int | float`
 
 ##### _method_ `left_end(qubit: int)`
