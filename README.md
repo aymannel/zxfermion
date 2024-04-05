@@ -8,8 +8,9 @@
 - [3) Documentation](#documentation)
   - [BaseGraph](#class-basegraph)
   - [GadgetGraph](#class-gadgetgraph)
-  - [Tableau](#class-tableau)
   - [GadgetCircuit](#class-gadgetcircuit)
+  - [Tableau](#class-tableau)
+  - [Gadget](#class-gadget)
   - [CX](#class-cxcontrol-int-target-int) & [CZ](#class-czcontrol-int-target-int)
   - [X](#class-xqubit-int) & [Z](#class-zqubit-int)
 
