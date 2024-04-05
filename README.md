@@ -49,7 +49,7 @@ Returns the minimum qubit of the current graph.
 
 Return type: `int`
 
-#### Property `max_qubit`
+#### _property_ `max_qubit`
 Returns the maximum qubit of the current graph.
 
 Return type: `int`
