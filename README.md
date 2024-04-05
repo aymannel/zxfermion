@@ -5,8 +5,6 @@
 - [1) What is ZxFermion?](#what-is-zxfermion?)
 - [2) Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
-  - [Creating Circuits of Gadgets](#creating-circuits-of-gadgets)
-  - [Working with Cliffords](#working-with-cliffords)
 - [3) Documentation](#documentation)
   - [BaseGraph](#class-basegraph)
   - [GadgetGraph](#class-gadgetgraph)
@@ -35,10 +33,6 @@ By default gadgets are represented in the following more compact form.
 gadget = Gadget('YZX', phase=1/2, as_gadget=True)
 gadget.draw()
 ```
-
-### Creating circuits of gadgets
-
-### Working with Cliffords
 
 ## Documentation
 
