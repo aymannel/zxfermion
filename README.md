@@ -10,10 +10,8 @@
   - [GadgetGraph](#class-gadgetgraph)
   - [Tableau](#class-tableau)
   - [GadgetCircuit](#class-gadgetcircuit)
-  - [CX](#class-cxcontrol-int-target-int)
-  - [CZ](#class-czcontrol-int-target-int)
-  - [X](#class-xqubit-int)
-  - [Z](#class-zqubit-int)
+  - [CX](#class-cxcontrol-int-target-int) & [CZ](#class-czcontrol-int-target-int)
+  - [X](#class-xqubit-int) & [Z](#class-zqubit-int)
 
 ## What is ZxFermion?
 ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io/en/latest/) designed for the manipulation and visualisation of circuits of Pauli gadgets. With built-in Clifford tableau logic using [Stim](https://github.com/quantumlib/Stim), ZxFermion allows users to quickly implement proofs and test ideas.
