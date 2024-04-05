@@ -38,7 +38,7 @@ gadget.draw()
 
 #### _class_ `BaseGraph`
 - Extends the `pyzx.GraphS` class. Implements a number of additional methods for handling ZX diagrams.
-- Please see the [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph) for other essential methods.
+- Please see the [PyZX documentation](https://pyzx.readthedocs.io/en/latest/api.html#pyzx.graph.base.BaseGraph).
 
 ##### _property_ `min_qubit`
 - Returns the minimum qubit of the current graph.
