@@ -42,12 +42,11 @@ gadget.draw()
 ## Documentation
 
 #### `BaseGraph` class
-The `BaseGraph` class extends the PyZX `GraphS` class. It implements a number of useful methods and properties handling ZX diagrams.
+- The `BaseGraph` class extends the PyZX `GraphS` class. It implements a number of useful methods and properties handling ZX diagrams.
 
 ##### _property_ `min_qubit`
-Returns the minimum qubit of the current graph.
-
-Return type: `int`
+- Returns the minimum qubit of the current graph.
+- Return type: `int`
 
 ##### _property_ `max_qubit`
 Returns the maximum qubit of the current graph.
