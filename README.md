@@ -203,4 +203,3 @@ gadget.draw()
 
 ##### _class_ `Z(qubit: int)`
 - Class for representing the Z gate.
-
