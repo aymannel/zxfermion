@@ -28,15 +28,48 @@ The following diagrams were all made using ZxFermion.
 ```python
 from zxfermion import Gadget
 
-gadget = Gadget('YZX', as_gadget=False)
+gadget = Gadget('YZX', phase=1/2, var='theta', as_gadget=False)
 gadget.graph.draw()
 ```
+
 ![expanded_yzzx_gadget](figures/expanded_yzzx_gadget.png)
 
 By default gadgets are represented in the following more compact form.
 ```python
-gadget = Gadget('YZX', phase=1/2, as_gadget=True)
-gadget.draw()
+gadget = Gadget('YZX', phase=1/2, var='theta')
+gadget.graph.draw()
+```
+
+```python
+from zxfermion import GadgetCircuit
+
+gadget1 = Gadget('YZX', phase=1/2, var='theta')
+gadget2 = Gadget('XZY', phase=1/2, var='phi')
+circuit = GadgetCircuit([gadget1, gadget2])
+circuit.draw()
+```
+
+```python
+gadget1 = Gadget('YZX', phase=1/2, var='theta')
+gadget2 = Gadget('XZY', phase=1/2, var='phi')
+circuit = GadgetCircuit([gadget1, gadget2])
+circuit.draw(as_gadgets=False)
+```
+
+```python
+gadgets = [
+    Gadget('YXXX', phase=1/4, var='theta'),
+    Gadget('XYXX', phase=1/4, var='theta'),
+    Gadget('XXYX', phase=-1/4, var='theta'),
+    Gadget('YYYX', phase=-1/4, var='theta'),
+    Gadget('YYXY', phase=1/4, var='theta'),
+    Gadget('XXXY', phase=1/4, var='theta'),
+    Gadget('XYYY', phase=-1/4, var='theta'),
+    Gadget('YXYY', phase=-1/4, var='theta')
+]
+
+circuit1 = GadgetCircuit(gadgets)
+circuit1.draw()
 ```
 
 ## Documentation
