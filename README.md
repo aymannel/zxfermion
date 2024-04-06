@@ -32,7 +32,7 @@ gadget = Gadget('YZX', phase=1/2, var='theta', as_gadget=False)
 gadget.graph.draw()
 ```
 
-![expanded_yzzx_gadget](figures/expanded_yzzx_gadget.png)
+![expanded_yzzx_gadget](figures/base.png)
 
 By default gadgets are represented in the following more compact form.
 ```python
