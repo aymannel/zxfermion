@@ -31,14 +31,14 @@ from zxfermion import Gadget
 gadget = Gadget('YZX', phase=1/2, var='theta', as_gadget=False)
 gadget.graph.draw()
 ```
-
-![expanded_yzzx_gadget](figures/base.png)
+![](figures/readme1.png)
 
 By default gadgets are represented in the following more compact form.
 ```python
 gadget = Gadget('YZX', phase=1/2, var='theta')
 gadget.graph.draw()
 ```
+![](figures/readme2.png)
 
 ```python
 from zxfermion import GadgetCircuit
@@ -48,6 +48,7 @@ gadget2 = Gadget('XZY', phase=1/2, var='phi')
 circuit = GadgetCircuit([gadget1, gadget2])
 circuit.draw()
 ```
+![](figures/readme3.png)
 
 ```python
 gadget1 = Gadget('YZX', phase=1/2, var='theta')
@@ -55,6 +56,7 @@ gadget2 = Gadget('XZY', phase=1/2, var='phi')
 circuit = GadgetCircuit([gadget1, gadget2])
 circuit.draw(as_gadgets=False)
 ```
+![](figures/readme4.png)
 
 ```python
 gadgets = [
@@ -71,6 +73,7 @@ gadgets = [
 circuit1 = GadgetCircuit(gadgets)
 circuit1.draw()
 ```
+![](figures/readme5.png)
 
 ## Documentation
 
