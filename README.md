@@ -27,7 +27,6 @@ The following diagrams were all made using ZxFermion.
 ### Creating Pauli gadgets
 ```python
 from zxfermion import Gadget
-
 gadget = Gadget('YZX', phase=1/2, var='theta', as_gadget=False)
 gadget.graph.draw()
 ```
@@ -42,7 +41,6 @@ gadget.graph.draw()
 
 ```python
 from zxfermion import GadgetCircuit
-
 gadget1 = Gadget('YZX', phase=1/2, var='theta')
 gadget2 = Gadget('XZY', phase=1/2, var='phi')
 circuit = GadgetCircuit([gadget1, gadget2])
