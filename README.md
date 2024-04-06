@@ -25,10 +25,9 @@ The following diagrams were all made using ZxFermion.
 ## Getting Started
 
 ### Creating Pauli gadgets
-To begin... Then to export to pdf, run `gadget.pdf('file_name')`.
-
 ```python
 from zxfermion import Gadget
+
 gadget = Gadget('YZX', as_gadget=False)
 gadget.graph.draw()
 ```
