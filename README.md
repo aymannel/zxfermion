@@ -58,23 +58,6 @@ circuit.draw(as_gadgets=False)
 ```
 ![](figures/readme4.png)
 
-```python
-gadgets = [
-    Gadget('YXXX', phase=1/4, var='theta'),
-    Gadget('XYXX', phase=1/4, var='theta'),
-    Gadget('XXYX', phase=-1/4, var='theta'),
-    Gadget('YYYX', phase=-1/4, var='theta'),
-    Gadget('YYXY', phase=1/4, var='theta'),
-    Gadget('XXXY', phase=1/4, var='theta'),
-    Gadget('XYYY', phase=-1/4, var='theta'),
-    Gadget('YXYY', phase=-1/4, var='theta')
-]
-
-circuit1 = GadgetCircuit(gadgets)
-circuit1.draw()
-```
-![](figures/readme5.png)
-
 ## Documentation
 
 #### _class_ `BaseGraph`
