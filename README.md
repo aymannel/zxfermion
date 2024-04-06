@@ -38,7 +38,7 @@ By default gadgets are represented in the following more compact form.
 gadget = Gadget('YZX', phase=1/2, var='theta')
 gadget.graph.draw()
 ```
-![](figures/see.png)
+![](figures/readme2.png)
 
 ```python
 from zxfermion import GadgetCircuit
