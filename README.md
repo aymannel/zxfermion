@@ -32,14 +32,14 @@ from zxfermion import Gadget
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
 ```
-![](figures/readme2.png)
+![](figures/readme1.png)
 
 Setting `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
 ```python
 gadget = Gadget('YZX', phase=1/2, as_gadget=False)
 gadget.draw()
 ```
-![](figures/readme1.png)
+![](figures/readme2.png)
 
 ### Creating circuits of Pauli gadgets
 Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter allows users to specify the symbol for the gadget phase when rendering PDF figures.
@@ -67,6 +67,7 @@ from zxfermion.gates import CX, CZ, X, XPhase, ZPhase
 circuit = GadgetCircuit([CX(0, 1), CZ(1, 2), X(1), ZPhase(0, 3/4), XPhase(0, 1/2), CX(0, 2), CX(0, 1), CZ(1, 2)])
 circuit.draw(stack=True)
 ```
+![](figures/readme5.png)
 
 ### Analysis of Quantum Stabiliser Circuits
 Using [Stim](https://github.com/quantumlib/Stim) as a backend, users can easily observe the effect of Pauli and Clifford gates on Pauli gadgets. Consider the following circuit of Pauli gadgets, which represents a paired double excitation operator.
