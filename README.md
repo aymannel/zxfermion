@@ -84,7 +84,7 @@ circuit = GadgetCircuit([
 ])
 circuit.draw()
 ```
-![](figures/readme6s.png)
+![](figures/readme6.png)
 
 It is easy to show that conjugating the circuit by controlled-not gates yields a triply-controlled rotation.
 ```python
