@@ -8,6 +8,7 @@
 - [2) Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
   - [Creating Circuits of Gadgets](#creating-circuits-of-pauli-gadgets)
+  - [Analysis of Quantum Stabiliser Circuits](#analysis-of-quantum-stabiliser-circuits)
 - [3) Documentation](#documentation)
   - [BaseGraph](#class-basegraph)
   - [GadgetGraph](#class-gadgetgraph)
@@ -67,6 +68,7 @@ circuit = GadgetCircuit([CX(0, 1), CZ(1, 2), X(1), ZPhase(0, 3/4), XPhase(0, 1/2
 circuit.draw(stack=True)
 ```
 
+### Analysis of Quantum Stabiliser Circuits
 Using [Stim](https://github.com/quantumlib/Stim) as a backend, users can easily observe the effect of Pauli and Clifford gates on Pauli gadgets. Consider the following circuit of Pauli gadgets, which represents a paired double excitation operator.
 ```python
 circuit = GadgetCircuit([
