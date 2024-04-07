@@ -10,12 +10,12 @@
   - [Creating Circuits of Gadgets](#creating-circuits-of-pauli-gadgets)
   - [Analysis of Quantum Stabiliser Circuits](#analysis-of-quantum-stabiliser-circuits)
 - [3) Documentation](#documentation)
-  - [BaseGraph](#class-basegraph)
-  - [GadgetGraph](#class-gadgetgraph)
-  - [GadgetCircuit](#class-gadgetcircuit)
-  - [Tableau](#class-tableau)
-  - [Gadget](#class-gadget)
   - [Gates](#gates)
+  - [Gadget](#class-gadget)
+  - [GadgetCircuit](#class-gadgetcircuit)
+  - [GadgetGraph](#class-gadgetgraph)
+  - [BaseGraph](#class-basegraph)
+  - [Tableau](#class-tableau)
 
 ## What is ZxFermion?
 ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io/en/latest/) designed for the manipulation and visualisation of circuits of Pauli gadgets. With built-in Clifford tableau logic using [Stim](https://github.com/quantumlib/Stim), ZxFermion allows users to quickly implement proofs and test ideas.
@@ -32,14 +32,14 @@ from zxfermion import Gadget
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
 ```
-![](figures/readme1s.png)
+![](figures/readme1.png)
 
 Setting `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
 ```python
 gadget = Gadget('YZX', phase=1/2, as_gadget=False)
 gadget.draw()
 ```
-![](figures/readme2s.png)
+![](figures/readme2.png)
 
 ### Creating circuits of Pauli gadgets
 Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter allows users to specify the symbol for the gadget phase when rendering PDF figures.
@@ -96,6 +96,25 @@ circuit.draw()
 ![](figures/readme7.png)
 
 ## Documentation
+
+#### Gates
+##### _class_ `CX(control: int, target: int)`
+- Class for representing the CX gate.
+
+##### _class_ `CZ(control: int, target: int)`
+- Class for representing the CZ gate.
+
+##### _class_ `X(qubit: int)`
+- Class for representing the X gate.
+
+##### _class_ `Z(qubit: int)`
+- Class for representing the Z gate.
+
+#### _class_ `Gadget`
+- Class for representing Pauli gadgets.
+
+#### _class_ `GadgetCircuit`
+- Class for representing circuits of Pauli gadgets and other quantum gates.
 
 #### _class_ `BaseGraph`
 - Extends the `pyzx.GraphS` class. Implements a number of additional methods for handling ZX diagrams.
@@ -242,21 +261,3 @@ circuit.draw()
 - Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates.
 - Built on top of [Stim](https://github.com/quantumlib/Stim).
 
-#### _class_ `GadgetCircuit`
-- Class for representing circuits of Pauli gadgets and other quantum gates.
-
-#### _class_ `Gadget`
-- Class for representing Pauli gadgets.
-
-#### Gates
-##### _class_ `CX(control: int, target: int)`
-- Class for representing the CX gate.
-
-##### _class_ `CZ(control: int, target: int)`
-- Class for representing the CZ gate.
-
-##### _class_ `X(qubit: int)`
-- Class for representing the X gate.
-
-##### _class_ `Z(qubit: int)`
-- Class for representing the Z gate.
