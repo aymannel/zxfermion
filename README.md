@@ -32,14 +32,14 @@ from zxfermion import Gadget
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
 ```
-![](figures/readme1.png)
+![](figures/readme1s.png)
 
 Setting `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
 ```python
 gadget = Gadget('YZX', phase=1/2, as_gadget=False)
 gadget.draw()
 ```
-![](figures/readme2.png)
+![](figures/readme2s.png)
 
 ### Creating circuits of Pauli gadgets
 Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter allows users to specify the symbol for the gadget phase when rendering PDF figures.
@@ -84,7 +84,7 @@ circuit = GadgetCircuit([
 ])
 circuit.draw()
 ```
-![](figures/readme6.png)
+![](figures/readme6s.png)
 
 It is easy to show that conjugating the circuit by controlled-not gates yields a triply-controlled rotation.
 ```python
