@@ -93,6 +93,7 @@ circuit.apply(CX(0, 2))
 circuit.apply(CX(0, 1))
 circuit.draw()
 ```
+![](figures/readme7.png)
 
 ## Documentation
 
