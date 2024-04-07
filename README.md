@@ -7,6 +7,7 @@
 - [1) What is ZxFermion?](#what-is-zxfermion?)
 - [2) Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
+  - [Creating circuits of Gadgets](#creating-circuits-of-pauli-gadgets)
 - [3) Documentation](#documentation)
   - [BaseGraph](#class-basegraph)
   - [GadgetGraph](#class-gadgetgraph)
@@ -39,6 +40,7 @@ gadget.draw()
 ```
 ![](figures/readme1.png)
 
+### Creating circuits of Pauli gadgets
 Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter allows users to specify the symbol for the gadget phase when rendering PDF figures.
 ```python
 from zxfermion import GadgetCircuit
