@@ -7,7 +7,7 @@
 - [1) What is ZxFermion?](#what-is-zxfermion?)
 - [2) Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
-  - [Creating circuits of Gadgets](#creating-circuits-of-pauli-gadgets)
+  - [Creating Circuits of Gadgets](#creating-circuits-of-pauli-gadgets)
 - [3) Documentation](#documentation)
   - [BaseGraph](#class-basegraph)
   - [GadgetGraph](#class-gadgetgraph)
