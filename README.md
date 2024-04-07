@@ -25,6 +25,7 @@ The following diagrams were all made using ZxFermion.
 ## Getting Started
 
 ### Creating Pauli gadgets
+The `Gadget` class is used to represent Pauli gadgets [cite]. `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
 ```python
 from zxfermion import Gadget
 gadget = Gadget('YZX', phase=1/2, var='theta', as_gadget=False)
@@ -32,13 +33,14 @@ gadget.graph.draw()
 ```
 ![](figures/readme1.png)
 
-By default gadgets are represented in the following more compact form.
+By default, the `as_gadget` parameter is set to `True`, and Pauli gadgets are represented in their more compact form in the ZX calculus [cite].
 ```python
 gadget = Gadget('YZX', phase=1/2, var='theta')
 gadget.graph.draw()
 ```
 ![](figures/readme2.png)
 
+Circuits of Pauli gadgets are defined by the `GadgetCircuit` class.
 ```python
 from zxfermion import GadgetCircuit
 gadget1 = Gadget('YZX', phase=1/2, var='theta')
@@ -48,6 +50,7 @@ circuit.draw()
 ```
 ![](figures/readme3.png)
 
+Setting `as_gadgets=False` allows users to extract the corresponding quantum circuit.
 ```python
 gadget1 = Gadget('YZX', phase=1/2, var='theta')
 gadget2 = Gadget('XZY', phase=1/2, var='phi')
@@ -55,6 +58,14 @@ circuit = GadgetCircuit([gadget1, gadget2])
 circuit.draw(as_gadgets=False)
 ```
 ![](figures/readme4.png)
+
+The `GadgetCircuit` class also allows users to represent circuits of standard quantum gates.
+
+Using [Stim](https://github.com/quantumlib/Stim) as a backend, users can easily visualise the effect of Pauli and Clifford gates on Pauli gadgets. For instance, see how the following circuit, representing a singly-controlled Y rotation, is represented by Pauli gadgets alone.
+
+Now consider the following circuit of Pauli gadgets, which represents a paired double excitation operator.
+
+It is easy to show that conjugating the circuit by controlled-not gates yields a triply-controlled rotation.
 
 ## Documentation
 
