@@ -24,20 +24,20 @@ VQE algorithms used in quantum chemistry often utilise the [UCC](https://doi.org
 All of the following diagrams were made using ZxFermion's `pdf(name='filename')` method.
 
 ### Creating Pauli gadgets
-The `Gadget` class is used to represent Pauli gadgets [cite]. Setting `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
+The `Gadget` class is used to represent Pauli gadgets [cite]. By default, Pauli gadgets are represented in their more compact form in the ZX calculus [cite].
 ```python
 from zxfermion import Gadget
-gadget = Gadget('YZX', phase=1/2, as_gadget=False)
-gadget.graph.draw()
-```
-![](figures/readme1.png)
-
-By default, the `as_gadget` parameter is set to `True`, and Pauli gadgets are represented in their more compact form in the ZX calculus [cite].
-```python
 gadget = Gadget('YZX', phase=1/2)
 gadget.graph.draw()
 ```
 ![](figures/readme2.png)
+
+Setting `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
+```python
+gadget = Gadget('YZX', phase=1/2, as_gadget=False)
+gadget.graph.draw()
+```
+![](figures/readme1.png)
 
 Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter takes $\LaTeX$ symbols for the rendering of PDF figures.
 ```python
