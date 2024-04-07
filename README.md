@@ -20,31 +20,30 @@ ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io
 
 VQE algorithms used in quantum chemistry often utilise the [UCC](https://doi.org/10.48550/arXiv.2109.15176) framework in which excitation operators have a natural representation as Pauli gadgets. ZxFermion provides a comprehensive toolset designed to be used in a Jupyter notebook environment. Export functionality can be used to generated research paper quality diagrams.
 
-The following diagrams were all made using ZxFermion.
-
 ## Getting Started
+All of the following diagrams were made using ZxFermion's `pdf(name='filename')` method.
 
 ### Creating Pauli gadgets
-The `Gadget` class is used to represent Pauli gadgets [cite]. `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
+The `Gadget` class is used to represent Pauli gadgets [cite]. Setting `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
 ```python
 from zxfermion import Gadget
-gadget = Gadget('YZX', phase=1/2, var='theta', as_gadget=False)
+gadget = Gadget('YZX', phase=1/2, as_gadget=False)
 gadget.graph.draw()
 ```
 ![](figures/readme1.png)
 
 By default, the `as_gadget` parameter is set to `True`, and Pauli gadgets are represented in their more compact form in the ZX calculus [cite].
 ```python
-gadget = Gadget('YZX', phase=1/2, var='theta')
+gadget = Gadget('YZX', phase=1/2)
 gadget.graph.draw()
 ```
 ![](figures/readme2.png)
 
-Circuits of Pauli gadgets are defined by the `GadgetCircuit` class.
+Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter takes $\LaTeX$ symbols for the rendering of PDF figures.
 ```python
 from zxfermion import GadgetCircuit
-gadget1 = Gadget('YZX', phase=1/2, var='theta')
-gadget2 = Gadget('XZY', phase=1/2, var='phi')
+gadget1 = Gadget('YZX', phase=1/2, variable='theta')
+gadget2 = Gadget('XZY', phase=1/2, variable='phi')
 circuit = GadgetCircuit([gadget1, gadget2])
 circuit.draw()
 ```
@@ -52,8 +51,8 @@ circuit.draw()
 
 Setting `as_gadgets=False` allows users to extract the corresponding quantum circuit.
 ```python
-gadget1 = Gadget('YZX', phase=1/2, var='theta')
-gadget2 = Gadget('XZY', phase=1/2, var='phi')
+gadget1 = Gadget('YZX', phase=1/2, variable='theta')
+gadget2 = Gadget('XZY', phase=1/2, variable='phi')
 circuit = GadgetCircuit([gadget1, gadget2])
 circuit.draw(as_gadgets=False)
 ```
