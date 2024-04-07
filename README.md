@@ -92,8 +92,6 @@ circuit.apply(CX(0, 1))
 circuit.draw()
 ```
 
----
-
 ## Documentation
 
 #### _class_ `BaseGraph`
