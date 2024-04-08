@@ -97,37 +97,37 @@ circuit.draw()
 
 ## Documentation
 
-#### Gates
+### Gates
 Setting `as_gadget=True` allows users to visualise any of the standard quantum gates as Pauli gadgets.
 
-##### _class_ `CX(control: int, target: int, as_gadget=False)`
+#### _class_ `CX(control: int, target: int, as_gadget=False)`
 - Class for representing the CX gate.
 
-##### _class_ `CZ(control: int, target: int, as_gadget=False)`
+#### _class_ `CZ(control: int, target: int, as_gadget=False)`
 - Class for representing the CZ gate.
 
-##### _class_ `X(qubit: int, as_gadget=False)`
+#### _class_ `X(qubit: int, as_gadget=False)`
 - Class for representing the X gate.
 
-##### _class_ `Z(qubit: int, as_gadget=False)`
+#### _class_ `Z(qubit: int, as_gadget=False)`
 - Class for representing the Z gate.
 
-##### _class_ `XPhase(qubit: int, phase=None, as_gadget=False)`
+#### _class_ `XPhase(qubit: int, phase=None, as_gadget=False)`
 - Class for representing a general rotation gate in the X basis.
 
-##### _class_ `ZPhase(qubit: int, phase=None, as_gadget=False)`
+#### _class_ `ZPhase(qubit: int, phase=None, as_gadget=False)`
 - Class for representing a general rotation gate in the Z basis.
 
-##### _class_ `XPlus(qubit: int, as_gadget=False)`
+#### _class_ `XPlus(qubit: int, as_gadget=False)`
 - Class for representing a $\pi/2$ rotation in the X basis.
 
-##### _class_ `ZPlus(qubit: int, as_gadget=False)`
+#### _class_ `ZPlus(qubit: int, as_gadget=False)`
 - Class for representing a $\pi/2$ rotation in the Z basis.
 
-##### _class_ `XMinus(qubit: int, as_gadget=False)`
+#### _class_ `XMinus(qubit: int, as_gadget=False)`
 - Class for representing a $3\pi/2$ rotation in the X basis.
 
-##### _class_ `ZPlus(qubit: int, as_gadget=False)`
+#### _class_ `ZPlus(qubit: int, as_gadget=False)`
 - Class for representing a $3\pi/2$ rotation in the Z basis.
 
 #### _class_ `Gadget(pauli_string: str, phase: int | float, as_gadget=True)`
@@ -138,6 +138,30 @@ Setting `as_gadget=True` allows users to visualise any of the standard quantum g
 #### _class_ `GadgetCircuit(num_qubits: int, gates: list`
 - Class for representing circuits of Pauli gadgets and other quantum gates.
 - The gates parameter takes a list of `Gadget`, `X`, `Z`, `CX`...
+
+##### _method_ `apply(gate, start: int, end: int)`
+- Return type: `None`
+
+##### _method_ `graph(as_gadgets=None, stack=False)`
+- Return type: `GadgetGraph`
+
+##### _method_ `draw(as_gadgets=None, stack=False, labels=False)`
+- Return type: `None`
+
+##### _method_ `tikz(name: str, scale: float, as_gadgets=None, stack=False)`
+- Return type: `str | None`
+
+##### _method_ `pdf(name: str, scale: float, as_gadgets=None, stack=False)`
+- Return type: `None`
+
+##### _method_ `to_dict()`
+- Return type: `None`
+
+##### _staticmethod_ `from_dict(circuit_dict: dict)`
+- Return type: `GadgetCircuit`
+
+##### _method_ `matrix(return_latex=False)`
+- Return type: `str | None`
 
 #### _class_ `BaseGraph`
 - Extends the `pyzx.GraphS` class. Implements a number of additional methods for handling ZX diagrams.
@@ -279,6 +303,27 @@ Setting `as_gadget=True` allows users to visualise any of the standard quantum g
 #### _class_ `GadgetGraph`
 - Inherits from the `zxfermion.BaseGraph` class (see above).
 - Implements methods for handling the graphing of the `Gadget` class and other quantum gates.
+
+##### _method_ `add(gate)`
+- Return type: `None`
+
+##### _method_ `add_cx(cx: CX)`
+- Return type: `None`
+
+##### _method_ `add_cz(cz: CZ)`
+- Return type: `None`
+
+##### _method_ `add_cx_gadget(cx: CX)`
+- Return type: `None`
+
+##### _method_ `add_cz_gadget(cz: CZ)`
+- Return type: `None`
+
+##### _method_ `add_gadget(gadget: Gadget)`
+- Return type: `None`
+
+##### _method_ `add_expanded_gadget(gadget: Gadget)`
+- Return type: `None`
 
 #### _class_ `Tableau`
 - Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates.
