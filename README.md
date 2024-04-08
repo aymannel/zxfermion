@@ -11,11 +11,9 @@
   - [Analysis of Quantum Stabiliser Circuits](#analysis-of-quantum-stabiliser-circuits)
 - [3) Documentation](#documentation)
   - [Gates](#gates)
-  - [Gadget](#class-gadget)
-  - [GadgetCircuit](#class-gadgetcircuit)
-  - [GadgetGraph](#class-gadgetgraph)
-  - [BaseGraph](#class-basegraph)
-  - [Tableau](#class-tableau)
+  - [Circuits](#circuits)
+  - [Graphs](#graphs)
+  - [Tableau](#tableaus)
 
 ## What is ZxFermion?
 ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io/en/latest/) designed for the manipulation and visualisation of circuits of Pauli gadgets. With built-in Clifford tableau logic using [Stim](https://github.com/quantumlib/Stim), ZxFermion allows users to quickly implement proofs and test ideas.
@@ -135,6 +133,8 @@ Setting `as_gadget=True` allows users to visualise any of the standard quantum g
 - Setting `as_gadget=True` allows users to represent the gadget in its simplified form. 
 - Setting `as_gadget=False` allows users to represent the gadget as a CNOT ladder construction.
 
+
+### Circuits
 #### _class_ `GadgetCircuit(num_qubits: int, gates: list`
 - Class for representing circuits of Pauli gadgets and other quantum gates.
 - The gates parameter takes a list of `Gadget`, `X`, `Z`, `CX`...
@@ -162,6 +162,32 @@ Setting `as_gadget=True` allows users to visualise any of the standard quantum g
 
 ##### _method_ `matrix(return_latex=False)`
 - Return type: `str | None`
+
+### Graphs
+#### _class_ `GadgetGraph`
+- Inherits from the `zxfermion.BaseGraph` class (see above).
+- Implements methods for handling the graphing of the `Gadget` class and other quantum gates.
+
+##### _method_ `add(gate)`
+- Return type: `None`
+
+##### _method_ `add_cx(cx: CX)`
+- Return type: `None`
+
+##### _method_ `add_cz(cz: CZ)`
+- Return type: `None`
+
+##### _method_ `add_cx_gadget(cx: CX)`
+- Return type: `None`
+
+##### _method_ `add_cz_gadget(cz: CZ)`
+- Return type: `None`
+
+##### _method_ `add_gadget(gadget: Gadget)`
+- Return type: `None`
+
+##### _method_ `add_expanded_gadget(gadget: Gadget)`
+- Return type: `None`
 
 #### _class_ `BaseGraph`
 - Extends the `pyzx.GraphS` class. Implements a number of additional methods for handling ZX diagrams.
@@ -300,31 +326,7 @@ Setting `as_gadget=True` allows users to visualise any of the standard quantum g
 - Draws the current gate, `Gadget` or `GadgetCircuit`.
 - Return type: `None`
 
-#### _class_ `GadgetGraph`
-- Inherits from the `zxfermion.BaseGraph` class (see above).
-- Implements methods for handling the graphing of the `Gadget` class and other quantum gates.
-
-##### _method_ `add(gate)`
-- Return type: `None`
-
-##### _method_ `add_cx(cx: CX)`
-- Return type: `None`
-
-##### _method_ `add_cz(cz: CZ)`
-- Return type: `None`
-
-##### _method_ `add_cx_gadget(cx: CX)`
-- Return type: `None`
-
-##### _method_ `add_cz_gadget(cz: CZ)`
-- Return type: `None`
-
-##### _method_ `add_gadget(gadget: Gadget)`
-- Return type: `None`
-
-##### _method_ `add_expanded_gadget(gadget: Gadget)`
-- Return type: `None`
-
+### Tableaus
 #### _class_ `Tableau`
 - Class for handling the interaction of the `Gadget` class with the Pauli and Clifford gates.
 - Built on top of [Stim](https://github.com/quantumlib/Stim).
