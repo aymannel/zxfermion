@@ -98,23 +98,46 @@ circuit.draw()
 ## Documentation
 
 #### Gates
-##### _class_ `CX(control: int, target: int)`
+Setting `as_gadget=True` allows users to visualise any of the standard quantum gates as Pauli gadgets.
+
+##### _class_ `CX(control: int, target: int, as_gadget=False)`
 - Class for representing the CX gate.
 
-##### _class_ `CZ(control: int, target: int)`
+##### _class_ `CZ(control: int, target: int, as_gadget=False)`
 - Class for representing the CZ gate.
 
-##### _class_ `X(qubit: int)`
+##### _class_ `X(qubit: int, as_gadget=False)`
 - Class for representing the X gate.
 
-##### _class_ `Z(qubit: int)`
+##### _class_ `Z(qubit: int, as_gadget=False)`
 - Class for representing the Z gate.
 
-#### _class_ `Gadget`
-- Class for representing Pauli gadgets.
+##### _class_ `XPhase(qubit: int, phase=None, as_gadget=False)`
+- Class for representing a general rotation gate in the X basis.
 
-#### _class_ `GadgetCircuit`
+##### _class_ `ZPhase(qubit: int, phase=None, as_gadget=False)`
+- Class for representing a general rotation gate in the Z basis.
+
+##### _class_ `XPlus(qubit: int, as_gadget=False)`
+- Class for representing a $\pi/2$ rotation in the X basis.
+
+##### _class_ `ZPlus(qubit: int, as_gadget=False)`
+- Class for representing a $\pi/2$ rotation in the Z basis.
+
+##### _class_ `XMinus(qubit: int, as_gadget=False)`
+- Class for representing a $3\pi/2$ rotation in the X basis.
+
+##### _class_ `ZPlus(qubit: int, as_gadget=False)`
+- Class for representing a $3\pi/2$ rotation in the Z basis.
+
+#### _class_ `Gadget(pauli_string: str, phase: int | float, as_gadget=True)`
+- Class for representing Pauli gadgets.
+- Setting `as_gadget=True` allows users to represent the gadget in its simplified form. 
+- Setting `as_gadget=False` allows users to represent the gadget as a CNOT ladder construction.
+
+#### _class_ `GadgetCircuit(num_qubits: int, gates: list`
 - Class for representing circuits of Pauli gadgets and other quantum gates.
+- The gates parameter takes a list of `Gadget`, `X`, `Z`, `CX`...
 
 #### _class_ `BaseGraph`
 - Extends the `pyzx.GraphS` class. Implements a number of additional methods for handling ZX diagrams.
