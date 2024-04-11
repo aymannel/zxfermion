@@ -87,7 +87,7 @@ circuit.draw()
 ```
 ![](figures/readme6.png)
 
-It is easy to show that conjugating the circuit by controlled-not gates yields a triply-controlled rotation.
+It is easy to show the effect of conjugating the circuit by CNOT gates.
 ```python
 circuit.apply(CX(0, 3), draw=True)
 circuit.apply(CX(0, 2), draw=True)
