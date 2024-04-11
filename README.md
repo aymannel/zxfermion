@@ -23,10 +23,15 @@ VQE algorithms used in quantum chemistry often utilise the [UCC](https://doi.org
 ## Getting Started
 All of the following diagrams were made using ZxFermion's `pdf(name='filename')` method.
 
+### Import Relevant Modules
+```python
+from zxfermion import Gadget, GadgetCircuit
+from zxfermion.gates import XPhase, ZPhase, CX, CZ, X, Z
+```
+
 ### Creating Pauli gadgets
 The `Gadget` class is used to represent Pauli gadgets [cite]. By default, Pauli gadgets are represented in their more compact form in the ZX calculus [cite].
 ```python
-from zxfermion import Gadget
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
 ```
@@ -42,7 +47,6 @@ gadget.draw()
 ### Creating circuits of Pauli gadgets
 Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter allows users to specify the symbol for the gadget phase when rendering PDF figures.
 ```python
-from zxfermion import GadgetCircuit
 gadget1 = Gadget('YZX', phase=1/2, variable='theta')
 gadget2 = Gadget('XZY', phase=1/2, variable='phi')
 circuit = GadgetCircuit([gadget1, gadget2])
@@ -61,7 +65,6 @@ circuit.draw(as_gadgets=False)
 
 The `GadgetCircuit` class also allows users to represent circuits of standard quantum gates.
 ```python
-from zxfermion.gates import CX, CZ, X, XPhase, ZPhase
 circuit = GadgetCircuit([CX(0, 1), CZ(1, 2), X(1), ZPhase(0, 3/4), XPhase(0, 1/2), CX(0, 2), CX(0, 1), CZ(1, 2)])
 circuit.draw(stack=True)
 ```
@@ -86,12 +89,14 @@ circuit.draw()
 
 It is easy to show that conjugating the circuit by controlled-not gates yields a triply-controlled rotation.
 ```python
-circuit.apply(CX(0, 3))
-circuit.apply(CX(0, 2))
-circuit.apply(CX(0, 1))
+circuit.apply(CX(0, 3), draw=True)
+circuit.apply(CX(0, 2), draw=True)
+circuit.apply(CX(0, 1), draw=True)
 circuit.draw()
 ```
-![](figures/readme7.png)
+![](figures/readme7a.png)
+![](figures/readme7b.png)
+![](figures/readme7c.png)
 
 ## Documentation
 

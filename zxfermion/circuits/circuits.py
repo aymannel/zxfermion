@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from copy import deepcopy, copy
-from typing import Optional
-
 import pyzx as zx
-from IPython.display import display, Markdown
+from typing import Optional
+from copy import deepcopy, copy
 
 from zxfermion import Gadget, BaseGraph
 from zxfermion.graphs.gadget_graph import GadgetGraph
@@ -27,7 +25,7 @@ class GadgetCircuit:
         assert self.num_qubits == other.num_qubits
         return GadgetCircuit(gates=self.simplify(self.gates + other.gates))
 
-    def apply(self, gate, start: int = 0, end: int = None):
+    def apply(self, gate, start: int = 0, end: int = None, draw=False):
         assert max(gate.qubits) < self.num_qubits  # update num qubits instead / think about edge cases
         end = len(self.gates) if end is None else end
         tableau = Tableau(gate)
@@ -36,6 +34,8 @@ class GadgetCircuit:
             if gadget.type == GateType.GADGET else gadget
             for gadget in self.gates[start:end]]
         self.gates[start:end] = [copy(gate), *new_gadgets, copy(gate.inverse)]
+        if draw:
+            zx.draw(self.graph())
         # self.gates[start:end] = new_gadgets
 
     def graph(self, as_gadgets: bool = None, stack: bool = settings.stack) -> GadgetGraph:
