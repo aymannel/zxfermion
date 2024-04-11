@@ -94,9 +94,7 @@ circuit.apply(CX(0, 2), draw=True)
 circuit.apply(CX(0, 1), draw=True)
 circuit.draw()
 ```
-![](figures/readme7a.png)
-![](figures/readme7b.png)
-![](figures/readme7c.png)
+![](figures/readme7.png)
 
 ## Documentation
 
