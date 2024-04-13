@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional
@@ -228,6 +229,9 @@ class BaseGraph(GraphS):
         pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
         if os.path.exists(f'output/{name}_temp.tex'):
             os.remove(f'output/{name}_temp.tex')
+
+    def clipboard(self):
+        subprocess.run('pbcopy', text=True, input=self.tikz())
 
     def draw(self, labels: bool = settings.labels):
         zx.draw(self, labels=labels)

@@ -62,6 +62,10 @@ class GadgetCircuit:
     def pdf(self, name: str, scale: float = settings.tikz_scale, **kwargs):
         return self.graph(**kwargs).pdf(name=name, scale=scale)
 
+    def clipboard(self):
+        graph = self.graph()
+        graph.clipboard()
+
     def to_dict(self) -> list[dict[str, str | int | float]]:
         return {
             'num_qubits': self.num_qubits,

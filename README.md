@@ -1,5 +1,21 @@
 # ZxFermion
-[![Generic badge](https://img.shields.io/badge/python-3.9+-green.svg)](https://docs.python.org/3.9/)
+|Python version| |PyPI status| |Mypy checked| |Documentation status| |Standard readme|
+
+.. |Python version| image:: https://img.shields.io/badge/python-3.10+-green.svg
+    :target: https://docs.python.org/3.9/
+    :alt: Python versions
+
+.. |PyPI status| image:: https://img.shields.io/pypi/status/q1ss.svg
+    :target: https://pypi.python.org/pypi/q1ss/
+    :alt: PyPI status
+
+.. |Documentation status| image:: https://readthedocs.org/projects/aphash/badge/?version=latest
+    :target: https://aphash.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. |Standard readme| image:: https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square
+    :target: https://github.com/RichardLitt/standard-readme
+    :alt: standard-readme compliant
 
 <img src="figures/logo.png" width="150">
 
