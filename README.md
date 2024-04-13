@@ -1,37 +1,10 @@
 # ZxFermion
-
-|Python version| |PyPI version| |PyPI status| |Mypy checked| |Documentation status| |Standard readme|
-
-.. |Python version| image:: https://img.shields.io/badge/python-3.10+-green.svg
-    :target: https://docs.python.org/3.10/
-    :alt: Python versions
-
-.. |PyPI version| image:: https://img.shields.io/pypi/v/q1ss.svg
-    :target: https://pypi.python.org/pypi/q1ss/
-    :alt: PyPI version
-
-.. |PyPI status| image:: https://img.shields.io/pypi/status/q1ss.svg
-    :target: https://pypi.python.org/pypi/q1ss/
-    :alt: PyPI status
-
-.. |Mypy checked| image:: http://www.mypy-lang.org/static/mypy_badge.svg
-    :target: https://github.com/python/mypy
-    :alt: Checked with Mypy
-
-.. |Documentation status| image:: https://readthedocs.org/projects/aphash/badge/?version=latest
-    :target: https://aphash.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
-
-.. |Standard readme| image:: https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square
-    :target: https://github.com/RichardLitt/standard-readme
-    :alt: standard-readme compliant
-
-
+[![Generic badge](https://img.shields.io/badge/python-3.9+-green.svg)](https://docs.python.org/3.9/)
 
 <img src="figures/logo.png" width="150">
 
 ## Contents
-- [1) What is ZxFermion?](#what-is-zxfermion?)
+- (#what-is-zxfermion?)
 - [2) Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
   - [Creating Circuits of Gadgets](#creating-circuits-of-pauli-gadgets)
