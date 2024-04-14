@@ -4,7 +4,7 @@
 <img src="figures/logo.png" width="150">
 
 ## Contents
-- (#what-is-zxfermion?)
+- [What is ZxFermion?](#what-is-zxfermion?)
 - [2) Getting Started](#getting-started)
   - [Creating Pauli Gadgets](#creating-pauli-gadgets)
   - [Creating Circuits of Gadgets](#creating-circuits-of-pauli-gadgets)
