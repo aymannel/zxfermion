@@ -1,7 +1,7 @@
 \definecolor{z_color}{RGB}{216,248,216}
 \definecolor{x_color}{RGB}{232,165,165}
 \definecolor{y_color}{RGB}{88,184,244}
-\definecolor{h_color}{RGB}{255,255,0}
+\definecolor{h_color}{RGB}{255,215,0}
 
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest, compat/show suggested version=false}
@@ -9,7 +9,6 @@
 \newcommand{\tikzrefsize}[1]{\scriptsize{#1}}
 \newcommand{\axref}[1]{\tikzrefsize{(#1)}}
 \newcommand{\lemref}[1]{\tikzrefsize{\ref{#1}}}
-\newcommand{\zxw}[1]{\cite[#1]{poorCompletenessArbitraryFinite2023}}
 
 \tikzstyle{hadamard}=[box, draw=black, shape=rectangle, fill={h_color}, minimum size=.55em]
 \tikzstyle{z_node}=[draw=black, shape=circle, fill={z_color}, inner sep=0.7mm, minimum width=0pt, minimum height=0pt]

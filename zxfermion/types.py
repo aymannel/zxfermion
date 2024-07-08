@@ -26,10 +26,10 @@ class GateType(str, Enum):
     H = 'H'
     CX = 'CX'
     CZ = 'CZ'
-    X_PLUS = 'X_PLUS'
-    Z_PLUS = 'Z_PLUS'
-    X_MINUS = 'X_MINUS'
-    Z_MINUS = 'Z_MINUS'
+    X_PLUS = 'X_PLUS'  # > S
+    Z_PLUS = 'Z_PLUS'  # > SDag
+    X_MINUS = 'X_MINUS'  # > V
+    Z_MINUS = 'Z_MINUS'  # > VDag
 
     NAMES = [
         'Gadget',

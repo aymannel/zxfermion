@@ -9,10 +9,12 @@ from typing import Optional
 import pyzx as zx
 from IPython.core.display import Markdown
 from IPython.core.display_functions import display
-from pdflatex import PDFLaTeX
+# from pdflatex import PDFLaTeX
 from pyzx.graph.graph_s import GraphS
 
 from zxfermion.utils import pair_list, settings
+
+#### PDFLATEX STUFF MAKE IT LIGHTER
 
 
 class BaseGraph(GraphS):
@@ -223,15 +225,19 @@ class BaseGraph(GraphS):
 
     def pdf(self, name: str, scale: float = settings.tikz_scale):
         self.tex(name=name, scale=scale)
-        pdf = PDFLaTeX.from_texfile(f'output/{name}_temp.tex')
-        pdf.set_pdf_filename(f'{name}')
-        pdf.set_output_directory('output/')
-        pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
-        if os.path.exists(f'output/{name}_temp.tex'):
-            os.remove(f'output/{name}_temp.tex')
+        #pdf = PDFLaTeX.from_texfile(f'output/{name}_temp.tex')
+        #pdf.set_pdf_filename(f'{name}')
+        #pdf.set_output_directory('output/')
+        #pdf.create_pdf(keep_pdf_file=True, keep_log_file=False)
+        #if os.path.exists(f'output/{name}_temp.tex'):
+        #    os.remove(f'output/{name}_temp.tex')
 
     def clipboard(self):
         subprocess.run('pbcopy', text=True, input=self.tikz())
 
     def draw(self, labels: bool = settings.labels):
         zx.draw(self, labels=labels)
+
+    def html(self, name: str):
+        with open(f'output/{name}_temp.html', 'w') as file:
+            file.write(zx.draw(self))

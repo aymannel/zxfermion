@@ -45,6 +45,10 @@ def to_tikz(graph: BaseGraph, scale: float) -> str:
             numerator = '' if phase.numerator == 1 else str(phase.numerator)
             denominator = '' if phase.denominator == 1 else str(phase.denominator)
             phase = rf'$\frac{{{numerator}{var}}}{{{denominator}}}$' if denominator else rf'${numerator}{var}$'
+            if phase == r'$\frac{\pi}{2}$':
+                phase = r'$+$'
+            elif phase == r'$\frac{3\pi}{2}$':
+                phase = r'$-$'
 
         x = graph.row(vertex)
         y = - graph.qubit(vertex)

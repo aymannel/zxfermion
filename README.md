@@ -13,7 +13,7 @@
   - [Gates](#gates)
   - [Circuits](#circuits)
   - [Graphs](#graphs)
-  - [Tableau](#tableaus)
+    - [Tableau](#tableaus)
 
 ## What is ZxFermion?
 ZxFermion is a Python package built on top of [PyZX](https://pyzx.readthedocs.io/en/latest/) designed for the manipulation and visualisation of circuits of Pauli gadgets. With built-in Clifford tableau logic using [Stim](https://github.com/quantumlib/Stim), ZxFermion allows users to quickly implement proofs and test ideas.
@@ -30,38 +30,29 @@ from zxfermion.gates import XPhase, ZPhase, CX, CZ, X, Z
 ```
 
 ### Creating Pauli gadgets
-The `Gadget` class is used to represent Pauli gadgets [cite]. By default, Pauli gadgets are represented in their more compact form in the ZX calculus [cite].
+We begin by introducing the `Gadget` class, which we use to represent Pauli gadgets. The `Gadget` class takes a Pauli string and a phase as inputs. By default, Pauli gadgets are represented in their form in the ZX calculus.
 ```python
 gadget = Gadget('YZX', phase=1/2)
 gadget.draw()
 ```
-![](figures/readme1.png)
+![](figures/gadget_zx.png)
 
 Setting `as_gadget=False` allows users to visualise Pauli gadgets in their expanded form. 
 ```python
 gadget = Gadget('YZX', phase=1/2, as_gadget=False)
 gadget.draw()
 ```
-![](figures/readme2.png)
+![](figures/gadget_zx_expanded.png)
 
 ### Creating circuits of Pauli gadgets
-Circuits of Pauli gadgets are defined by the `GadgetCircuit` class. The `variable` parameter allows users to specify the symbol for the gadget phase when rendering PDF figures.
+We can construct circuits of Pauli gadgets using the `GadgetCircuit` class by passing an ordered list of `Gadget` instances to the `gates` parameter. The `variable` parameter allows users to specify the LaTeX symbol used to render each Pauli gadget's phase when exporting to PDF.
 ```python
 gadget1 = Gadget('YZX', phase=1/2, variable='theta')
 gadget2 = Gadget('XZY', phase=1/2, variable='phi')
-circuit = GadgetCircuit([gadget1, gadget2])
+circuit = GadgetCircuit(gates=[gadget1, gadget2])
 circuit.draw()
 ```
-![](figures/readme3.png)
-
-Setting `as_gadgets=False` allows users to extract the corresponding quantum circuit.
-```python
-gadget1 = Gadget('YZX', phase=1/2, variable='theta')
-gadget2 = Gadget('XZY', phase=1/2, variable='phi')
-circuit = GadgetCircuit([gadget1, gadget2])
-circuit.draw(as_gadgets=False)
-```
-![](figures/readme4.png)
+![](figures/circuit_zx.png)
 
 The `GadgetCircuit` class also allows users to represent circuits of standard quantum gates.
 ```python
